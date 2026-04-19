@@ -21,6 +21,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
   color:#fff; font-weight:700; text-align:center;
   text-shadow:0 4px 12px rgba(0,0,0,0.7);
   font-size:3vw; line-height:1.4; z-index:10;
+  transition:opacity 0.5s ease;
 }
 #phoneFooter {
   position:fixed; top:2%; left:50%;
@@ -61,7 +62,6 @@ const slides = [
 const captionEl = document.getElementById('caption');
 let current = 0;
 
-// スライド要素を作成
 const slideEls = slides.map(s => {
   const el = document.createElement('div');
   el.className = 'slide';
@@ -71,17 +71,36 @@ const slideEls = slides.map(s => {
 });
 
 function showSlide(i) {
+  captionEl.style.opacity = '0';
   slideEls.forEach((el, idx) => {
     el.style.opacity = idx === i ? '1' : '0';
   });
-  captionEl.innerHTML = slides[i].caption;
+  setTimeout(() => {
+    captionEl.innerHTML = slides[i].caption;
+    captionEl.style.opacity = '1';
+  }, 1000);
 }
 
 showSlide(0);
 setInterval(() => {
   current = (current + 1) % slides.length;
   showSlide(current);
-}, 5000); // まず5秒でテスト
+}, 20000);
+
+/* フルスクリーン */
+function ensureFullscreen() {
+  const el = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  }
+}
+document.addEventListener('click', ensureFullscreen, {once: true});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
+});
+setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
 </html>

@@ -15,6 +15,13 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
   opacity:0;
   transition:opacity 1s ease-in-out;
 }
+@keyframes verticalPan {
+  0%   { background-position:center top; }
+  100% { background-position:center bottom; }
+}
+.slide.vertical {
+  animation:verticalPan 20s ease-in-out forwards;
+}
 #caption {
   position:fixed; left:50%; top:25%;
   transform:translateX(-50%);
@@ -28,14 +35,29 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
   transform:translateX(-50%);
   color:#fff; font-weight:bold; font-size:2.5vw;
   text-shadow:0 0 10px rgba(0,0,0,0.7); z-index:10;
+  transition:opacity 0.5s ease;
 }
 #qrLinks {
   position:fixed; bottom:1%; left:50%;
   transform:translateX(-50%);
   display:flex; gap:2.2vw; z-index:10;
+  transition:opacity 0.5s ease;
 }
 .qrItem { text-align:center; color:#fff; font-size:1vw; }
 .qrItem img { width:5vw; height:auto; border-radius:10px; }
+
+/* 同期用オーバーレイ */
+#mainOverlay {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  background:#000 no-repeat center center;
+  background-size:cover;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20;
+  pointer-events:none;
+}
+#mainOverlay.visible { opacity:1; }
 </style>
 </head>
 <body>
@@ -49,18 +71,24 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
   <div class="qrItem"><a href="https://cycle-center-yamaguchi.jimdofree.com/" target="_blank"><img src="HP.png"><div>公式HP</div></a></div>
 </div>
 
+<div id="mainOverlay"></div>
+
 <script>
 const slides = [
-  {img:'横長ロゴ.jpg',     caption:''},
-  {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋'},
-  {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応'},
-  {img:'店舗斜め.jpg',     caption:'修理・点検・カスタムも<br>お任せください'},
-  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください'},
-  {img:'イベント.jpg',     caption:''}
+  {img:'横長ロゴ.jpg',     caption:'',                                            vertical:false},
+  {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋',            vertical:false},
+  {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応', vertical:false},
+  {img:'店舗斜め.jpg',     caption:'修理・点検・カスタムも<br>お任せください',      vertical:false},
+  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください',    vertical:false},
+  {img:'イベント.jpg',     caption:'',                                            vertical:true}
 ];
 
 const captionEl = document.getElementById('caption');
-let current = 0;
+const phoneEl   = document.getElementById('phoneFooter');
+const qrEl      = document.getElementById('qrLinks');
+const overlay   = document.getElementById('mainOverlay');
+let current    = 0;
+let slideTimer = null;
 
 const slideEls = slides.map(s => {
   const el = document.createElement('div');
@@ -74,6 +102,14 @@ function showSlide(i) {
   captionEl.style.opacity = '0';
   slideEls.forEach((el, idx) => {
     el.style.opacity = idx === i ? '1' : '0';
+    // verticalPanのリセット
+    if (idx === i && slides[i].vertical) {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'verticalPan 20s ease-in-out forwards';
+    } else if (idx === i) {
+      el.style.animation = 'none';
+    }
   });
   setTimeout(() => {
     captionEl.innerHTML = slides[i].caption;
@@ -81,13 +117,62 @@ function showSlide(i) {
   }, 1000);
 }
 
-showSlide(0);
-setInterval(() => {
-  current = (current + 1) % slides.length;
-  showSlide(current);
-}, 20000);
+function startSlideshow() {
+  clearInterval(slideTimer);
+  slideTimer = setInterval(() => {
+    current = (current + 1) % slides.length;
+    showSlide(current);
+  }, 20000);
+}
 
-/* フルスクリーン */
+showSlide(0);
+startSlideshow();
+
+/* ===== 全画面同期（20〜30秒） ===== */
+const INDIVIDUAL_MS = 20000;
+const MAIN_MS       = 10000;
+const CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
+let syncPhase  = null;
+let savedSlide = 0;
+
+async function loadMainVisual() {
+  try {
+    const res  = await fetch('playlist.json?t=' + Date.now());
+    const data = await res.json();
+    const main = (data['main'] || [])[0];
+    if (main) overlay.style.backgroundImage = `url('${main.src}')`;
+  } catch(e) {}
+}
+
+function syncTick() {
+  const offset = Date.now() % CYCLE_MS;
+  const isMain = offset >= INDIVIDUAL_MS;
+
+  if (isMain && syncPhase !== 'main') {
+    syncPhase  = 'main';
+    savedSlide = current;
+    captionEl.style.opacity = '0';
+    phoneEl.style.opacity   = '0';
+    qrEl.style.opacity      = '0';
+    overlay.classList.add('visible');
+
+  } else if (!isMain && syncPhase !== 'individual') {
+    syncPhase = 'individual';
+    overlay.classList.remove('visible');
+    captionEl.style.opacity = '1';
+    phoneEl.style.opacity   = '1';
+    qrEl.style.opacity      = '1';
+    current = savedSlide;
+    showSlide(current);
+    startSlideshow();
+    loadMainVisual();
+  }
+}
+
+loadMainVisual();
+setInterval(syncTick, 500);
+
+/* ===== フルスクリーン ===== */
 function ensureFullscreen() {
   const el = document.documentElement;
   if (!document.fullscreenElement) {
@@ -96,7 +181,7 @@ function ensureFullscreen() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
-document.addEventListener('click', ensureFullscreen, {once: true});
+document.addEventListener('click', ensureFullscreen, {once:true});
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });

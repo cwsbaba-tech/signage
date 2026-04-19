@@ -166,11 +166,17 @@ let slideTimer = null;
 
 function showSlide(i) {
   slideEls.forEach((el, idx) => {
-    el.style.opacity   = (idx === i) ? '1' : '0';
-    el.style.animation = 'none';
-    void el.offsetWidth;
-    if (idx === i && slides[i].vertical) {
-      el.style.animation = 'verticalPan 20s ease-in-out forwards';
+    if (idx === i) {
+      el.style.opacity = '1';
+      if (slides[i].vertical) {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'verticalPan 20s ease-in-out forwards';
+      } else {
+        el.style.animation = 'none';
+      }
+    } else {
+      el.style.opacity = '0';
     }
   });
   captionEl.innerHTML = slides[i].caption;

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>CYCLE CENTER YAMAGUCHI</title>
+<style>
+html, body {
+  margin:0; padding:0;
+  width:100%; height:100%;
+  background:#000;
+  font-family:"Noto Sans JP",sans-serif;
+  overflow:hidden;
+}
+.screen {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+}
+.slide {
+  position:absolute; top:0; left:0;
+  width:100%; height:100%;
+  background-size:cover;
+  background-position:center center;
+  background-repeat:no-repeat;
+  opacity:0;
+  transition:opacity 1s ease-in-out;
+}
+@keyframes verticalPan {
+  0%   { background-position:center top; }
+  100% { background-position:center bottom; }
+}
+.slide.vertical { animation:verticalPan 20s ease-in-out forwards; }
+
+#caption {
+  position:absolute; left:50%; top:25%;
+  transform:translateX(-50%);
+  color:#fff; font-weight:700; text-align:center;
+  text-shadow:0 4px 12px rgba(0,0,0,0.7);
+  font-size:3vw; line-height:1.4; z-index:2;
+  transition:opacity 0.5s ease;
+}
+#phoneFooter {
+  position:absolute; top:2%; left:50%;
+  transform:translateX(-50%);
+  color:#fff; font-weight:bold; font-size:2.5vw;
+  text-shadow:0 0 10px rgba(0,0,0,0.7);
+  z-index:2; transition:opacity 0.5s ease;
+}
+#qrLinks {
+  position:absolute; bottom:1%; left:50%;
+  transform:translateX(-50%);
+  display:flex; gap:2.2vw; z-index:3;
+  transition:opacity 0.5s ease;
+}
+.qrItem { text-align:center; color:#fff; font-size:1vw; }
+.qrItem img { width:5vw; height:auto; border-radius:10px; }
+
+#mainOverlay {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  background:#000 no-repeat center center;
+  background-size:cover;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20;
+  pointer-events:none;
+}
+#mainOverlay.visible { opacity:1; }
+
+#menuScreen {
+  display:none; background:#fff; color:#000;
+  flex-direction:column; z-index:30;
+}
+#menuLogo { width:40%; max-width:500px; margin:5vh 0; }
+.menuButtons {
+  display:flex; flex-direction:row;
+  justify-content:center; align-items:center;
+  gap:5vw; flex-wrap:wrap;
+}
+.menuButton {
+  width:20%; min-width:150px;
+  background:#f5f5f5; border:2px solid #ccc;
+  border-radius:10px; padding:2vh;
+  font-size:1.5vw; color:#000;
+  text-decoration:none; font-weight:700;
+  text-align:center;
+  transition:background 0.3s,transform 0.3s;
+}
+.menuButton:hover { background:#ddd; transform:scale(1.05); }
+#siteFrame { display:none; width:100%; height:80%; border:none; }
+#backBtn, #frameBackBtn, #menuReturnBtn {
+  position:absolute; bottom:5%;
+  background:#ccc; color:#000;
+  padding:1vh 2vh; border-radius:10px;
+  font-size:1.2vw; font-weight:700;
+  cursor:pointer; transition:background 0.3s;
+}
+#backBtn { left:5%; }
+#frameBackBtn { left:5%; display:none; }
+#menuReturnBtn { left:15%; display:none; }
+@media (max-width:768px) {
+  #caption { font-size:6vw; top:30%; }
+  #phoneFooter { font-size:4.5vw; }
+  .menuButton { width:30%; font-size:4vw; }
+  #backBtn,#frameBackBtn,#menuReturnBtn { font-size:4.5vw; }
+}
+</style>
+</head>
+<body>
+
+<div class="screen" id="slideshowScreen">
+  <div id="slidesContainer"></div>
+  <div id="phoneFooter">☎ 03-3372-6530</div>
+  <div id="caption"></div>
+  <div id="qrLinks">
+    <div class="qrItem"><a href="https://www.instagram.com/cycle_center_yamaguchi/" target="_blank"><img src="instagram.jpg"><div>Instagram</div></a></div>
+    <div class="qrItem"><a href="https://x.com/Yamaguchi_Cycle" target="_blank"><img src="X.png"><div>X</div></a></div>
+    <div class="qrItem"><a href="https://www.facebook.com/" target="_blank"><img src="Facebook.png"><div>Facebook</div></a></div>
+    <div class="qrItem"><a href="https://cycle-center-yamaguchi.jimdofree.com/" target="_blank"><img src="HP.png"><div>公式HP</div></a></div>
+  </div>
+</div>
+
+<div id="mainOverlay"></div>
+
+<div id="menuScreen" class="screen">
+  <img id="menuLogo" src="横長ロゴ.jpg" alt="Logo">
+  <iframe id="siteFrame"></iframe>
+  <div id="buttonGroup" class="menuButtons">
+    <a href="#" id="giantBtn" class="menuButton">GIANT</a>
+    <a href="#" data-url="https://www.japan.bianchi.com/" class="menuButton">BIANCHI</a>
+    <a href="#" data-url="https://dahon-intl.jp/" class="menuButton">DAHON</a>
+  </div>
+  <div id="backBtn">←</div>
+  <div id="frameBackBtn">↩</div>
+  <div id="menuReturnBtn">🏠</div>
+</div>
+
+<script>
+const slides = [
+  {img:'横長ロゴ.jpg',     caption:''},
+  {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋'},
+  {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応'},
+  {img:'店舗斜め.JPG',     caption:'修理・点検・カスタムも<br>お任せください'},
+  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください'},
+  {img:'イベント.jpg',     caption:'', vertical:true}
+];
+
+const slidesContainer = document.getElementById('slidesContainer');
+slides.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'slide';
+  if (s.vertical) el.classList.add('vertical');
+  el.style.backgroundImage = `url('${s.img}')`;
+  slidesContainer.appendChild(el);
+});
+
+const slideEls  = document.querySelectorAll('.slide');
+const captionEl = document.getElementById('caption');
+const phoneEl   = document.getElementById('phoneFooter');
+const qrEl      = document.getElementById('qrLinks');
+const overlay   = document.getElementById('mainOverlay');
+let current    = 0;
+let slideTimer = null;
+
+function showSlide(i) {
+  slideEls.forEach((el, idx) => {
+    el.style.opacity   = (idx === i) ? '1' : '0';
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    if (idx === i && slides[i].vertical) {
+      el.style.animation = 'verticalPan 20s ease-in-out forwards';
+    }
+  });
+  captionEl.innerHTML = slides[i].caption;
+}
+
+function nextSlide() {
+  current = (current + 1) % slides.length;
+  showSlide(current);
+}
+
+function startSlideshow() {
+  clearInterval(slideTimer);
+  slideTimer = setInterval(nextSlide, 20000);
+}
+
+showSlide(0);
+startSlideshow();
+
+/* 同期 */
+const INDIVIDUAL_MS = 20000;
+const MAIN_MS       = 10000;
+const CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
+let syncPhase  = null;
+let savedSlide = 0;
+
+async function loadMainVisual() {
+  try {
+    const res  = await fetch('playlist.json?t=' + Date.now());
+    const data = await res.json();
+    const main = (data['main'] || [])[0];
+    if (main) overlay.style.backgroundImage = `url('${main.src}')`;
+  } catch(e) {}
+}
+
+function syncTick() {
+  const offset = Date.now() % CYCLE_MS;
+  const isMain = offset >= INDIVIDUAL_MS;
+  if (isMain && syncPhase !== 'main') {
+    syncPhase  = 'main';
+    savedSlide = current;
+    clearInterval(slideTimer);
+    captionEl.style.opacity = '0';
+    phoneEl.style.opacity   = '0';
+    qrEl.style.opacity      = '0';
+    overlay.classList.add('visible');
+  } else if (!isMain && syncPhase !== 'individual') {
+    syncPhase = 'individual';
+    overlay.classList.remove('visible');
+    captionEl.style.opacity = '1';
+    phoneEl.style.opacity   = '1';
+    qrEl.style.opacity      = '1';
+    current = savedSlide;
+    showSlide(current);
+    startSlideshow();
+    loadMainVisual();
+  }
+}
+
+loadMainVisual();
+setInterval(syncTick, 500);
+
+/* メニュー */
+const slideshowScreen = document.getElementById('slideshowScreen');
+const menuScreen      = document.getElementById('menuScreen');
+const iframe          = document.getElementById('siteFrame');
+const buttonGroup     = document.getElementById('buttonGroup');
+const frameBackBtn    = document.getElementById('frameBackBtn');
+const menuReturnBtn   = document.getElementById('menuReturnBtn');
+
+slideshowScreen.addEventListener('click', () => {
+  ensureFullscreen();
+  slideshowScreen.style.display = 'none';
+  menuScreen.style.display = 'flex';
+});
+
+document.getElementById('backBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (iframe.style.display === 'block') {
+    iframe.src = '';
+    iframe.style.display = 'none';
+    buttonGroup.style.display = 'flex';
+    document.getElementById('menuLogo').style.display = 'block';
+    frameBackBtn.style.display = 'none';
+    menuReturnBtn.style.display = 'none';
+  } else {
+    menuScreen.style.display = 'none';
+    slideshowScreen.style.display = 'flex';
+    ensureFullscreen();
+  }
+});
+
+document.getElementById('giantBtn').addEventListener('click', e => {
+  e.preventDefault();
+  const newTab = window.open('https://www.giant-bicycles.com/jp', '_blank');
+  const check  = setInterval(() => {
+    if (newTab.closed) {
+      clearInterval(check);
+      menuScreen.style.display = 'none';
+      slideshowScreen.style.display = 'flex';
+      ensureFullscreen();
+    }
+  }, 1000);
+});
+
+document.querySelectorAll('.menuButton[data-url]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    iframe.src = btn.dataset.url;
+    iframe.style.display = 'block';
+    buttonGroup.style.display = 'none';
+    document.getElementById('menuLogo').style.display = 'none';
+    frameBackBtn.style.display = 'block';
+    menuReturnBtn.style.display = 'block';
+  });
+});
+
+frameBackBtn.addEventListener('click', () => iframe.contentWindow.history.back());
+menuReturnBtn.addEventListener('click', () => {
+  iframe.src = '';
+  iframe.style.display = 'none';
+  buttonGroup.style.display = 'flex';
+  document.getElementById('menuLogo').style.display = 'block';
+  frameBackBtn.style.display = 'none';
+  menuReturnBtn.style.display = 'none';
+});
+
+/* フルスクリーン */
+function ensureFullscreen() {
+  const el = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
+});
+setTimeout(ensureFullscreen, 1000);
+</script>
+</body>
+</html>

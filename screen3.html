@@ -214,23 +214,22 @@ async function loadMainVisual() {
 function syncTick() {
   const offset = Date.now() % CYCLE_MS;
   const isMain = offset >= INDIVIDUAL_MS;
+
   if (isMain && syncPhase !== 'main') {
     syncPhase  = 'main';
     savedSlide = current;
-    clearInterval(slideTimer);
+    // slideshowは止めない！オーバーレイで隠すだけ
     captionEl.style.opacity = '0';
     phoneEl.style.opacity   = '0';
     qrEl.style.opacity      = '0';
     overlay.classList.add('visible');
+
   } else if (!isMain && syncPhase !== 'individual') {
     syncPhase = 'individual';
     overlay.classList.remove('visible');
     captionEl.style.opacity = '1';
     phoneEl.style.opacity   = '1';
     qrEl.style.opacity      = '1';
-    current = savedSlide;
-    showSlide(current);
-    startSlideshow();
     loadMainVisual();
   }
 }

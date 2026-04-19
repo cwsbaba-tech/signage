@@ -7,56 +7,40 @@
 <style>
 html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
 .slide {
-  position:fixed; top:0; left:0;
-  width:100%; height:100%;
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
-  opacity:0;
-  transition:opacity 1s ease-in-out;
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  opacity:0; transition:opacity 1s ease-in-out;
 }
 @keyframes verticalPan {
-  0%   { background-position:center top; }
+  0% { background-position:center top; }
   100% { background-position:center bottom; }
 }
 #caption {
-  position:fixed; left:50%; top:25%;
-  transform:translateX(-50%);
+  position:fixed; left:50%; top:25%; transform:translateX(-50%);
   color:#fff; font-weight:700; text-align:center;
   text-shadow:0 4px 12px rgba(0,0,0,0.7);
-  font-size:3vw; line-height:1.4; z-index:10;
-  transition:opacity 0.5s ease;
+  font-size:3vw; line-height:1.4; z-index:10; transition:opacity 0.5s ease;
 }
 #phoneFooter {
-  position:fixed; top:2%; left:50%;
-  transform:translateX(-50%);
+  position:fixed; top:2%; left:50%; transform:translateX(-50%);
   color:#fff; font-weight:bold; font-size:2.5vw;
-  text-shadow:0 0 10px rgba(0,0,0,0.7); z-index:10;
-  transition:opacity 0.5s ease;
+  text-shadow:0 0 10px rgba(0,0,0,0.7); z-index:10; transition:opacity 0.5s ease;
 }
 #qrLinks {
-  position:fixed; bottom:1%; left:50%;
-  transform:translateX(-50%);
-  display:flex; gap:2.2vw; z-index:10;
-  transition:opacity 0.5s ease;
+  position:fixed; bottom:1%; left:50%; transform:translateX(-50%);
+  display:flex; gap:2.2vw; z-index:10; transition:opacity 0.5s ease;
 }
 .qrItem { text-align:center; color:#fff; font-size:1vw; }
 .qrItem img { width:5vw; height:auto; border-radius:10px; }
 #mainOverlay {
-  position:fixed; top:0; left:0;
-  width:100%; height:100%;
-  background:#000 no-repeat center center;
-  background-size:cover;
-  opacity:0;
-  transition:opacity 0.8s ease;
-  z-index:20;
-  pointer-events:none;
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#000 no-repeat center center; background-size:cover;
+  opacity:0; transition:opacity 0.8s ease; z-index:20; pointer-events:none;
 }
 #mainOverlay.visible { opacity:1; }
 </style>
 </head>
 <body>
-
 <div id="phoneFooter">☎ 03-3372-6530</div>
 <div id="caption"></div>
 <div id="qrLinks">
@@ -68,8 +52,112 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
 <div id="mainOverlay"></div>
 
 <script>
-const slides = [
+var slides = [
   {img:'横長ロゴ.jpg',     caption:'',                                            vertical:false},
   {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋',            vertical:false},
   {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応', vertical:false},
-  {img
+  {img:'店舗斜め.jpg',     caption:'修理・点検・カスタムも<br>お任せください',      vertical:false},
+  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください',    vertical:false},
+  {img:'イベント.jpg',     caption:'',                                            vertical:true}
+];
+
+var captionEl = document.getElementById('caption');
+var phoneEl   = document.getElementById('phoneFooter');
+var qrEl      = document.getElementById('qrLinks');
+var overlay   = document.getElementById('mainOverlay');
+
+var slideEls = slides.map(function(s) {
+  var el = document.createElement('div');
+  el.className = 'slide';
+  el.style.backgroundImage = "url('" + s.img + "')";
+  document.body.appendChild(el);
+  return el;
+});
+
+function showSlide(i) {
+  captionEl.style.opacity = '0';
+  slideEls.forEach(function(el, idx) {
+    el.style.opacity = idx === i ? '1' : '0';
+    if (idx === i) {
+      if (slides[i].vertical) {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'verticalPan 20s ease-in-out forwards';
+      } else {
+        el.style.animation = 'none';
+      }
+    }
+  });
+  setTimeout(function() {
+    captionEl.innerHTML = slides[i].caption;
+    captionEl.style.opacity = '1';
+  }, 1000);
+}
+
+var SLIDE_COUNT    = slides.length;
+var SLIDE_DURATION = 20000;
+var INDIVIDUAL_MS  = SLIDE_COUNT * SLIDE_DURATION;
+var MAIN_MS        = 10000;
+var CYCLE_MS       = INDIVIDUAL_MS + MAIN_MS;
+
+var syncPhase    = null;
+var lastSlideIdx = -1;
+
+function loadMainVisual() {
+  fetch('playlist.json?t=' + Date.now())
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var main = (data['main'] || [])[0];
+      if (main) overlay.style.backgroundImage = "url('" + main.src + "')";
+    })
+    .catch(function(e) {});
+}
+
+function tick() {
+  var offset = Date.now() % CYCLE_MS;
+  var isMain = offset >= INDIVIDUAL_MS;
+
+  if (isMain) {
+    if (syncPhase !== 'main') {
+      syncPhase = 'main';
+      captionEl.style.opacity = '0';
+      phoneEl.style.opacity   = '0';
+      qrEl.style.opacity      = '0';
+      overlay.classList.add('visible');
+    }
+  } else {
+    var slideIdx = Math.floor(offset / SLIDE_DURATION) % SLIDE_COUNT;
+    if (syncPhase !== 'individual') {
+      syncPhase = 'individual';
+      overlay.classList.remove('visible');
+      captionEl.style.opacity = '1';
+      phoneEl.style.opacity   = '1';
+      qrEl.style.opacity      = '1';
+      loadMainVisual();
+    }
+    if (slideIdx !== lastSlideIdx) {
+      lastSlideIdx = slideIdx;
+      showSlide(slideIdx);
+    }
+  }
+}
+
+loadMainVisual();
+setInterval(tick, 500);
+
+function ensureFullscreen() {
+  var el = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  }
+}
+document.addEventListener('click', ensureFullscreen, {once:true});
+document.addEventListener('fullscreenchange', function() {
+  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
+});
+setTimeout(ensureFullscreen, 1000);
+</script>
+</body>
+</html>

@@ -6,41 +6,18 @@
 <title>CYCLE CENTER YAMAGUCHI</title>
 <style>
 html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
-.slide.panning {
-  background-repeat: no-repeat;
-  background-size: cover;
-
-  background-position: center bottom; /* 最終値としても固定 */
-
-  animation-name: verticalPan;
-  animation-duration: 20s;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards; /* 終了後に止める */
+.slide {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  opacity:0; transition:opacity 1s ease-in-out;
 }
-
 @keyframes verticalPan {
-  from { background-position: center top; }
-  to   { background-position: center bottom; }
+  0%   { background-position:center top; }
+  100% { background-position:center bottom; }
 }
 .slide.panning {
-  background-repeat: no-repeat;
-  background-size: cover;
-  animation: verticalPan 20s ease-in-out forwards;
-}
-
-@keyframes verticalPan {
-  from { background-position: center 0%; }
-  to   { background-position: center 100%; }
-}
-
-@keyframes verticalPan {
-  from {
-    background-position: center top;     /* 上から開始 */
-  }
-  to {
-    background-position: center bottom;  /* 一番下で止める */
-  }
+  background-size:auto 150%;
+  animation:verticalPan 20s ease-in-out forwards;
 }
 #caption {
   position:fixed; left:50%; top:25%; transform:translateX(-50%);

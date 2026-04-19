@@ -12,8 +12,12 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
   opacity:0; transition:opacity 1s ease-in-out;
 }
 @keyframes verticalPan {
-  0% { background-position:center top; }
+  0%   { background-position:center top; }
   100% { background-position:center bottom; }
+}
+.slide.panning {
+  background-size:auto 150%;
+  animation:verticalPan 20s ease-in-out forwards;
 }
 #caption {
   position:fixed; left:50%; top:25%; transform:translateX(-50%);
@@ -34,7 +38,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
 .qrItem img { width:5vw; height:auto; border-radius:10px; }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#000 no-repeat center center; background-size:cover;
+  background:#000 no-repeat center center; background-size:contain;
   opacity:0; transition:opacity 0.8s ease; z-index:20; pointer-events:none;
 }
 #mainOverlay.visible { opacity:1; }
@@ -53,7 +57,6 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
 
 <script>
 var slides = [
-  {img:'横長ロゴ.jpg',     caption:'',                                            vertical:false},
   {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋',            vertical:false},
   {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応', vertical:false},
   {img:'店舗斜め.jpg',     caption:'修理・点検・カスタムも<br>お任せください',      vertical:false},
@@ -77,15 +80,19 @@ var slideEls = slides.map(function(s) {
 function showSlide(i) {
   captionEl.style.opacity = '0';
   slideEls.forEach(function(el, idx) {
-    el.style.opacity = idx === i ? '1' : '0';
     if (idx === i) {
+      el.style.opacity = '1';
       if (slides[i].vertical) {
-        el.style.animation = 'none';
+        el.classList.remove('panning');
         void el.offsetWidth;
-        el.style.animation = 'verticalPan 20s ease-in-out forwards';
+        el.classList.add('panning');
       } else {
-        el.style.animation = 'none';
+        el.classList.remove('panning');
+        el.style.backgroundSize = 'cover';
       }
+    } else {
+      el.style.opacity = '0';
+      el.classList.remove('panning');
     }
   });
   setTimeout(function() {

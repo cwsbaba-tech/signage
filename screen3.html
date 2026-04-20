@@ -79,25 +79,11 @@ function showSlide(i) {
     if (idx === i) {
       el.style.opacity = '1';
       if (slides[i].vertical) {
-        // 縦長画像：画像の実サイズで縦にパン
-        var img = new Image();
-        img.onload = function() {
-          // 画像の縦横比を計算
-          var imgRatio = img.naturalWidth / img.naturalHeight;
-          var screenRatio = window.innerWidth / window.innerHeight;
-          if (imgRatio < screenRatio) {
-            // 画像が画面より縦長：横幅に合わせてbackground-size指定
-            el.style.backgroundSize = '100% auto';
-          } else {
-            el.style.backgroundSize = 'cover';
-          }
-          el.style.backgroundPosition = 'center top';
-          // アニメーションリセット
-          el.style.animation = 'none';
-          void el.offsetWidth;
-          el.style.animation = 'verticalPan 20s ease-in-out forwards';
-        };
-        img.src = slides[i].img;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center top';
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'verticalPan 20s ease-in-out forwards';
       } else {
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
@@ -106,6 +92,8 @@ function showSlide(i) {
     } else {
       el.style.opacity = '0';
       el.style.animation = 'none';
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
     }
   });
   setTimeout(function() {
@@ -113,7 +101,6 @@ function showSlide(i) {
     captionEl.style.opacity = '1';
   }, 1000);
 }
-
 var SLIDE_COUNT    = slides.length;
 var SLIDE_DURATION = 20000;
 var INDIVIDUAL_MS  = SLIDE_COUNT * SLIDE_DURATION;

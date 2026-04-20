@@ -184,7 +184,7 @@ function showSlide(i) {
     el.style.animation = 'none';
     void el.offsetWidth;
     if (idx === i && slides[i].vertical) {
-      el.style.animation = 'verticalPan 20s linear forwards';
+      el.style.animation = 'verticalPan 20s ease-in-out forwards';
     }
   });
   captionEl.innerHTML = slides[i].caption;

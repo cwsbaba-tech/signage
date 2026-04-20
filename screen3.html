@@ -11,16 +11,6 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#000; over
   background-size:cover; background-position:center; background-repeat:no-repeat;
   opacity:0; transition:opacity 1s ease-in-out;
 }
-@keyframes verticalPan {
-  0%   { background-position: center top; }
-  95%  { background-position: center bottom; }
-  100% { background-position: center bottom; }
-}
-.slide {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background-size:cover; background-position:center; background-repeat:no-repeat;
-  opacity:0; transition:opacity 1s ease-in-out;
-}
 #caption {
   position:fixed; left:50%; top:25%; transform:translateX(-50%);
   color:#fff; font-weight:700; text-align:center;
@@ -62,7 +52,7 @@ var slides = [
   {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋',            vertical:false},
   {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応', vertical:false},
   {img:'店舗斜め.jpg',     caption:'修理・点検・カスタムも<br>お任せください',      vertical:false},
-  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください',    vertical:false},
+  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相断ください',    vertical:false},
   {img:'イベント.jpg',     caption:'',                                            vertical:true}
 ];
 
@@ -79,26 +69,41 @@ var slideEls = slides.map(function(s) {
   return el;
 });
 
+// パン用タイマー
+var panTimer = null;
+
+function startPan(el) {
+  // パンをリセット
+  el.style.backgroundPosition = 'center 0%';
+  var startTime = Date.now();
+  var duration  = 20000; // 20秒でパン
+  clearInterval(panTimer);
+  panTimer = setInterval(function() {
+    var elapsed = Date.now() - startTime;
+    var progress = Math.min(elapsed / duration, 1); // 0〜1
+    var pct = progress * 100; // 0%〜100%
+    el.style.backgroundPosition = 'center ' + pct + '%';
+    if (progress >= 1) {
+      clearInterval(panTimer); // 100%で止める
+    }
+  }, 50); // 50msごとに更新
+}
+
 function showSlide(i) {
   captionEl.style.opacity = '0';
+  clearInterval(panTimer);
   slideEls.forEach(function(el, idx) {
     if (idx === i) {
       el.style.opacity = '1';
       if (slides[i].vertical) {
         el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center top';
-        el.style.animation = 'none';
-        void el.offsetWidth;
-        el.style.animation = 'verticalPan 20s ease-in-out forwards';
+        startPan(el);
       } else {
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
-        el.style.animation = 'none';
       }
     } else {
       el.style.opacity = '0';
-      el.style.animation = 'none';
-      el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
     }
   });
@@ -107,6 +112,7 @@ function showSlide(i) {
     captionEl.style.opacity = '1';
   }, 1000);
 }
+
 var SLIDE_COUNT    = slides.length;
 var SLIDE_DURATION = 20000;
 var INDIVIDUAL_MS  = SLIDE_COUNT * SLIDE_DURATION;
@@ -133,6 +139,7 @@ function tick() {
   if (isMain) {
     if (syncPhase !== 'main') {
       syncPhase = 'main';
+      clearInterval(panTimer);
       captionEl.style.opacity = '0';
       phoneEl.style.opacity   = '0';
       qrEl.style.opacity      = '0';

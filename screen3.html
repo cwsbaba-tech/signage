@@ -5,122 +5,202 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>CYCLE CENTER YAMAGUCHI</title>
 <style>
-html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
-.slide {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background-size:cover; background-position:center; background-repeat:no-repeat;
-  opacity:0; transition:opacity 1s ease-in-out;
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background: #000;
+  font-family: "Noto Sans JP", sans-serif;
+  overflow: hidden;
 }
+.screen {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+}
+#startOverlay {
+  position: fixed; inset: 0;
+  background: #000; color: #fff;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  z-index: 9999; cursor: pointer; text-align: center;
+}
+#startOverlay h1 { font-size: 3vw; margin-bottom: 2vh; }
+#startOverlay p  { font-size: 2vw; opacity: 0.8; }
+
+.slide {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+@keyframes verticalPan {
+  0%   { background-position: center top; }
+  100% { background-position: center bottom; }
+}
+.slide.vertical { animation: verticalPan 20s linear forwards; }
+
 #caption {
-  position:fixed; left:50%; top:25%; transform:translateX(-50%);
-  color:#fff; font-weight:700; text-align:center;
-  text-shadow:0 4px 12px rgba(0,0,0,0.7);
-  font-size:3vw; line-height:1.4; z-index:10; transition:opacity 0.5s ease;
+  position: absolute; left: 50%; top: 25%;
+  transform: translateX(-50%);
+  color: #fff; font-weight: 700; text-align: center;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.7);
+  font-size: 3vw; line-height: 1.4; z-index: 2;
+  transition: opacity 0.5s ease;
 }
 #phoneFooter {
-  position:fixed; top:2%; left:50%; transform:translateX(-50%);
-  color:#fff; font-weight:bold; font-size:2.5vw;
-  text-shadow:0 0 10px rgba(0,0,0,0.7); z-index:10; transition:opacity 0.5s ease;
+  position: absolute; top: 2%; left: 50%;
+  transform: translateX(-50%);
+  color: #fff; font-weight: bold; font-size: 2.5vw;
+  text-shadow: 0 0 10px rgba(0,0,0,0.7); z-index: 2;
+  transition: opacity 0.5s ease;
 }
 #qrLinks {
-  position:fixed; bottom:1%; left:50%; transform:translateX(-50%);
-  display:flex; gap:2.2vw; z-index:10; transition:opacity 0.5s ease;
+  position: absolute; bottom: 1%; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 2.2vw; z-index: 3;
+  transition: opacity 0.5s ease;
 }
-.qrItem { text-align:center; color:#fff; font-size:1vw; }
-.qrItem img { width:5vw; height:auto; border-radius:10px; }
+.qrItem { text-align: center; color: #fff; font-size: 1vw; }
+.qrItem img { width: 5vw; height: auto; border-radius: 10px; }
+
+/* 同期用オーバーレイ */
 #mainOverlay {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#000 no-repeat center center; background-size:contain;
-  opacity:0; transition:opacity 0.8s ease; z-index:20; pointer-events:none;
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #000 no-repeat center center;
+  background-size: contain;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  z-index: 20; pointer-events: none;
 }
-#mainOverlay.visible { opacity:1; }
+#mainOverlay.visible { opacity: 1; }
+
+#menuScreen {
+  display: none; background: #fff; color: #000; flex-direction: column;
+}
+#menuLogo { width: 40%; max-width: 500px; margin: 5vh 0; }
+.menuButtons {
+  display: flex; flex-direction: row;
+  justify-content: center; align-items: center;
+  gap: 5vw; flex-wrap: wrap;
+}
+.menuButton {
+  width: 20%; min-width: 180px;
+  background: #f5f5f5; border: 2px solid #ccc;
+  border-radius: 20px; padding: 3vh;
+  font-size: 1.8vw; color: #000;
+  text-decoration: none; font-weight: 700; text-align: center;
+  transition: background 0.3s, transform 0.3s;
+}
+.menuButton:hover { background: #ddd; transform: scale(1.05); }
+#backBtn {
+  position: absolute; bottom: 5%; left: 5%;
+  background: #ccc; color: #000;
+  padding: 2vh 4vh; border-radius: 20px;
+  font-size: 2vw; font-weight: 700;
+  cursor: pointer; transition: background 0.3s;
+}
+#backBtn:hover { background: #aaa; }
+
+@media (max-width: 768px) {
+  #caption { font-size: 6vw; top: 30%; }
+  #phoneFooter { font-size: 4.5vw; }
+  .menuButton { width: 30%; font-size: 4vw; }
+  #backBtn { font-size: 4.5vw; }
+  #startOverlay h1 { font-size: 7vw; }
+  #startOverlay p  { font-size: 4vw; }
+}
 </style>
 </head>
 <body>
-<div id="phoneFooter">☎ 03-3372-6530</div>
-<div id="caption"></div>
-<div id="qrLinks">
-  <div class="qrItem"><a href="https://www.instagram.com/cycle_center_yamaguchi/" target="_blank"><img src="instagram.jpg"><div>Instagram</div></a></div>
-  <div class="qrItem"><a href="https://x.com/Yamaguchi_Cycle" target="_blank"><img src="X.png"><div>X</div></a></div>
-  <div class="qrItem"><a href="https://www.facebook.com/" target="_blank"><img src="Facebook.png"><div>Facebook</div></a></div>
-  <div class="qrItem"><a href="https://cycle-center-yamaguchi.jimdofree.com/" target="_blank"><img src="HP.png"><div>公式HP</div></a></div>
+
+<div id="startOverlay">
+  <h1>タップしてスタート</h1>
+  <p>全画面表示でスライドショーを開始します</p>
 </div>
+
+<div class="screen" id="slideshowScreen" style="display:none;">
+  <div id="slidesContainer"></div>
+  <div id="phoneFooter">☎ 03-3372-6530</div>
+  <div id="caption"></div>
+  <div id="qrLinks">
+    <div class="qrItem"><a href="https://www.instagram.com/cycle_center_yamaguchi/" target="_blank"><img src="instagram.jpg"><div>Instagram</div></a></div>
+    <div class="qrItem"><a href="https://x.com/Yamaguchi_Cycle" target="_blank"><img src="X.png"><div>X</div></a></div>
+    <div class="qrItem"><a href="https://www.facebook.com/" target="_blank"><img src="Facebook.png"><div>Facebook</div></a></div>
+    <div class="qrItem"><a href="https://cycle-center-yamaguchi.jimdofree.com/" target="_blank"><img src="HP.png"><div>公式HP</div></a></div>
+  </div>
+</div>
+
 <div id="mainOverlay"></div>
+
+<div id="menuScreen" class="screen">
+  <img id="menuLogo" src="横長ロゴ.jpg" alt="Logo">
+  <div class="menuButtons">
+    <a href="https://www.giant-bicycles.com/jp" target="_blank" class="menuButton">GIANT</a>
+    <a href="https://www.japan.bianchi.com/" target="_blank" class="menuButton">BIANCHI</a>
+    <a href="https://dahon-intl.jp/" target="_blank" class="menuButton">DAHON</a>
+  </div>
+  <div id="backBtn">← 戻る</div>
+</div>
 
 <script>
 var slides = [
   {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋',            vertical:false},
   {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応', vertical:false},
   {img:'店舗斜め.jpg',     caption:'修理・点検・カスタムも<br>お任せください',      vertical:false},
-  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相断ください',    vertical:false},
+  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください',    vertical:false},
   {img:'イベント.jpg',     caption:'',                                            vertical:true}
 ];
 
-var captionEl = document.getElementById('caption');
-var phoneEl   = document.getElementById('phoneFooter');
-var qrEl      = document.getElementById('qrLinks');
-var overlay   = document.getElementById('mainOverlay');
+var slidesContainer = document.getElementById('slidesContainer');
+var captionEl       = document.getElementById('caption');
+var phoneEl         = document.getElementById('phoneFooter');
+var qrEl            = document.getElementById('qrLinks');
+var overlay         = document.getElementById('mainOverlay');
+var startOverlay    = document.getElementById('startOverlay');
+var slideshowScreen = document.getElementById('slideshowScreen');
+var menuScreen      = document.getElementById('menuScreen');
 
-var slideEls = slides.map(function(s) {
+slides.forEach(function(s) {
   var el = document.createElement('div');
   el.className = 'slide';
+  if (s.vertical) el.classList.add('vertical');
   el.style.backgroundImage = "url('" + s.img + "')";
-  document.body.appendChild(el);
-  return el;
+  slidesContainer.appendChild(el);
 });
 
-// パン用タイマー
-var panTimer = null;
-
-function startPan(el) {
-  // パンをリセット
-  el.style.backgroundPosition = 'center 0%';
-  var startTime = Date.now();
-  var duration  = 20000; // 20秒でパン
-  clearInterval(panTimer);
-  panTimer = setInterval(function() {
-    var elapsed = Date.now() - startTime;
-    var progress = Math.min(elapsed / duration, 1); // 0〜1
-    var pct = progress * 100; // 0%〜100%
-    el.style.backgroundPosition = 'center ' + pct + '%';
-    if (progress >= 1) {
-      clearInterval(panTimer); // 100%で止める
-    }
-  }, 50); // 50msごとに更新
-}
+var slideEls = document.querySelectorAll('.slide');
+var current  = 0;
+var started  = false;
+var slideInterval = null;
 
 function showSlide(i) {
-  captionEl.style.opacity = '0';
-  clearInterval(panTimer);
   slideEls.forEach(function(el, idx) {
-    if (idx === i) {
-      el.style.opacity = '1';
-      if (slides[i].vertical) {
-        el.style.backgroundSize = 'cover';
-        startPan(el);
-      } else {
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center';
-      }
-    } else {
-      el.style.opacity = '0';
-      el.style.backgroundPosition = 'center';
+    el.style.opacity = (idx === i) ? '1' : '0';
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    if (idx === i && slides[i].vertical) {
+      el.style.animation = 'verticalPan 20s linear forwards';
     }
   });
-  setTimeout(function() {
-    captionEl.innerHTML = slides[i].caption;
-    captionEl.style.opacity = '1';
-  }, 1000);
+  captionEl.innerHTML = slides[i].caption;
 }
 
-var SLIDE_COUNT    = slides.length;
-var SLIDE_DURATION = 20000;
-var INDIVIDUAL_MS  = SLIDE_COUNT * SLIDE_DURATION;
-var MAIN_MS        = 10000;
-var CYCLE_MS       = INDIVIDUAL_MS + MAIN_MS;
+function nextSlide() {
+  current = (current + 1) % slides.length;
+  showSlide(current);
+}
 
-var syncPhase    = null;
-var lastSlideIdx = -1;
+/* ===== 同期 ===== */
+var INDIVIDUAL_MS = slides.length * 20000; // 5枚×20秒=100秒
+var MAIN_MS       = 10000;
+var CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
+var syncPhase     = null;
+var lastSlideIdx  = -1;
 
 function loadMainVisual() {
   fetch('playlist.json?t=' + Date.now())
@@ -133,20 +213,21 @@ function loadMainVisual() {
 }
 
 function tick() {
+  if (!started) return;
   var offset = Date.now() % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
     if (syncPhase !== 'main') {
       syncPhase = 'main';
-      clearInterval(panTimer);
+      clearInterval(slideInterval);
       captionEl.style.opacity = '0';
       phoneEl.style.opacity   = '0';
       qrEl.style.opacity      = '0';
       overlay.classList.add('visible');
     }
   } else {
-    var slideIdx = Math.floor(offset / SLIDE_DURATION) % SLIDE_COUNT;
+    var slideIdx = Math.floor(offset / 20000) % slides.length;
     if (syncPhase !== 'individual') {
       syncPhase = 'individual';
       overlay.classList.remove('visible');
@@ -154,9 +235,13 @@ function tick() {
       phoneEl.style.opacity   = '1';
       qrEl.style.opacity      = '1';
       loadMainVisual();
+      // スライドショー再開
+      clearInterval(slideInterval);
+      slideInterval = setInterval(nextSlide, 20000);
     }
     if (slideIdx !== lastSlideIdx) {
       lastSlideIdx = slideIdx;
+      current = slideIdx;
       showSlide(slideIdx);
     }
   }
@@ -165,6 +250,30 @@ function tick() {
 loadMainVisual();
 setInterval(tick, 500);
 
+/* ===== スタート ===== */
+startOverlay.addEventListener('click', function() {
+  ensureFullscreen();
+  startOverlay.style.display = 'none';
+  slideshowScreen.style.display = 'flex';
+  started = true;
+  showSlide(0);
+  slideInterval = setInterval(nextSlide, 20000);
+});
+
+/* ===== メニュー ===== */
+slideshowScreen.addEventListener('click', function() {
+  ensureFullscreen();
+  slideshowScreen.style.display = 'none';
+  menuScreen.style.display = 'flex';
+});
+
+document.getElementById('backBtn').addEventListener('click', function() {
+  menuScreen.style.display = 'none';
+  slideshowScreen.style.display = 'flex';
+  ensureFullscreen();
+});
+
+/* ===== フルスクリーン ===== */
 function ensureFullscreen() {
   var el = document.documentElement;
   if (!document.fullscreenElement) {
@@ -173,11 +282,9 @@ function ensureFullscreen() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
-document.addEventListener('click', ensureFullscreen, {once:true});
 document.addEventListener('fullscreenchange', function() {
   if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });
-setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
 </html>

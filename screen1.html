@@ -170,6 +170,7 @@ function tick() {
   if (isMain) {
     if (syncPhase !== 'main') {
       syncPhase = 'main';
+      lastContentIdx = -1;
       hideAll();
       overlay.classList.add('visible');
     }
@@ -183,9 +184,13 @@ function tick() {
       lastContentIdx = idx;
       showContent(idx);
     }
+    // 現在のコンテンツのopacityを維持
+    var currentEl = document.getElementById('content_' + idx);
+    if (currentEl && currentEl.style.opacity !== '1') {
+      currentEl.style.opacity = '1';
+    }
   }
 }
-
 setInterval(tick, 500);
 
 document.getElementById('startOverlay').addEventListener('click', function() {

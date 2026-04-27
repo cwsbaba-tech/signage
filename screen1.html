@@ -5,43 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 1</title>
 <style>
-html, body {
-  margin:0; padding:0;
-  width:100%; height:100%;
-  background:#000; overflow:hidden;
+html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
+
+/* 通常スライド（横長素材の左半分） */
+.slide {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background-repeat:no-repeat;
+  background-position:left center;
+  background-size:200% auto;
+  opacity:0;
+  transition:opacity 1s ease-in-out;
 }
-#wrap {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
+.slide.video-slide {
+  background:none;
 }
 video {
-  position:absolute;
-  top:0; left:0;
-  width:200%;
-  height:100%;
+  position:fixed; top:0; left:0;
+  width:200%; height:100%;
   object-fit:cover;
   object-position:left center;
-  display:none;
+  opacity:0;
+  transition:opacity 1s ease-in-out;
 }
-.slide {
-  position:absolute;
-  top:0; left:0;
-  width:100%; height:100%;
+video.visible { opacity:1; }
+
+/* ロゴオーバーレイ（四角ロゴ左半分・白背景） */
+#mainOverlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#fff;
+  background-image:url('四角ロゴ.PNG');
+  background-repeat:no-repeat;
   background-size:200% auto;
   background-position:left center;
-  background-repeat:no-repeat;
-  display:none;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20; pointer-events:none;
 }
-#mainOverlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:#fff url('四角ロゴ.PNG') no-repeat left center;
-  background-size:150% auto;
-  display:none;
-  z-index:20;
-}
+#mainOverlay.visible { opacity:1; }
+
 #startOverlay {
   position:fixed; inset:0;
   background:#000; color:#fff;
@@ -54,41 +55,47 @@ video {
 </style>
 </head>
 <body>
+
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
   <p>全画面表示で開始します</p>
 </div>
-<div id="wrap">
-  <video id="v0" src="video1.mp4" muted playsinline webkit-playsinline preload="auto"></video>
-  <video id="v1" src="video2.mp4" muted playsinline webkit-playsinline preload="auto"></video>
-  <video id="v2" src="video3.mp4" muted playsinline webkit-playsinline preload="auto"></video>
-  <div id="s0" class="slide" style="background-image:url('calendar.jpg')"></div>
-</div>
 <div id="mainOverlay"></div>
 
 <script>
+// コンテンツ定義
+// type: 'video' または 'image'
+// src: ファイル名
+// duration: 表示秒数（ms）
 var contents = [
-  {el: document.getElementById('v0'), type:'video', duration:15000},
-  {el: document.getElementById('v1'), type:'video', duration:15000},
-  {el: document.getElementById('v2'), type:'video', duration:10000},
-  {el: document.getElementById('s0'), type:'image', duration:10000}
+  {type:'video', src:'video1.mp4', duration:15000},
+  {type:'video', src:'video2.mp4', duration:15000},
+  {type:'video', src:'video3.mp4', duration:10000},
+  {type:'image', src:'calendar.jpg', duration:10000}
 ];
 
+// サイクル計算
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
+// = 15+15+10+10 = 50秒
 var MAIN_MS  = 10000;
-var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS; // 60秒
 
+var overlay  = document.getElementById('mainOverlay');
+var started  = false;
+var syncPhase = null;
+var lastContentIdx = -1;
+var currentEl = null;
+
+// 各コンテンツの開始オフセットを事前計算
 var offsets = [];
 var acc = 0;
-contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
+contents.forEach(function(c) {
+  offsets.push(acc);
+  acc += c.duration;
+});
 
-var overlay        = document.getElementById('mainOverlay');
-var started        = false;
-var syncPhase      = null;
-var lastIdx        = -1;
-
-function getIdx(offset) {
+function getContentIdx(offset) {
   for (var i = contents.length - 1; i >= 0; i--) {
     if (offset >= offsets[i]) return i;
   }
@@ -96,21 +103,47 @@ function getIdx(offset) {
 }
 
 function hideAll() {
-  contents.forEach(function(c) {
-    c.el.style.display = 'none';
-    if (c.type === 'video') c.el.pause();
+  // 全動画・画像を非表示
+  document.querySelectorAll('video, .slide').forEach(function(el) {
+    el.style.opacity = '0';
+    if (el.tagName === 'VIDEO') el.pause();
   });
-  overlay.style.display = 'none';
 }
 
 function showContent(i) {
   hideAll();
   var c = contents[i];
-  c.el.style.display = 'block';
-  if (c.type === 'video') {
-    c.el.currentTime = 0;
-    c.el.play();
+  var id = 'content_' + i;
+  var el = document.getElementById(id);
+
+  if (!el) {
+    if (c.type === 'video') {
+      el = document.createElement('video');
+      el.id = id;
+      el.src = c.src;
+      el.muted = true;
+      el.playsInline = true;
+      el.loop = false;
+      document.body.appendChild(el);
+    } else {
+      el = document.createElement('div');
+      el.id = id;
+      el.className = 'slide';
+      el.style.backgroundImage = "url('" + c.src + "')";
+      document.body.appendChild(el);
+    }
   }
+
+  el.style.opacity = '1';
+  if (c.type === 'video') {
+    el.currentTime = 0;
+    el.play();
+  }
+  currentEl = el;
+}
+
+function loadMainVisual() {
+  // 四角ロゴは既にCSSで設定済みなので何もしない
 }
 
 function tick() {
@@ -121,18 +154,17 @@ function tick() {
   if (isMain) {
     if (syncPhase !== 'main') {
       syncPhase = 'main';
-      lastIdx = -1;
       hideAll();
-      overlay.style.display = 'block';
+      overlay.classList.add('visible');
     }
   } else {
-    var idx = getIdx(offset);
+    var idx = getContentIdx(offset);
     if (syncPhase !== 'individual') {
       syncPhase = 'individual';
-      overlay.style.display = 'none';
+      overlay.classList.remove('visible');
     }
-    if (idx !== lastIdx) {
-      lastIdx = idx;
+    if (idx !== lastContentIdx) {
+      lastContentIdx = idx;
       showContent(idx);
     }
   }
@@ -144,8 +176,6 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   ensureFullscreen();
   document.getElementById('startOverlay').style.display = 'none';
   started = true;
-  showContent(0);
-  lastIdx = 0;
 });
 
 function ensureFullscreen() {
@@ -156,9 +186,11 @@ function ensureFullscreen() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
+document.addEventListener('click', ensureFullscreen, {once:true});
 document.addEventListener('fullscreenchange', function() {
   if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });
+setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
 </html>

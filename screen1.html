@@ -172,6 +172,9 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   ensureFullscreen();
   document.getElementById('startOverlay').style.display = 'none';
   started = true;
+  // 最初のコンテンツをすぐに表示（ユーザー操作のタイミングで再生開始）
+  showContent(0);
+  lastContentIdx = 0;
 });
 
 function ensureFullscreen() {

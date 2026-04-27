@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 1</title>
 <style>
-html, body {
+html {
   margin:0; padding:0;
   width:100vw; height:100vh;
   background:#000; overflow:hidden;
 }
-
-/* 画面を90度回転して縦向きに */
 body {
+  margin:0; padding:0;
   width:100vh;
   height:100vw;
   transform:rotate(-90deg);
@@ -21,19 +20,15 @@ body {
   top:100vh;
   left:0;
   overflow:hidden;
+  background:#000;
 }
-
-/* 通常スライド（横長素材の左半分） */
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
   background-position:left center;
   background-size:200% auto;
   opacity:0;
-  transition:opacity 1s ease-in-out;
-}
-.slide.video-slide {
-  background:none;
+  transition:opacity 0.5s ease-in-out;
 }
 video {
   position:fixed; top:0; left:0;
@@ -41,24 +36,20 @@ video {
   object-fit:cover;
   object-position:left center;
   opacity:0;
-  transition:opacity 1s ease-in-out;
+  transition:opacity 0.5s ease-in-out;
 }
-video.visible { opacity:1; }
-
-/* ロゴオーバーレイ（四角ロゴ左半分・白背景） */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff;
   background-image:url('四角ロゴ.PNG');
   background-repeat:no-repeat;
-  background-size:200% auto;
+  background-size:150% auto;
   background-position:left center;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
 }
 #mainOverlay.visible { opacity:1; }
-
 #startOverlay {
   position:fixed; inset:0;
   background:#000; color:#fff;
@@ -79,10 +70,6 @@ video.visible { opacity:1; }
 <div id="mainOverlay"></div>
 
 <script>
-// コンテンツ定義
-// type: 'video' または 'image'
-// src: ファイル名
-// duration: 表示秒数（ms）
 var contents = [
   {type:'video', src:'video1.mp4', duration:15000},
   {type:'video', src:'video2.mp4', duration:15000},
@@ -90,20 +77,16 @@ var contents = [
   {type:'image', src:'calendar.jpg', duration:10000}
 ];
 
-// サイクル計算
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
-// = 15+15+10+10 = 50秒
 var MAIN_MS  = 10000;
-var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS; // 60秒
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
 var overlay  = document.getElementById('mainOverlay');
 var started  = false;
 var syncPhase = null;
 var lastContentIdx = -1;
-var currentEl = null;
 
-// 各コンテンツの開始オフセットを事前計算
 var offsets = [];
 var acc = 0;
 contents.forEach(function(c) {
@@ -111,16 +94,30 @@ contents.forEach(function(c) {
   acc += c.duration;
 });
 
-function getContentIdx(offset) {
-  for (var i = contents.length - 1; i >= 0; i--) {
-    if (offset >= offsets[i]) return i;
+// 全要素をあらかじめ作成
+var elements = contents.map(function(c, i) {
+  var el;
+  if (c.type === 'video') {
+    el = document.createElement('video');
+    el.src = c.src;
+    el.muted = true;
+    el.playsInline = true;
+    el.loop = false;
+    el.setAttribute('playsinline', '');
+    el.setAttribute('webkit-playsinline', '');
+  } else {
+    el = document.createElement('div');
+    el.className = 'slide';
+    el.style.backgroundImage = "url('" + c.src + "')";
   }
-  return 0;
-}
+  el.style.opacity = '0';
+  el.id = 'content_' + i;
+  document.body.appendChild(el);
+  return el;
+});
 
 function hideAll() {
-  // 全動画・画像を非表示
-  document.querySelectorAll('video, .slide').forEach(function(el) {
+  elements.forEach(function(el) {
     el.style.opacity = '0';
     if (el.tagName === 'VIDEO') el.pause();
   });
@@ -128,38 +125,20 @@ function hideAll() {
 
 function showContent(i) {
   hideAll();
-  var c = contents[i];
-  var id = 'content_' + i;
-  var el = document.getElementById(id);
-
-  if (!el) {
-    if (c.type === 'video') {
-      el = document.createElement('video');
-      el.id = id;
-      el.src = c.src;
-      el.muted = true;
-      el.playsInline = true;
-      el.loop = false;
-      document.body.appendChild(el);
-    } else {
-      el = document.createElement('div');
-      el.id = id;
-      el.className = 'slide';
-      el.style.backgroundImage = "url('" + c.src + "')";
-      document.body.appendChild(el);
-    }
-  }
-
+  var el = elements[i];
+  var c  = contents[i];
   el.style.opacity = '1';
   if (c.type === 'video') {
     el.currentTime = 0;
-    el.play();
+    el.play().catch(function(e) { console.log(e); });
   }
-  currentEl = el;
 }
 
-function loadMainVisual() {
-  // 四角ロゴは既にCSSで設定済みなので何もしない
+function getContentIdx(offset) {
+  for (var i = contents.length - 1; i >= 0; i--) {
+    if (offset >= offsets[i]) return i;
+  }
+  return 0;
 }
 
 function tick() {
@@ -184,13 +163,9 @@ function tick() {
       lastContentIdx = idx;
       showContent(idx);
     }
-    // 現在のコンテンツのopacityを維持
-    var currentEl = document.getElementById('content_' + idx);
-    if (currentEl && currentEl.style.opacity !== '1') {
-      currentEl.style.opacity = '1';
-    }
   }
 }
+
 setInterval(tick, 500);
 
 document.getElementById('startOverlay').addEventListener('click', function() {

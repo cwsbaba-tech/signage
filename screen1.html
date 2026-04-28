@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1 - Left Rotated</title>
+<title>SCREEN 1</title>
 <style>
 html {
   margin:0; padding:0;
@@ -12,10 +12,8 @@ html {
 }
 body {
   margin:0; padding:0;
-  /* 回転後の描画領域を確保 */
   width:100vh;
   height:100vw;
-  /* 左に90度回転 */
   transform:rotate(-90deg);
   transform-origin:left top;
   position:absolute;
@@ -96,6 +94,7 @@ contents.forEach(function(c) {
   acc += c.duration;
 });
 
+// 全要素をあらかじめ作成
 var elements = contents.map(function(c, i) {
   var el;
   if (c.type === 'video') {

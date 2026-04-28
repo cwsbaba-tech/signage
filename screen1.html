@@ -12,16 +12,20 @@ html {
 }
 body {
   margin:0; padding:0;
-  width:100vh;
-  height:100vw;
-  /* 右に90度回転 */
-  transform:rotate(90deg);
-  transform-origin:left top;
-  position:absolute;
-  top:0;
-  left:100vw;
-  overflow:hidden;
-  background:#000;
+  /* 180度回転させるので、サイズは画面そのままに合わせる */
+  width:100vw;
+  height:100vh;
+  
+  /* 180度回転の設定 */
+  transform: rotate(180deg);
+  transform-origin: center center;
+  
+  position: absolute;
+  top: 0;
+  left: 0;
+  
+  overflow: hidden;
+  background: #000;
 }
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;

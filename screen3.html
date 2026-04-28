@@ -227,7 +227,7 @@ function tick() {
       overlay.classList.add('visible');
     }
   } else {
-    var slideIdx = Math.floor(offset / 20000) % slides.length;
+    var slideIdx = Math.floor(offset / 10000) % slides.length;
     if (syncPhase !== 'individual') {
       syncPhase = 'individual';
       overlay.classList.remove('visible');

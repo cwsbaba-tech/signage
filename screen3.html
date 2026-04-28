@@ -237,7 +237,7 @@ function tick() {
       loadMainVisual();
       // スライドショー再開
       clearInterval(slideInterval);
-      slideInterval = setInterval(nextSlide, 20000);
+      slideInterval = setInterval(nextSlide, 10000);
     }
     if (slideIdx !== lastSlideIdx) {
       lastSlideIdx = slideIdx;

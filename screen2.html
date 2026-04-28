@@ -128,9 +128,9 @@ var elements = contents.map(function(c, i) {
   if (c.type === 'video') {
     el = document.createElement('video');
     el.src = c.src;
-    el.muted = true;
-    el.playsInline = true;
-    el.loop = false;
+    el.muted = true;       // 必須：ミュートでないと自動再生されません
+    el.playsInline = true; // 必須：iOSのブラウザ再生に必要
+    el.preload = 'auto';   // 事前に読み込みを開始
     if (c.className) el.classList.add(c.className);
   } else {
     el = document.createElement('div');

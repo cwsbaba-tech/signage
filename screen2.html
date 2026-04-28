@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1 - Multi Rotate Fixed</title>
+<title>SCREEN - Split Left/Right</title>
+
 <style>
 html {
   margin:0; padding:0;
@@ -22,6 +23,12 @@ body {
   overflow:hidden;
   background:#000;
 }
+
+/* side はJSで左右に入れ替えます（初期値は左扱いにしておきます） */
+.slide, video, #mainOverlay {
+  clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%); /* left default */
+}
+
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
@@ -29,9 +36,8 @@ body {
   background-size:cover;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
-  /* 💡 画面を縦に2分割し、見た目上の「左半分」だけを切り抜いて表示 */
-  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
 }
+
 video {
   position:fixed; top:0; left:0;
   width:100%; height:100%;
@@ -40,18 +46,11 @@ video {
   opacity:0;
   transition:opacity 0.5s ease-in-out;
   transform-origin: center center;
-  /* 💡 画面を縦に2分割し、見た目上の「左半分」だけを切り抜いて表示 */
-  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
 }
 
-/* ==============================================
-   個別コンテンツごとの回転・補正 CSS
-   ============================================== */
 .rotate-90-fix { transform: rotate(90deg) scale(1.5); }
 .rotate-neg90-fix { transform: rotate(-90deg) scale(1.5); }
 .rotate-180-fix { transform: rotate(180deg); }
-.image-fix { }
-/* ============================================== */
 
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
@@ -63,9 +62,8 @@ video {
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
-  /* 💡 オーバーレイも左半分に制限 */
-  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
 }
+
 #mainOverlay.visible { opacity:1; }
 
 #startOverlay {
@@ -79,8 +77,8 @@ video {
 #startOverlay p  { font-size:4vw; opacity:0.8; }
 </style>
 </head>
-<body>
 
+<body>
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
   <p>全画面表示で開始します</p>
@@ -88,6 +86,19 @@ video {
 <div id="mainOverlay"></div>
 
 <script>
+var params = new URLSearchParams(location.search);
+var side = (params.get('side') || 'right').toLowerCase(); // right default
+
+// sideごとのclip-path（左右分割：幅方向で切る）
+var clipLeft  = 'polygon(0 0, 50% 0, 50% 100%, 0 100%)';
+var clipRight = 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)';
+
+// clip-pathを反映
+var clip = (side === 'left') ? clipLeft : clipRight;
+document.querySelectorAll('.slide, video, #mainOverlay').forEach(function(el) {
+  el.style.clipPath = clip;
+});
+
 var contents = [
   {type:'video', src:'video1.mp4', duration:15000, className:'rotate-90-fix'},
   {type:'video', src:'video2.mp4', duration:15000, className:'rotate-neg90-fix'},
@@ -132,6 +143,9 @@ var elements = contents.map(function(c, i) {
   document.body.appendChild(el);
   return el;
 });
+
+// 追加で、生成後要素にもclipを適用（念のため）
+elements.forEach(function(el){ el.style.clipPath = clip; });
 
 function hideAll() {
   elements.forEach(function(el) {

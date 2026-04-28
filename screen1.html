@@ -1,65 +1,199 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1</title>
+<title>CYCLE CENTER YAMAGUCHI</title>
 <style>
-html, body {
-  margin:0; padding:0;
-  width:100%; height:100%;
-  background:#000; overflow:hidden;
-}
-.slide {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background-repeat:no-repeat;
-  background-position:left center;
-  background-size:200% auto;
-  display:none;
-}
-video {
-  position:fixed; top:0; left:0;
-  width:200%; height:100%;
-  object-fit:cover;
-  object-position:left center;
-  display:none;
-}
-#mainOverlay {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#fff url('四角ロゴ.PNG') no-repeat left center;
-  background-size:150% auto;
-  display:none;
-  z-index:20;
-}
-#startOverlay {
-  position:fixed; inset:0;
-  background:#000; color:#fff;
-  display:flex; flex-direction:column;
-  justify-content:center; align-items:center;
-  z-index:9999; cursor:pointer; text-align:center;
-}
-#startOverlay h1 { font-size:7vw; margin-bottom:2vh; }
-#startOverlay p  { font-size:4vw; opacity:0.8; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:"Noto Sans JP",sans-serif; }
+
+  .slide {
+    position:absolute; inset:0;
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+    opacity:0;
+    transition: opacity 1s ease-in-out;
+  }
+  @keyframes verticalPan {
+    0%   { background-position: center top; }
+    100% { background-position: center bottom; }
+  }
+  .slide.vertical { animation: verticalPan 20s ease-in-out forwards; }
+
+  #caption {
+    position:absolute; left:50%; top:25%;
+    transform:translateX(-50%);
+    color:#fff; font-weight:700; text-align:center;
+    text-shadow:0 4px 12px rgba(0,0,0,0.7);
+    font-size:3vw; line-height:1.4; z-index:2;
+    transition: opacity 0.5s ease;
+  }
+  #phoneFooter {
+    position:absolute; top:2%; left:50%;
+    transform:translateX(-50%);
+    color:#fff; font-weight:bold; font-size:2.5vw;
+    text-shadow:0 0 10px rgba(0,0,0,0.7);
+    z-index:2; transition: opacity 0.5s ease;
+  }
+  #qrLinks {
+    position:absolute; bottom:1%; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:2.2vw; z-index:3;
+    transition: opacity 0.5s ease;
+  }
+  .qrItem { text-align:center; color:#fff; font-size:1vw; }
+  .qrItem img { width:5vw; height:auto; border-radius:10px; }
+
+  /* メインビジュアル用オーバーレイ */
+  #mainOverlay {
+    position:absolute; inset:0;
+    background:#000;
+    background-size:contain;
+    background-position:center center;
+    background-repeat:no-repeat;
+    opacity:0;
+    transition: opacity 0.8s ease;
+    z-index:10;
+  }
+  #mainOverlay.visible { opacity:1; }
 </style>
 </head>
 <body>
 
-<div id="startOverlay">
-  <h1>タップしてスタート</h1>
-  <p>全画面表示で開始します</p>
+<div id="slidesContainer"></div>
+<div id="phoneFooter">☎ 03-3372-6530</div>
+<div id="caption"></div>
+<div id="qrLinks">
+  <div class="qrItem"><a href="https://www.instagram.com/cycle_center_yamaguchi/" target="_blank"><img src="Instagram.jpg"><div>Instagram</div></a></div>
+  <div class="qrItem"><a href="https://x.com/Yamaguchi_Cycle" target="_blank"><img src="X.png"><div>X</div></a></div>
+  <div class="qrItem"><a href="https://www.facebook.com/" target="_blank"><img src="Facebook.png"><div>Facebook</div></a></div>
+  <div class="qrItem"><a href="https://cycle-center-yamaguchi.jimdofree.com/" target="_blank"><img src="HP.png"><div>公式HP</div></a></div>
 </div>
+
+<!-- 同期用メインビジュアルオーバーレイ -->
 <div id="mainOverlay"></div>
 
 <script>
-var contents = [
-  {type:'image', src:'calendar.jpg', duration:10000}
+/* ===== スライドショー設定 ===== */
+const slides = [
+  {img:'横長ロゴ.jpg',     caption:''},
+  {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋'},
+  {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応'},
+  {img:'店舗斜め.JPG',     caption:'修理・点検・カスタムも<br>お任せください'},
+  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください'},
+  {img:'イベント.jpg',     caption:'', vertical:true}
 ];
 
-var INDIVIDUAL_MS = 0;
-contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
-var MAIN_MS  = 10000;
-var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+const container  = document.getElementById('slidesContainer');
+const captionEl  = document.getElementById('caption');
+const phoneEl    = document.getElementById('phoneFooter');
+const qrEl       = document.getElementById('qrLinks');
+const overlay    = document.getElementById('mainOverlay');
 
-var offsets = [];
-var acc = 0;
-contents.forEach(funct
+slides.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'slide' + (s.vertical ? ' vertical' : '');
+  el.style.backgroundImage = `url('${s.img}')`;
+  container.appendChild(el);
+});
+
+const slideEls = document.querySelectorAll('.slide');
+let current = 0;
+let slideInterval = null;
+
+function showSlide(i) {
+  slideEls.forEach((el, idx) => {
+    el.style.opacity = (i === idx) ? 1 : 0;
+    if (i === idx && slides[i].vertical) {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'verticalPan 20s ease-in-out forwards';
+    }
+  });
+  captionEl.innerHTML = slides[i].caption;
+}
+
+function nextSlide() {
+  current = (current + 1) % slides.length;
+  showSlide(current);
+}
+
+function startSlideshow() {
+  clearInterval(slideInterval);
+  slideInterval = setInterval(nextSlide, 20000);
+}
+
+showSlide(0);
+startSlideshow();
+
+/* ===== 全画面同期（20〜30秒） ===== */
+const INDIVIDUAL_MS = 20000;
+const MAIN_MS       = 10000;
+const CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
+
+let syncPhase   = null;
+let savedSlide  = 0;
+let mainVisual  = null; // playlist.jsonから取得
+
+async function loadMainVisual() {
+  try {
+    const res  = await fetch('/signage/playlist.json?t=' + Date.now());
+    const data = await res.json();
+    mainVisual = (data['main'] || [])[0] || null;
+    if (mainVisual) {
+      // 画像をプリロード
+      overlay.style.backgroundImage = `url('/signage/${mainVisual.src}')`;
+    }
+  } catch(e) { console.log('playlist読み込みエラー', e); }
+}
+
+function syncTick() {
+  const offset = Date.now() % CYCLE_MS;
+  const isMain = offset >= INDIVIDUAL_MS;
+
+  if (isMain && syncPhase !== 'main') {
+    syncPhase  = 'main';
+    savedSlide = current;
+    clearInterval(slideInterval);
+    // UI要素を隠す
+    captionEl.style.opacity = '0';
+    phoneEl.style.opacity   = '0';
+    qrEl.style.opacity      = '0';
+    // オーバーレイ表示
+    overlay.classList.add('visible');
+
+  } else if (!isMain && syncPhase !== 'individual') {
+    syncPhase = 'individual';
+    // オーバーレイを隠す
+    overlay.classList.remove('visible');
+    // UI要素を戻す
+    captionEl.style.opacity = '1';
+    phoneEl.style.opacity   = '1';
+    qrEl.style.opacity      = '1';
+    // スライドショー再開
+    current = savedSlide;
+    showSlide(current);
+    startSlideshow();
+    // mainビジュアル更新チェック
+    loadMainVisual();
+  }
+}
+
+loadMainVisual();
+setInterval(syncTick, 500);
+
+/* ===== フルスクリーン ===== */
+function ensureFullscreen() {
+  const el = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  }
+}
+document.addEventListener('click', ensureFullscreen, { once: true });
+setTimeout(ensureFullscreen, 1000);
+</script>
+</body>
+</html>

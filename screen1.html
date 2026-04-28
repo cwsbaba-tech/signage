@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1</title>
+<title>SCREEN 1 - Right Rotated</title>
 <style>
 html {
   margin:0; padding:0;
@@ -14,11 +14,12 @@ body {
   margin:0; padding:0;
   width:100vh;
   height:100vw;
-  transform:rotate(-90deg);
+  /* 右に90度回転 */
+  transform:rotate(90deg);
   transform-origin:left top;
   position:absolute;
-  top:100vh;
-  left:0;
+  top:0;
+  left:100vw;
   overflow:hidden;
   background:#000;
 }
@@ -70,6 +71,7 @@ video {
 <div id="mainOverlay"></div>
 
 <script>
+/* JavaScript部分は変更なし（サイクルのロジックはそのまま機能します） */
 var contents = [
   {type:'video', src:'video1.mp4', duration:15000},
   {type:'video', src:'video2.mp4', duration:15000},
@@ -94,7 +96,6 @@ contents.forEach(function(c) {
   acc += c.duration;
 });
 
-// 全要素をあらかじめ作成
 var elements = contents.map(function(c, i) {
   var el;
   if (c.type === 'video') {

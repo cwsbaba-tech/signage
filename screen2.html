@@ -25,18 +25,18 @@ body {
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
-  /* 💡 右半分を表示 */
-  background-position:right center;
+  /* 💡 左半分を表示 */
+  background-position:left center;
   background-size:200% auto;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
 video {
   position:fixed; top:0; left:0;
-  /* 💡 幅を200%にして右寄せにすることで、右半分を表示 */
+  /* 💡 幅を200%にして左寄せにすることで、左半分を表示 */
   width:200%; height:100%;
   object-fit:cover;
-  object-position:right center;
+  object-position:left center;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
   transform-origin: center center;
@@ -57,8 +57,8 @@ video {
   background-image:url('四角ロゴ.PNG');
   background-repeat:no-repeat;
   background-size:150% auto;
-  /* 💡 オーバーレイも右側に合わせる */
-  background-position:right center;
+  /* 💡 オーバーレイも左側に合わせる */
+  background-position:left center;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;

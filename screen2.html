@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1 - Left Rotated</title>
+<title>SCREEN 2 - Fixed</title>
 <style>
 html {
   margin:0; padding:0;
@@ -12,10 +12,8 @@ html {
 }
 body {
   margin:0; padding:0;
-  /* 回転後の描画領域を確保 */
   width:100vh;
   height:100vw;
-  /* 左に90度回転 */
   transform:rotate(-90deg);
   transform-origin:left top;
   position:absolute;
@@ -27,6 +25,7 @@ body {
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
+  /* 右半分を表示 */
   background-position:right center;
   background-size:200% auto;
   opacity:0;
@@ -34,24 +33,35 @@ body {
 }
 video {
   position:fixed; top:0; left:0;
-  width:100%; height:100%;
-  object-fit:contain;
-  background:#000;
+  /* 右半分を出すために幅を200%にし、右寄せにする */
+  width:200%; height:100%;
+  object-fit:cover;
+  object-position:right center;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
+
+/* video2 独自の修正：動画が横向きの場合の回転補正 */
+/* 状況に合わせて rotate の角度 (90deg, 270deg等) を調整してください */
+.video2-fix {
+  transform: rotate(90deg) scale(1.5); /* 回転させつつ、隙間が出ないよう拡大 */
+  transform-origin: center center;
+}
+
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff;
   background-image:url('四角ロゴ.PNG');
   background-repeat:no-repeat;
   background-size:150% auto;
+  /* オーバーレイも右側に合わせる */
   background-position:right center;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
 }
 #mainOverlay.visible { opacity:1; }
+
 #startOverlay {
   position:fixed; inset:0;
   background:#000; color:#fff;
@@ -74,7 +84,8 @@ video {
 <script>
 var contents = [
   {type:'video', src:'video1.mp4', duration:15000},
-  {type:'video', src:'video2.mp4', duration:15000},
+  /* video2 にだけ修正用クラスを付与 */
+  {type:'video', src:'video2.mp4', duration:15000, className:'video2-fix'},
   {type:'video', src:'video3.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000}
 ];
@@ -104,8 +115,7 @@ var elements = contents.map(function(c, i) {
     el.muted = true;
     el.playsInline = true;
     el.loop = false;
-    el.setAttribute('playsinline', '');
-    el.setAttribute('webkit-playsinline', '');
+    if (c.className) el.classList.add(c.className);
   } else {
     el = document.createElement('div');
     el.className = 'slide';
@@ -180,14 +190,8 @@ function ensureFullscreen() {
   if (!document.fullscreenElement) {
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
-document.addEventListener('click', ensureFullscreen, {once:true});
-document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
-});
-setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
 </html>

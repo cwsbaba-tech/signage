@@ -154,16 +154,29 @@ function hideAll() {
   });
 }
 
+/* --- JSのロジック部分をより堅牢に --- */
+
 function showContent(i) {
-  hideAll();
-  var el = elements[i];
-  var c  = contents[i];
-  el.style.opacity = '1';
-  if (c.type === 'video') {
-    el.currentTime = 0;
-    el.play().catch(function(e) { console.log(e); });
-  }
+    hideAll();
+    var el = elements[i];
+    var c = contents[i];
+    
+    // 現在のサイクル内での経過時間を計算 (秒)
+    var now = Date.now();
+    var offsetInCycle = now % CYCLE_MS;
+    var startTimeInContent = offsetInCycle - offsets[i];
+    
+    el.style.opacity = '1';
+    
+    if (c.type === 'video') {
+        // 重要：動画の再生位置を現在時刻に強制同期させる
+        el.currentTime = startTimeInContent / 1000;
+        el.play().catch(function(e) { console.log("再生エラー:", e); });
+    }
 }
+
+// チェック頻度を上げる (100ms)
+setInterval(tick, 100);
 
 function getContentIdx(offset) {
   for (var i = contents.length - 1; i >= 0; i--) {

@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN - Split Left/Right (Fixed)</title>
-
+<title>SCREEN 2 - Right Rotated</title>
 <style>
 html {
   margin:0; padding:0;
@@ -23,90 +22,72 @@ body {
   overflow:hidden;
   background:#000;
 }
-
-/* 全要素共通のクリップ設定 */
-.slide, video, #mainOverlay {
+.slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
+  background-repeat:no-repeat;
+  /* 右側：背景を右寄せにする */
+  background-position:right center;
+  background-size:200% auto;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
-
 video {
+  position:fixed; top:0; left:0;
+  /* 右側：200%の幅にして、右半分を表示する */
+  width:200%; height:100%;
   object-fit:cover;
-  object-position:center center;
+  object-position:right center; 
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
+  /* 左寄せの video 要素を右にズラす必要がある場合の補正 */
+  left: -100%; 
 }
-
-/* 動画の回転・拡大補正 */
-.rotate-90-fix { transform: rotate(90deg) scale(1.8); }
-.rotate-neg90-fix { transform: rotate(-90deg) scale(1.8); }
-.rotate-180-fix { transform: rotate(180deg); }
-
-.slide {
-  background-repeat:no-repeat;
-  background-position:center center;
-  background-size:cover;
-}
-
 #mainOverlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff;
   background-image:url('四角ロゴ.PNG');
   background-repeat:no-repeat;
-  background-size:contain;
-  background-position:center center;
+  background-size:150% auto;
+  background-position:right center;
+  opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
 }
-
 #mainOverlay.visible { opacity:1; }
-
 #startOverlay {
   position:fixed; inset:0;
   background:#000; color:#fff;
   display:flex; flex-direction:column;
   justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
-  /* 縦持ち状態で文字が読めるよう補正が必要な場合はここを調整 */
 }
 #startOverlay h1 { font-size:7vw; margin-bottom:2vh; }
 #startOverlay p  { font-size:4vw; opacity:0.8; }
 </style>
 </head>
-
 <body>
+
 <div id="startOverlay">
-  <h1>タップしてスタート</h1>
-  <p>動画の読み込みと同期を開始します</p>
+  <h1>タップしてスタート (右側用)</h1>
+  <p>映像の右半分を表示します</p>
 </div>
 <div id="mainOverlay"></div>
 
 <script>
-// --- 設定 ---
-var params = new URLSearchParams(location.search);
-var side = (params.get('side') || 'right').toLowerCase();
-
 var contents = [
-  {type:'video', src:'video1.mp4', duration:15000, className:'rotate-90-fix'},
-  {type:'video', src:'video2.mp4', duration:15000, className:'rotate-neg90-fix'},
-  {type:'video', src:'video3.mp4', duration:10000, className:'rotate-180-fix'},
+  {type:'video', src:'video1.mp4', duration:15000},
+  {type:'video', src:'video2.mp4', duration:15000},
+  {type:'video', src:'video3.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000}
 ];
 
-var MAIN_MS = 10000; // ロゴ画面の表示時間
-// ------------
-
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
+var MAIN_MS  = 10000;
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-var clipLeft  = 'polygon(0 0, 50% 0, 50% 100%, 0 100%)';
-var clipRight = 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)';
-var clip = (side === 'left') ? clipLeft : clipRight;
-
-var overlay = document.getElementById('mainOverlay');
-overlay.style.clipPath = clip;
-
-var started = false;
-var syncPhase = null;
+var overlay  = document.getElementById('mainOverlay');
+var started  = false;
 var lastContentIdx = -1;
 
 var offsets = [];
@@ -116,7 +97,6 @@ contents.forEach(function(c) {
   acc += c.duration;
 });
 
-// 要素の生成
 var elements = contents.map(function(c, i) {
   var el;
   if (c.type === 'video') {
@@ -124,14 +104,14 @@ var elements = contents.map(function(c, i) {
     el.src = c.src;
     el.muted = true;
     el.playsInline = true;
-    el.preload = 'auto'; // 事前読み込み
-    if (c.className) el.classList.add(c.className);
+    el.preload = 'auto'; // 追加：事前に読み込み
+    el.setAttribute('muted', '');
+    el.setAttribute('playsinline', '');
   } else {
     el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
-  el.style.clipPath = clip;
   el.style.opacity = '0';
   document.body.appendChild(el);
   return el;
@@ -149,19 +129,16 @@ function showContent(i) {
   var el = elements[i];
   var c  = contents[i];
   
-  // 同期計算：現在のサイクル内での経過時間を割り出す
+  // 右側の同期計算（現在時刻に合わせる）
   var now = Date.now();
   var offsetInCycle = now % CYCLE_MS;
-  var startTimeInContent = (offsetInCycle - offsets[i]) / 1000;
+  var startTime = (offsetInCycle - offsets[i]) / 1000;
 
   el.style.opacity = '1';
   if (c.type === 'video') {
-    if (startTimeInContent > 0) {
-      el.currentTime = startTimeInContent; // 再生位置を強制同期
-    } else {
-      el.currentTime = 0;
-    }
-    el.play().catch(function(e) { console.error("再生失敗:", e); });
+    // 映像が既に読み込まれているかに関わらず再生を試みる
+    el.currentTime = Math.max(0, startTime);
+    el.play().catch(function(e) { console.log("再生エラー:", e); });
   }
 }
 
@@ -171,9 +148,8 @@ function tick() {
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
-    if (syncPhase !== 'main') {
-      syncPhase = 'main';
-      lastContentIdx = -1;
+    if (lastContentIdx !== 999) {
+      lastContentIdx = 999;
       hideAll();
       overlay.classList.add('visible');
     }
@@ -182,32 +158,25 @@ function tick() {
     for (var i = contents.length - 1; i >= 0; i--) {
       if (offset >= offsets[i]) { idx = i; break; }
     }
-    
-    if (syncPhase !== 'individual') {
-      syncPhase = 'individual';
-      overlay.classList.remove('visible');
-    }
     if (idx !== lastContentIdx) {
+      overlay.classList.remove('visible');
       lastContentIdx = idx;
       showContent(idx);
     }
   }
 }
 
-// 精度向上のため100msごとにチェック
+// 精度を上げるためチェック間隔を 100ms に
 setInterval(tick, 100);
 
-// スタートボタン押下時の処理
 document.getElementById('startOverlay').addEventListener('click', function() {
   started = true;
   document.getElementById('startOverlay').style.display = 'none';
   ensureFullscreen();
-
-  // ブラウザの自動再生ブロックを解除するために全動画を一度ロード
+  
+  // 右側端末の再生ブロックを解除するための空再生
   elements.forEach(function(el) {
-    if (el.tagName === 'VIDEO') {
-      el.load();
-    }
+    if (el.tagName === 'VIDEO') el.load();
   });
 });
 

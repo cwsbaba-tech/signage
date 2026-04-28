@@ -1,198 +1,195 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>CYCLE CENTER YAMAGUCHI</title>
+<title>SCREEN 1</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:"Noto Sans JP",sans-serif; }
+html, body { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
 
-  .slide {
-    position:absolute; inset:0;
-    background-size:cover;
-    background-position:center center;
-    background-repeat:no-repeat;
-    opacity:0;
-    transition: opacity 1s ease-in-out;
-  }
-  @keyframes verticalPan {
-    0%   { background-position: center top; }
-    100% { background-position: center bottom; }
-  }
-  .slide.vertical { animation: verticalPan 20s ease-in-out forwards; }
+/* 通常スライド（横長素材の左半分） */
+.slide {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background-repeat:no-repeat;
+  background-position:left center;
+  background-size:200% auto;
+  opacity:0;
+  transition:opacity 1s ease-in-out;
+}
+.slide.video-slide {
+  background:none;
+}
+video {
+  position:fixed; top:0; left:0;
+  width:200%; height:100%;
+  object-fit:cover;
+  object-position:left center;
+  opacity:0;
+  transition:opacity 1s ease-in-out;
+}
+video.visible { opacity:1; }
 
-  #caption {
-    position:absolute; left:50%; top:25%;
-    transform:translateX(-50%);
-    color:#fff; font-weight:700; text-align:center;
-    text-shadow:0 4px 12px rgba(0,0,0,0.7);
-    font-size:3vw; line-height:1.4; z-index:2;
-    transition: opacity 0.5s ease;
-  }
-  #phoneFooter {
-    position:absolute; top:2%; left:50%;
-    transform:translateX(-50%);
-    color:#fff; font-weight:bold; font-size:2.5vw;
-    text-shadow:0 0 10px rgba(0,0,0,0.7);
-    z-index:2; transition: opacity 0.5s ease;
-  }
-  #qrLinks {
-    position:absolute; bottom:1%; left:50%;
-    transform:translateX(-50%);
-    display:flex; gap:2.2vw; z-index:3;
-    transition: opacity 0.5s ease;
-  }
-  .qrItem { text-align:center; color:#fff; font-size:1vw; }
-  .qrItem img { width:5vw; height:auto; border-radius:10px; }
+/* ロゴオーバーレイ（四角ロゴ左半分・白背景） */
+#mainOverlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#fff;
+  background-image:url('四角ロゴ.PNG');
+  background-repeat:no-repeat;
+  background-size:200% auto;
+  background-position:left center;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20; pointer-events:none;
+}
+#mainOverlay.visible { opacity:1; }
 
-  /* メインビジュアル用オーバーレイ */
-  #mainOverlay {
-    position:absolute; inset:0;
-    background:#000;
-    background-size:contain;
-    background-position:center center;
-    background-repeat:no-repeat;
-    opacity:0;
-    transition: opacity 0.8s ease;
-    z-index:10;
-  }
-  #mainOverlay.visible { opacity:1; }
+#startOverlay {
+  position:fixed; inset:0;
+  background:#000; color:#fff;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  z-index:9999; cursor:pointer; text-align:center;
+}
+#startOverlay h1 { font-size:7vw; margin-bottom:2vh; }
+#startOverlay p  { font-size:4vw; opacity:0.8; }
 </style>
 </head>
 <body>
 
-<div id="slidesContainer"></div>
-<div id="phoneFooter">☎ 03-3372-6530</div>
-<div id="caption"></div>
-<div id="qrLinks">
-  <div class="qrItem"><a href="https://www.instagram.com/cycle_center_yamaguchi/" target="_blank"><img src="Instagram.jpg"><div>Instagram</div></a></div>
-  <div class="qrItem"><a href="https://x.com/Yamaguchi_Cycle" target="_blank"><img src="X.png"><div>X</div></a></div>
-  <div class="qrItem"><a href="https://www.facebook.com/" target="_blank"><img src="Facebook.png"><div>Facebook</div></a></div>
-  <div class="qrItem"><a href="https://cycle-center-yamaguchi.jimdofree.com/" target="_blank"><img src="HP.png"><div>公式HP</div></a></div>
+<div id="startOverlay">
+  <h1>タップしてスタート</h1>
+  <p>全画面表示で開始します</p>
 </div>
-
-<!-- 同期用メインビジュアルオーバーレイ -->
 <div id="mainOverlay"></div>
 
 <script>
-/* ===== スライドショー設定 ===== */
-const slides = [
-  {img:'横長ロゴ.jpg',     caption:''},
-  {img:'大正13年店舗.jpg', caption:'創業100年<br>中野区の街の自転車屋'},
-  {img:'店舗正面.jpg',     caption:'電動アシストからスポーツ車まで<br>幅広く対応'},
-  {img:'店舗斜め.JPG',     caption:'修理・点検・カスタムも<br>お任せください'},
-  {img:'ピット.jpg',       caption:'自転車のことなら<br>なんでもご相談ください'},
-  {img:'イベント.jpg',     caption:'', vertical:true}
+// コンテンツ定義
+// type: 'video' または 'image'
+// src: ファイル名
+// duration: 表示秒数（ms）
+var contents = [
+  {type:'video', src:'video1.mp4', duration:15000},
+  {type:'video', src:'video2.mp4', duration:15000},
+  {type:'video', src:'video3.mp4', duration:10000},
+  {type:'image', src:'calendar.jpg', duration:10000}
 ];
 
-const container  = document.getElementById('slidesContainer');
-const captionEl  = document.getElementById('caption');
-const phoneEl    = document.getElementById('phoneFooter');
-const qrEl       = document.getElementById('qrLinks');
-const overlay    = document.getElementById('mainOverlay');
+// サイクル計算
+var INDIVIDUAL_MS = 0;
+contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
+// = 15+15+10+10 = 50秒
+var MAIN_MS  = 10000;
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS; // 60秒
 
-slides.forEach(s => {
-  const el = document.createElement('div');
-  el.className = 'slide' + (s.vertical ? ' vertical' : '');
-  el.style.backgroundImage = `url('${s.img}')`;
-  container.appendChild(el);
+var overlay  = document.getElementById('mainOverlay');
+var started  = false;
+var syncPhase = null;
+var lastContentIdx = -1;
+var currentEl = null;
+
+// 各コンテンツの開始オフセットを事前計算
+var offsets = [];
+var acc = 0;
+contents.forEach(function(c) {
+  offsets.push(acc);
+  acc += c.duration;
 });
 
-const slideEls = document.querySelectorAll('.slide');
-let current = 0;
-let slideInterval = null;
+function getContentIdx(offset) {
+  for (var i = contents.length - 1; i >= 0; i--) {
+    if (offset >= offsets[i]) return i;
+  }
+  return 0;
+}
 
-function showSlide(i) {
-  slideEls.forEach((el, idx) => {
-    el.style.opacity = (i === idx) ? 1 : 0;
-    if (i === idx && slides[i].vertical) {
-      el.style.animation = 'none';
-      void el.offsetWidth;
-      el.style.animation = 'verticalPan 20s ease-in-out forwards';
-    }
+function hideAll() {
+  // 全動画・画像を非表示
+  document.querySelectorAll('video, .slide').forEach(function(el) {
+    el.style.opacity = '0';
+    if (el.tagName === 'VIDEO') el.pause();
   });
-  captionEl.innerHTML = slides[i].caption;
 }
 
-function nextSlide() {
-  current = (current + 1) % slides.length;
-  showSlide(current);
-}
+function showContent(i) {
+  hideAll();
+  var c = contents[i];
+  var id = 'content_' + i;
+  var el = document.getElementById(id);
 
-function startSlideshow() {
-  clearInterval(slideInterval);
-  slideInterval = setInterval(nextSlide, 20000);
-}
-
-showSlide(0);
-startSlideshow();
-
-/* ===== 全画面同期（20〜30秒） ===== */
-const INDIVIDUAL_MS = 20000;
-const MAIN_MS       = 10000;
-const CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
-
-let syncPhase   = null;
-let savedSlide  = 0;
-let mainVisual  = null; // playlist.jsonから取得
-
-async function loadMainVisual() {
-  try {
-    const res  = await fetch('/signage/playlist.json?t=' + Date.now());
-    const data = await res.json();
-    mainVisual = (data['main'] || [])[0] || null;
-    if (mainVisual) {
-      // 画像をプリロード
-      overlay.style.backgroundImage = `url('/signage/${mainVisual.src}')`;
+  if (!el) {
+    if (c.type === 'video') {
+      el = document.createElement('video');
+      el.id = id;
+      el.src = c.src;
+      el.muted = true;
+      el.playsInline = true;
+      el.loop = false;
+      document.body.appendChild(el);
+    } else {
+      el = document.createElement('div');
+      el.id = id;
+      el.className = 'slide';
+      el.style.backgroundImage = "url('" + c.src + "')";
+      document.body.appendChild(el);
     }
-  } catch(e) { console.log('playlist読み込みエラー', e); }
+  }
+
+  el.style.opacity = '1';
+  if (c.type === 'video') {
+    el.currentTime = 0;
+    el.play();
+  }
+  currentEl = el;
 }
 
-function syncTick() {
-  const offset = Date.now() % CYCLE_MS;
-  const isMain = offset >= INDIVIDUAL_MS;
+function loadMainVisual() {
+  // 四角ロゴは既にCSSで設定済みなので何もしない
+}
 
-  if (isMain && syncPhase !== 'main') {
-    syncPhase  = 'main';
-    savedSlide = current;
-    clearInterval(slideInterval);
-    // UI要素を隠す
-    captionEl.style.opacity = '0';
-    phoneEl.style.opacity   = '0';
-    qrEl.style.opacity      = '0';
-    // オーバーレイ表示
-    overlay.classList.add('visible');
+function tick() {
+  if (!started) return;
+  var offset = Date.now() % CYCLE_MS;
+  var isMain = offset >= INDIVIDUAL_MS;
 
-  } else if (!isMain && syncPhase !== 'individual') {
-    syncPhase = 'individual';
-    // オーバーレイを隠す
-    overlay.classList.remove('visible');
-    // UI要素を戻す
-    captionEl.style.opacity = '1';
-    phoneEl.style.opacity   = '1';
-    qrEl.style.opacity      = '1';
-    // スライドショー再開
-    current = savedSlide;
-    showSlide(current);
-    startSlideshow();
-    // mainビジュアル更新チェック
-    loadMainVisual();
+  if (isMain) {
+    if (syncPhase !== 'main') {
+      syncPhase = 'main';
+      hideAll();
+      overlay.classList.add('visible');
+    }
+  } else {
+    var idx = getContentIdx(offset);
+    if (syncPhase !== 'individual') {
+      syncPhase = 'individual';
+      overlay.classList.remove('visible');
+    }
+    if (idx !== lastContentIdx) {
+      lastContentIdx = idx;
+      showContent(idx);
+    }
   }
 }
 
-loadMainVisual();
-setInterval(syncTick, 500);
+setInterval(tick, 500);
 
-/* ===== フルスクリーン ===== */
+document.getElementById('startOverlay').addEventListener('click', function() {
+  ensureFullscreen();
+  document.getElementById('startOverlay').style.display = 'none';
+  started = true;
+});
+
 function ensureFullscreen() {
-  const el = document.documentElement;
+  var el = document.documentElement;
   if (!document.fullscreenElement) {
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
-document.addEventListener('click', ensureFullscreen, { once: true });
+document.addEventListener('click', ensureFullscreen, {once:true});
+document.addEventListener('fullscreenchange', function() {
+  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
+});
 setTimeout(ensureFullscreen, 1000);
 </script>
 </body>

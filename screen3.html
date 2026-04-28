@@ -196,7 +196,7 @@ function nextSlide() {
 }
 
 /* ===== 同期 ===== */
-var INDIVIDUAL_MS = slides.length * 10000; // 5枚×10秒=50秒
+var INDIVIDUAL_MS = slides.length * 20000; // 5枚×20秒=100秒
 var MAIN_MS       = 10000;
 var CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
 var syncPhase     = null;
@@ -227,7 +227,7 @@ function tick() {
       overlay.classList.add('visible');
     }
   } else {
-    var slideIdx = Math.floor(offset / 10000) % slides.length;
+    var slideIdx = Math.floor(offset / 20000) % slides.length;
     if (syncPhase !== 'individual') {
       syncPhase = 'individual';
       overlay.classList.remove('visible');
@@ -237,7 +237,7 @@ function tick() {
       loadMainVisual();
       // スライドショー再開
       clearInterval(slideInterval);
-   slideInterval = setInterval(nextSlide, 10000);
+      slideInterval = setInterval(nextSlide, 20000);
     }
     if (slideIdx !== lastSlideIdx) {
       lastSlideIdx = slideIdx;
@@ -257,7 +257,7 @@ startOverlay.addEventListener('click', function() {
   slideshowScreen.style.display = 'flex';
   started = true;
   showSlide(0);
-  slideInterval = setInterval(nextSlide, 10000);
+  slideInterval = setInterval(nextSlide, 20000);
 });
 
 /* ===== メニュー ===== */

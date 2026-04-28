@@ -135,11 +135,21 @@ function showContent(i) {
   var startTime = (offsetInCycle - offsets[i]) / 1000;
 
   el.style.opacity = '1';
-  if (c.type === 'video') {
-    // 映像が既に読み込まれているかに関わらず再生を試みる
+// showContent関数内の再生処理を以下に差し替え
+if (c.type === 'video') {
+    el.muted = true; // 念押しでミュート
     el.currentTime = Math.max(0, startTime);
-    el.play().catch(function(e) { console.log("再生エラー:", e); });
-  }
+    
+    // 再生準備が整うのを待たずに play() を呼び、失敗したら再試行する
+    var playPromise = el.play();
+    
+    if (playPromise !== undefined) {
+        playPromise.catch(function(error) {
+            console.log("再生失敗、リトライします");
+            // ユーザー操作後であれば、少し遅延させて再試行
+            setTimeout(function() { el.play(); }, 200);
+        });
+    }
 }
 
 function tick() {

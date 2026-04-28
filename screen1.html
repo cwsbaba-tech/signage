@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1</title>
+<title>SCREEN 1 - Left Rotated</title>
 <style>
 html {
   margin:0; padding:0;
@@ -12,8 +12,10 @@ html {
 }
 body {
   margin:0; padding:0;
+  /* 回転後の描画領域を確保 */
   width:100vh;
   height:100vw;
+  /* 左に90度回転 */
   transform:rotate(-90deg);
   transform-origin:left top;
   position:absolute;
@@ -25,7 +27,7 @@ body {
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
-  background-position:left center;
+  background-position:right center;
   background-size:200% auto;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
@@ -34,7 +36,7 @@ video {
   position:fixed; top:0; left:0;
   width:200%; height:100%;
   object-fit:cover;
-  object-position:left center;
+  object-position:right center;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
@@ -44,7 +46,7 @@ video {
   background-image:url('四角ロゴ.PNG');
   background-repeat:no-repeat;
   background-size:150% auto;
-  background-position:left center;
+  background-position:right center;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
@@ -71,92 +73,108 @@ video {
 
 <script>
 var contents = [
-  {type:'video', src:'video1.mp4'},
-  {type:'video', src:'video2.mp4'},
-  {type:'video', src:'video3.mp4'},
-  {type:'image', src:'calendar.jpg', duration:10000},
-  {type:'overlay', duration:10000} // mainOverlayの表示を配列に統合
+  {type:'video', src:'video1.mp4', duration:15000},
+  {type:'video', src:'video2.mp4', duration:15000},
+  {type:'video', src:'video3.mp4', duration:10000},
+  {type:'image', src:'calendar.jpg', duration:10000}
 ];
 
-var currentIndex = 0;
-var elements = [];
-var overlay = document.getElementById('mainOverlay');
-var started = false;
+var INDIVIDUAL_MS = 0;
+contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
+var MAIN_MS  = 10000;
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-// 1. 各要素をあらかじめDOMに生成しておく
-contents.forEach(function(c, i) {
-  var el = null;
+var overlay  = document.getElementById('mainOverlay');
+var started  = false;
+var syncPhase = null;
+var lastContentIdx = -1;
+
+var offsets = [];
+var acc = 0;
+contents.forEach(function(c) {
+  offsets.push(acc);
+  acc += c.duration;
+});
+
+var elements = contents.map(function(c, i) {
+  var el;
   if (c.type === 'video') {
     el = document.createElement('video');
     el.src = c.src;
     el.muted = true;
     el.playsInline = true;
-    el.preload = 'auto'; // 事前読み込みを指示
+    el.loop = false;
     el.setAttribute('playsinline', '');
     el.setAttribute('webkit-playsinline', '');
-    
-    // 動画が最後まで再生されたら次のコンテンツへ
-    el.addEventListener('ended', nextContent);
-  } else if (c.type === 'image') {
+  } else {
     el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
-  
-  if (el) {
-    el.style.opacity = '0';
-    document.body.appendChild(el);
-    elements[i] = el;
-  } else {
-    elements[i] = null; // オーバーレイ用のプレースホルダー
-  }
+  el.style.opacity = '0';
+  el.id = 'content_' + i;
+  document.body.appendChild(el);
+  return el;
 });
 
-// 2. 全てを非表示にする
 function hideAll() {
   elements.forEach(function(el) {
-    if (el) {
-      el.style.opacity = '0';
-      if (el.tagName === 'VIDEO') el.pause();
-    }
+    el.style.opacity = '0';
+    if (el.tagName === 'VIDEO') el.pause();
   });
-  overlay.classList.remove('visible');
 }
 
-// 3. 次のコンテンツを再生する関数
-function showContent(index) {
+function showContent(i) {
   hideAll();
-  var c = contents[index];
-  var el = elements[index];
-
-  if (c.type === 'overlay') {
-    overlay.classList.add('visible');
-    setTimeout(nextContent, c.duration);
-  } else if (c.type === 'image') {
-    el.style.opacity = '1';
-    setTimeout(nextContent, c.duration);
-  } else if (c.type === 'video') {
-    el.style.opacity = '1';
+  var el = elements[i];
+  var c  = contents[i];
+  el.style.opacity = '1';
+  if (c.type === 'video') {
     el.currentTime = 0;
-    el.play().catch(function(e) { console.log("再生エラー:", e); });
+    el.play().catch(function(e) { console.log(e); });
   }
 }
 
-function nextContent() {
-  if (!started) return;
-  currentIndex = (currentIndex + 1) % contents.length;
-  showContent(currentIndex);
+function getContentIdx(offset) {
+  for (var i = contents.length - 1; i >= 0; i--) {
+    if (offset >= offsets[i]) return i;
+  }
+  return 0;
 }
 
-// 4. スタート処理
+function tick() {
+  if (!started) return;
+  var offset = Date.now() % CYCLE_MS;
+  var isMain = offset >= INDIVIDUAL_MS;
+
+  if (isMain) {
+    if (syncPhase !== 'main') {
+      syncPhase = 'main';
+      lastContentIdx = -1;
+      hideAll();
+      overlay.classList.add('visible');
+    }
+  } else {
+    var idx = getContentIdx(offset);
+    if (syncPhase !== 'individual') {
+      syncPhase = 'individual';
+      overlay.classList.remove('visible');
+    }
+    if (idx !== lastContentIdx) {
+      lastContentIdx = idx;
+      showContent(idx);
+    }
+  }
+}
+
+setInterval(tick, 500);
+
 document.getElementById('startOverlay').addEventListener('click', function() {
   ensureFullscreen();
   document.getElementById('startOverlay').style.display = 'none';
   started = true;
-  showContent(currentIndex);
 });
 
-// 全画面の制御
 function ensureFullscreen() {
   var el = document.documentElement;
   if (!document.fullscreenElement) {
@@ -165,11 +183,11 @@ function ensureFullscreen() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
+document.addEventListener('click', ensureFullscreen, {once:true});
 document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement && started) {
-    setTimeout(ensureFullscreen, 500);
-  }
+  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });
+setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
 </html>

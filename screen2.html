@@ -159,6 +159,15 @@ function tick() {
 
 setInterval(tick, 100);
 
+document.getElementById('startOverlay').addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  document.getElementById('startOverlay').style.display = 'none';
+  ensureFullscreen();
+  started = true;
+  showContent(0);
+  lastContentIdx = 0;
+}, {passive: false});
+
 document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
   ensureFullscreen();

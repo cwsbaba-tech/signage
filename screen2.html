@@ -27,33 +27,44 @@ body {
   background-repeat:no-repeat;
   background-position:right center;
   background-size:200% auto;
-  display:none;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
 }
 video {
   position:fixed; top:0;
   width:200%; height:100%;
   object-fit:cover;
   object-position:right center;
-  display:none;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
   left:-100%;
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat right center;
   background-size:150% auto;
-  display:none;
-  z-index:20;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20; pointer-events:none;
 }
-#tapOverlay {
+#mainOverlay.visible { opacity:1; }
+#startOverlay {
   position:fixed; inset:0;
-  background:rgba(0,0,0,0.01);
-  z-index:9999;
+  background:#000; color:#fff;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  z-index:9999; cursor:pointer; text-align:center;
 }
+#startOverlay h1 { font-size:7vw; margin-bottom:2vh; }
+#startOverlay p  { font-size:4vw; opacity:0.8; }
 </style>
 </head>
 <body>
 
-<div id="tapOverlay"></div>
+<div id="startOverlay">
+  <h1>タップしてスタート</h1>
+  <p>映像の右半分を表示します</p>
+</div>
 <div id="mainOverlay"></div>
 
 <script>
@@ -69,9 +80,8 @@ contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var MAIN_MS  = 10000;
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-var overlay        = document.getElementById('mainOverlay');
-var tapOverlay     = document.getElementById('tapOverlay');
-var started        = false;
+var overlay       = document.getElementById('mainOverlay');
+var started       = false;
 var lastContentIdx = -1;
 
 var offsets = [];
@@ -94,24 +104,24 @@ var elements = contents.map(function(c) {
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
-  el.style.display = 'none';
+  el.style.opacity = '0';
   document.body.appendChild(el);
   return el;
 });
 
 function hideAll() {
   elements.forEach(function(el) {
-    el.style.display = 'none';
+    el.style.opacity = '0';
     if (el.tagName === 'VIDEO') el.pause();
   });
-  overlay.style.display = 'none';
+  overlay.classList.remove('visible');
 }
 
 function showContent(i) {
   hideAll();
   var el = elements[i];
   var c  = contents[i];
-  el.style.display = 'block';
+  el.style.opacity = '1';
   if (c.type === 'video') {
     var offsetInCycle = Date.now() % CYCLE_MS;
     var startTime = (offsetInCycle - offsets[i]) / 1000;
@@ -136,7 +146,7 @@ function tick() {
     if (lastContentIdx !== 999) {
       lastContentIdx = 999;
       hideAll();
-      overlay.style.display = 'block';
+      overlay.classList.add('visible');
     }
   } else {
     var idx = getIdx(offset);
@@ -149,27 +159,14 @@ function tick() {
 
 setInterval(tick, 100);
 
-// タップで起動
-function startSignage() {
-  if (started) return;
-  tapOverlay.style.display = 'none';
+document.getElementById('startOverlay').addEventListener('click', function() {
+  document.getElementById('startOverlay').style.display = 'none';
+  ensureFullscreen();
   started = true;
   showContent(0);
   lastContentIdx = 0;
-}
-
-tapOverlay.addEventListener('touchstart', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  startSignage();
-}, {passive: false});
-
-tapOverlay.addEventListener('click', function(e) {
-  e.preventDefault();
-  startSignage();
 });
 
-// フルスクリーン
 function ensureFullscreen() {
   var el = document.documentElement;
   if (!document.fullscreenElement) {
@@ -181,7 +178,6 @@ function ensureFullscreen() {
 document.addEventListener('fullscreenchange', function() {
   if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });
-setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
 </html>

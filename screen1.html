@@ -98,9 +98,6 @@ var elements = contents.map(function(c) {
     el.setAttribute('playsinline', '');
     el.setAttribute('webkit-playsinline', '');
     el.preload = 'auto';
-    if (c.rotate) {
-      el.style.transform = 'rotate(' + c.rotate + 'deg)';
-    }
   } else {
     el = document.createElement('div');
     el.className = 'slide';

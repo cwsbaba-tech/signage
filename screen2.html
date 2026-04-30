@@ -170,9 +170,12 @@ function tick() {
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
-  started = true;
   document.getElementById('startOverlay').style.display = 'none';
   ensureFullscreen();
+  started = true;
+  showContent(0);
+  lastContentIdx = 0;
+});
   
   // 右側端末の再生ブロックを解除するための空再生
   elements.forEach(function(el) {

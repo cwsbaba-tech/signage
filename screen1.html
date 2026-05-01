@@ -79,8 +79,8 @@ contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var MAIN_MS  = 10000;
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-var overlay       = document.getElementById('mainOverlay');
-var started       = false;
+var overlay        = document.getElementById('mainOverlay');
+var started        = false;
 var lastContentIdx = -1;
 
 var offsets = [];
@@ -89,110 +89,4 @@ contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
 var elements = contents.map(function(c) {
   var el;
-  if (c.type === 'video') {
-    el = document.createElement('video');
-    el.src = c.src;
-    el.muted = true;
-    el.loop = false;
-    el.setAttribute('muted', '');
-    el.setAttribute('playsinline', '');
-    el.setAttribute('webkit-playsinline', '');
-    el.preload = 'none';
-  } else {
-    el = document.createElement('div');
-    el.className = 'slide';
-    el.style.backgroundImage = "url('" + c.src + "')";
-  }
-  el.style.opacity = '0';
-  document.body.appendChild(el);
-  return el;
-});
-
-function hideAll() {
-  elements.forEach(function(el) {
-    el.style.opacity = '0';
-    if (el.tagName === 'VIDEO') el.pause();
-  });
-  overlay.classList.remove('visible');
-}
-
-function showContent(i) {
-  hideAll();
-  var el = elements[i];
-  var c  = contents[i];
-  el.style.opacity = '1';
-  
-  // 回転設定（動画ごとに個別に適用）
-  if (el.tagName === 'VIDEO') {
-    var rotate = c.rotate || 0;
-    el.style.transform = 'rotate(' + rotate + 'deg)';
-  }
-  
-if (c.type === 'video') {
-    var offsetInCycle = Date.now() % CYCLE_MS;
-    var startTime = (offsetInCycle - offsets[i]) / 1000;
-    el.currentTime = Math.max(0, startTime);
-    el.play().catch(function(e) { console.log(e); });
-  }
-
-function getIdx(offset) {
-  for (var i = contents.length - 1; i >= 0; i--) {
-    if (offset >= offsets[i]) return i;
-  }
-  return 0;
-}
-
-function tick() {
-  if (!started) return;
-  var offset = Date.now() % CYCLE_MS;
-  var isMain = offset >= INDIVIDUAL_MS;
-
-  if (isMain) {
-    if (lastContentIdx !== 999) {
-      lastContentIdx = 999;
-      hideAll();
-      overlay.classList.add('visible');
-    }
-  } else {
-    var idx = getIdx(offset);
-    if (idx !== lastContentIdx) {
-      lastContentIdx = idx;
-      showContent(idx);
-    }
-  }
-}
-
-setInterval(tick, 100);
-
-document.getElementById('startOverlay').addEventListener('touchstart', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  document.getElementById('startOverlay').style.display = 'none';
-  ensureFullscreen();
-  started = true;
-  showContent(0);
-  lastContentIdx = 0;
-}, {passive: false});
-
-document.getElementById('startOverlay').addEventListener('click', function(e) {
-  e.preventDefault();
-  document.getElementById('startOverlay').style.display = 'none';
-  ensureFullscreen();
-  started = true;
-  showContent(0);
-  lastContentIdx = 0;
-});
-function ensureFullscreen() {
-  var el = document.documentElement;
-  if (!document.fullscreenElement) {
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (el.msRequestFullscreen) el.msRequestFullscreen();
-  }
-}
-document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
-});
-</script>
-</body>
-</html>
+  if (c.type === 'v

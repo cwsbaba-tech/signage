@@ -129,8 +129,17 @@ function showContent(i) {
   var el = elements[i];
   var c  = contents[i];
   el.style.opacity = '1';
+  
+  // 回転設定（動画ごとに個別に適用）
+  if (el.tagName === 'VIDEO') {
+    var rotate = c.rotate || 0;
+    el.style.transform = 'rotate(' + rotate + 'deg)';
+  }
+  
   if (c.type === 'video') {
-    el.currentTime = 0;
+    var offsetInCycle = Date.now() % CYCLE_MS;
+    var startTime = (offsetInCycle - offsets[i]) / 1000;
+    el.currentTime = Math.max(0, startTime);
     el.play().catch(function(e) { console.log(e); });
   }
 }

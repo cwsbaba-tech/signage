@@ -111,7 +111,10 @@ var elements = contents.map(function(c) {
 function hideAll() {
   elements.forEach(function(el) {
     el.style.opacity = '0';
-    if (el.tagName === 'VIDEO') el.pause();
+    if (el.tagName === 'VIDEO') {
+      el.pause();
+      el.style.transform = 'rotate(0deg)';
+    }
   });
   overlay.classList.remove('visible');
 }

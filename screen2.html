@@ -97,7 +97,7 @@ var elements = contents.map(function(c) {
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
     el.setAttribute('webkit-playsinline', '');
-    el.preload = 'auto';
+    el.preload = 'none';
   } else {
     el = document.createElement('div');
     el.className = 'slide';
@@ -128,10 +128,9 @@ function showContent(i) {
     el.style.transform = 'rotate(' + rotate + 'deg)';
   }
   
-  if (c.type === 'video') {
-    var offsetInCycle = Date.now() % CYCLE_MS;
-    var startTime = (offsetInCycle - offsets[i]) / 1000;
-    el.currentTime = Math.max(0, startTime);
+if (c.type === 'video') {
+    el.load();
+    el.currentTime = 0;
     el.play().catch(function(e) { console.log(e); });
   }
 }

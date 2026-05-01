@@ -164,14 +164,24 @@ function tick() {
 
 setInterval(tick, 100);
 
-document.getElementById('startOverlay').addEventListener('click', function() {
+document.getElementById('startOverlay').addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('startOverlay').style.display = 'none';
+  ensureFullscreen();
+  started = true;
+  showContent(0);
+  lastContentIdx = 0;
+}, {passive: false});
+
+document.getElementById('startOverlay').addEventListener('click', function(e) {
+  e.preventDefault();
   document.getElementById('startOverlay').style.display = 'none';
   ensureFullscreen();
   started = true;
   showContent(0);
   lastContentIdx = 0;
 });
-
 function ensureFullscreen() {
   var el = document.documentElement;
   if (!document.fullscreenElement) {

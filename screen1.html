@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1</title>
+<title>SCREEN 1 - Left Rotated</title>
 <style>
 html {
   margin:0; padding:0;
@@ -12,8 +12,10 @@ html {
 }
 body {
   margin:0; padding:0;
+  /* 回転後の描画領域を確保 */
   width:100vh;
   height:100vw;
+  /* 左に90度回転 */
   transform:rotate(-90deg);
   transform-origin:left top;
   position:absolute;
@@ -40,8 +42,11 @@ video {
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#fff url('四角ロゴ.PNG') no-repeat left center;
+  background:#fff;
+  background-image:url('四角ロゴ.PNG');
+  background-repeat:no-repeat;
   background-size:150% auto;
+  background-position:left center;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
@@ -62,7 +67,7 @@ video {
 
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
-  <p>映像の左半分を表示します</p>
+  <p>全画面表示で開始します</p>
 </div>
 <div id="mainOverlay"></div>
 
@@ -70,7 +75,7 @@ video {
 var contents = [
   {type:'video', src:'video1.mp4', duration:15000, rotate:0},
   {type:'video', src:'video2.mp4', duration:15000, rotate:0},
-  {type:'video', src:'video3.mp4', duration:10000, rotate:0},
+  {type:'video', src:'video3.mp4', duration:10000, rotate:90},
   {type:'image', src:'calendar.jpg', duration:10000, rotate:0}
 ];
 
@@ -79,31 +84,35 @@ contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var MAIN_MS  = 10000;
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-var overlay       = document.getElementById('mainOverlay');
-var started       = false;
+var overlay  = document.getElementById('mainOverlay');
+var started  = false;
+var syncPhase = null;
 var lastContentIdx = -1;
 
 var offsets = [];
 var acc = 0;
-contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
+contents.forEach(function(c) {
+  offsets.push(acc);
+  acc += c.duration;
+});
 
-var elements = contents.map(function(c) {
+var elements = contents.map(function(c, i) {
   var el;
   if (c.type === 'video') {
     el = document.createElement('video');
     el.src = c.src;
     el.muted = true;
+    el.playsInline = true;
     el.loop = false;
-    el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
     el.setAttribute('webkit-playsinline', '');
-    el.preload = 'auto';
   } else {
     el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
   el.style.opacity = '0';
+  el.id = 'content_' + i;
   document.body.appendChild(el);
   return el;
 });
@@ -111,12 +120,8 @@ var elements = contents.map(function(c) {
 function hideAll() {
   elements.forEach(function(el) {
     el.style.opacity = '0';
-    if (el.tagName === 'VIDEO') {
-      el.pause();
-      el.style.transform = 'rotate(0deg)';
-    }
+    if (el.tagName === 'VIDEO') el.pause();
   });
-  overlay.classList.remove('visible');
 }
 
 function showContent(i) {
@@ -124,21 +129,13 @@ function showContent(i) {
   var el = elements[i];
   var c  = contents[i];
   el.style.opacity = '1';
-
-  if (el.tagName === 'VIDEO') {
-    var rotate = c.rotate || 0;
-    el.style.transform = 'rotate(' + rotate + 'deg)';
-  }
-
   if (c.type === 'video') {
-    var offsetInCycle = Date.now() % CYCLE_MS;
-    var startTime = (offsetInCycle - offsets[i]) / 1000;
-    el.currentTime = Math.max(0, startTime);
+    el.currentTime = 0;
     el.play().catch(function(e) { console.log(e); });
   }
 }
 
-function getIdx(offset) {
+function getContentIdx(offset) {
   for (var i = contents.length - 1; i >= 0; i--) {
     if (offset >= offsets[i]) return i;
   }
@@ -151,13 +148,18 @@ function tick() {
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
-    if (lastContentIdx !== 999) {
-      lastContentIdx = 999;
+    if (syncPhase !== 'main') {
+      syncPhase = 'main';
+      lastContentIdx = -1;
       hideAll();
       overlay.classList.add('visible');
     }
   } else {
-    var idx = getIdx(offset);
+    var idx = getContentIdx(offset);
+    if (syncPhase !== 'individual') {
+      syncPhase = 'individual';
+      overlay.classList.remove('visible');
+    }
     if (idx !== lastContentIdx) {
       lastContentIdx = idx;
       showContent(idx);
@@ -165,14 +167,12 @@ function tick() {
   }
 }
 
-setInterval(tick, 100);
+setInterval(tick, 500);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
-  document.getElementById('startOverlay').style.display = 'none';
   ensureFullscreen();
+  document.getElementById('startOverlay').style.display = 'none';
   started = true;
-  showContent(0);
-  lastContentIdx = 0;
 });
 
 function ensureFullscreen() {
@@ -183,9 +183,11 @@ function ensureFullscreen() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
+document.addEventListener('click', ensureFullscreen, {once:true});
 document.addEventListener('fullscreenchange', function() {
   if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });
+setTimeout(ensureFullscreen, 1000);
 </script>
 </body>
-</html>== 'v
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 2 - Left Rotated</title>
+<title>SCREEN 1 - Left Rotated</title>
 <style>
 html {
   margin:0; padding:0;
@@ -32,25 +32,15 @@ body {
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
-/* Screen 2 (右側) のための修正 */
-video, .slide {
-  position: fixed;
-  top: 0;
-  /* 左に90度回転させているので、座標系が特殊です */
-  /* width 200% の動画の「右半分」が見えるように調整 */
-  left: -100%; 
-  width: 200%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-  z-index: 1; /* 重なり順を固定 */
+video {
+  position:fixed; top:0; right:0;
+  width:200%; height:100%;
+  object-fit:cover;
+  object-position:right center;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
 }
-
 #mainOverlay {
-  /* ロゴなどは動画より上にくるように設定 */
-  z-index: 100; 
-}
   position:fixed; top:0; right:0; width:100%; height:100%;
   background:#fff;
   background-image:url('四角ロゴ.PNG');
@@ -85,7 +75,7 @@ video, .slide {
 var contents = [
   {type:'video', src:'video1.mp4', duration:15000, rotate:0},
   {type:'video', src:'video2.mp4', duration:15000, rotate:0},
-  {type:'video', src:'video3.mp4', duration:10000, rotate:0},
+  {type:'video', src:'video3.mp4', duration:10000, rotate:90},
   {type:'image', src:'calendar.jpg', duration:10000, rotate:0}
 ];
 
@@ -139,20 +129,8 @@ function showContent(i) {
   var el = elements[i];
   var c  = contents[i];
   el.style.opacity = '1';
-  
-  var rotate = c.rotate || 0;
-  // 常にセンター寄せ(translate)を維持したまま、個別の回転(rotate)を加える
-  if (el.tagName === 'VIDEO') {
-    el.style.transform = 'translate(-50%, -50%) rotate(' + rotate + 'deg)';
-  } else {
-    // 画像（.slide）の場合も同様
-    el.style.transform = 'rotate(' + rotate + 'deg)';
-  }
-  
   if (c.type === 'video') {
-    var offsetInCycle = Date.now() % CYCLE_MS;
-    var startTime = (offsetInCycle - offsets[i]) / 1000;
-    el.currentTime = Math.max(0, startTime);
+    el.currentTime = 0;
     el.play().catch(function(e) { console.log(e); });
   }
 }

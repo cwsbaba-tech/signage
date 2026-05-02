@@ -40,13 +40,16 @@ video {
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
-#mainOverlay {
-  position:fixed; top:0; right:0; width:100%; height:100%;
-  background:#fff;
-  background-image:url('四角ロゴ.PNG');
-  background-repeat:no-repeat;
-  background-size:150% auto;
-  background-position:left 10% center;
+position: fixed;
+  top: 0;
+  left: -100%; /* Screen 2は左に100%ずらす */
+  width: 200%; /* 2画面分の横幅 */
+  height: 100%;
+  background: #fff;
+  background-image: url('四角ロゴ.PNG');
+  background-repeat: no-repeat;
+  background-size: 50% auto; /* 2画面分(200%)の中の50%＝1画面分のサイズ */
+  background-position: center center; /* これで2枚の真ん中にロゴが来る */
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;

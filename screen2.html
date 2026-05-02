@@ -32,19 +32,25 @@ body {
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
-video {
+/* Screen 2 (右側) のための修正 */
+video, .slide {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  /* 基準をセンターに固定し、JSからコントロールしやすくする */
-  transform: translate(-50%, -50%);
-  width: 200%; /* 2枚で1枚に見せるための設定は維持 */
+  top: 0;
+  /* 左に90度回転させているので、座標系が特殊です */
+  /* width 200% の動画の「右半分」が見えるように調整 */
+  left: -100%; 
+  width: 200%;
   height: 100%;
   object-fit: cover;
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
+  z-index: 1; /* 重なり順を固定 */
 }
+
 #mainOverlay {
+  /* ロゴなどは動画より上にくるように設定 */
+  z-index: 100; 
+}
   position:fixed; top:0; right:0; width:100%; height:100%;
   background:#fff;
   background-image:url('四角ロゴ.PNG');

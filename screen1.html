@@ -134,9 +134,12 @@ function showContent(i) {
   var c  = contents[i];
   el.style.opacity = '1';
   
-  // 回転設定（動画ごとに個別に適用）
+  var rotate = c.rotate || 0;
+  // 常にセンター寄せ(translate)を維持したまま、個別の回転(rotate)を加える
   if (el.tagName === 'VIDEO') {
-    var rotate = c.rotate || 0;
+    el.style.transform = 'translate(-50%, -50%) rotate(' + rotate + 'deg)';
+  } else {
+    // 画像（.slide）の場合も同様
     el.style.transform = 'rotate(' + rotate + 'deg)';
   }
   
@@ -147,7 +150,6 @@ function showContent(i) {
     el.play().catch(function(e) { console.log(e); });
   }
 }
-
 function getContentIdx(offset) {
   for (var i = contents.length - 1; i >= 0; i--) {
     if (offset >= offsets[i]) return i;

@@ -124,9 +124,13 @@ function showContent(i) {
   var c  = contents[i];
   el.style.opacity = '1';
   if (el.tagName === 'VIDEO') {
-    // bodyの-90度回転を打ち消すため+90度追加
-    var totalRotate = (c.rotate || 0) + 90;
-    el.style.transform = 'rotate(' + totalRotate + 'deg)';
+    var rotate = c.rotate || 0;
+    // bodyの-90deg回転を打ち消してから個別回転を適用
+    el.style.transform = 'rotate(' + (rotate - 90) + 'deg)';
+    el.style.width = '100vh';
+    el.style.height = '100vw';
+    el.style.top = '0';
+    el.style.left = '0';
     el.load();
     el.currentTime = 0;
     el.play().catch(function(e) { console.log(e); });

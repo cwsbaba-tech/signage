@@ -110,13 +110,7 @@ var elements = contents.map(function(c) {
   return el;
 });
 
-function hideAll() {
-  elements.forEach(function(el) {
-    el.style.opacity = '0';
-    if (el.tagName === 'VIDEO') el.pause();
-  });
-  overlay.classList.remove('visible');
-}
+function hideAll()
 
 function showContent(i) {
   hideAll();

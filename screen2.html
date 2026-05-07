@@ -110,15 +110,11 @@ var elements = contents.map(function(c) {
   document.body.appendChild(el);
   return el;
 });
-
 function hideAll() {
   elements.forEach(function(el) {
     el.style.opacity = '0';
     if (el.tagName === 'VIDEO') {
       el.pause();
-      el.style.transform = '';
-      el.style.width = '';
-      el.style.height = '';
     }
   });
   overlay.classList.remove('visible');

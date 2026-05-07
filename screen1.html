@@ -80,12 +80,12 @@ video {
 <script>
 // コンテンツ設定（Screen 2と完全に一致させてください）
 var contents = [
-  {type:'video', src:'video1.mp4', duration:15000, rotate:0},
-  {type:'video', src:'video2.mp4', duration:15000, rotate:0},
-  {type:'video', src:'video3.mp4', duration:10000, rotate:0},
-  {type:'image', src:'calendar.jpg', duration:10000, rotate:0}
+  {type:'video', src:'video1.mp4', duration:10000, rotate:0},
+  {type:'image', src:'calendar.jpg', duration:10000, rotate:0},
+  {type:'video', src:'video2.mp4', duration:10000, rotate:0},
+  {type:'image', src:'holiday.jpg', duration:10000, rotate:0},
+  {type:'image', src:'event.jpg', duration:10000, rotate:0}
 ];
-
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var MAIN_MS  = 10000;

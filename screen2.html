@@ -3,50 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 2</title>
+<title>SCREEN 1</title>
 <style>
-html {
+html, body {
   margin:0; padding:0;
-  width:100vw; height:100vh;
+  width:100%; height:100%;
   background:#000; overflow:hidden;
 }
-body {
-  margin:0; padding:0;
+
+/* 全要素を90度回転して縦画面に */
+.slide {
+  position:fixed;
+  top:0; left:0;
   width:100vh;
   height:100vw;
-  transform:rotate(-90deg);
-  transform-origin:left top;
-  position:absolute;
-  top:100vh;
-  left:0;
-  overflow:hidden;
-  background:#000;
-}
-.slide {
-  position:fixed; top:0; left:0; width:100%; height:100%;
+  transform:rotate(90deg);
+  transform-origin:top left;
+  margin-top:calc(100vw - 100vh);
   background-repeat:no-repeat;
-  background-position:left center;
-  background-size:200% auto;
+  background-position:bottom center;
+  background-size:auto 50%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
+
 video {
-  position:fixed; top:0; left:0;
-  width:200%; height:100%;
+  position:fixed;
+  top:0; left:0;
+  width:100vh;
+  height:100vw;
+  transform:rotate(90deg);
+  transform-origin:top left;
+  margin-top:calc(100vw - 100vh);
   object-fit:cover;
-  object-position:left center;
+  object-position:center bottom;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
+
 #mainOverlay {
-  position:fixed; top:0; left:0; width:100%; height:100%;
+  position:fixed;
+  top:0; left:0;
+  width:100vh;
+  height:100vw;
+  transform:rotate(90deg);
+  transform-origin:top left;
+  margin-top:calc(100vw - 100vh);
   background:#fff url('四角ロゴ.PNG') no-repeat center center;
-  background-size:auto 100%;
+  background-size:auto 50%;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
 }
 #mainOverlay.visible { opacity:1; }
+
 #startOverlay {
   position:fixed; inset:0;
   background:#000; color:#fff;
@@ -54,15 +64,15 @@ video {
   justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
 }
-#startOverlay h1 { font-size:7vw; margin-bottom:2vh; }
-#startOverlay p  { font-size:4vw; opacity:0.8; }
+#startOverlay h1 { font-size:5vw; margin-bottom:2vh; }
+#startOverlay p  { font-size:3vw; opacity:0.8; }
 </style>
 </head>
 <body>
 
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
-  <p>映像の右半分を表示します</p>
+  <p>映像の左半分を表示します</p>
 </div>
 <div id="mainOverlay"></div>
 

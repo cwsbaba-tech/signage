@@ -33,7 +33,7 @@ body {
 video {
   position:fixed; top:0; left:0;
   width:200%; height:100%;
-  object-fit:cover;
+  object-fit:fill;
   object-position:left center;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
@@ -121,11 +121,18 @@ function hideAll() {
 function showContent(i) {
   hideAll();
   var el = elements[i];
-  var c  = contents[i];
+  var c = contents[i];
   el.style.opacity = '1';
+
   if (c.type === 'video') {
     el.load();
-    el.currentTime = 0;
+    // 現在のサイクル内のオフセットから、その動画の経過時間を計算
+    var currentOffset = Date.now() % CYCLE_MS;
+    var videoStartTime = offsets[i];
+    var seekTime = (currentOffset - videoStartTime) / 1000;
+
+    // 0秒以下にならないように調整してシーク
+    el.currentTime = Math.max(0, seekTime);
     el.play().catch(function(e) { console.log(e); });
   }
 }

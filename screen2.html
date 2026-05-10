@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 2 - RIGHT</title>
 <style>
+/* スタイルは共通（Screen 2の設定を維持） */
 html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
 body {
   margin:0; padding:0; width:100vh; height:100vw;
@@ -12,42 +13,20 @@ body {
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
 }
-
-/* --- SCREEN 2 の核となる設定 --- */
 video, .slide {
-  position:fixed; top:0; 
-  /* 幅を2枚分(200%)にして、左に1枚分(100%)はみ出させる = 右半分が表示される */
-  left:-100%; 
-  width:200%; height:100%;
+  position:fixed; top:0; left:-100%; width:200%; height:100%;
   object-fit:fill; opacity:0; z-index:1;
   transition:opacity 0.5s ease-in-out;
 }
-
 .slide {
-  position: fixed;
-  top: 0;
-  /* 左に1枚分ずらして右半分を画面内に入れる */
-  left: -100%; 
-  width: 200%; /* 2画面分の幅 */
-  height: 100%;
-  background-repeat: no-repeat;
-  /* 画像を2画面分（200%）に強制的に引き伸ばす */
-  background-size: 100% 100%; 
-  /* 右端を基準にする */
-  background-position: right center; 
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-  z-index: 1;
+  background-repeat:no-repeat; background-size:100% 100%; background-position:right center;
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  /* ロゴの右側を表示 */
   background:#fff url('四角ロゴ.PNG') no-repeat right center;
   background-size:200% auto; opacity:0;
   transition:opacity 0.8s ease; z-index:20; pointer-events:none;
 }
-/* ------------------------------ */
-
 #mainOverlay.visible { opacity:1; }
 #startOverlay {
   position:fixed; inset:0; background:#000; color:#fff;
@@ -65,16 +44,21 @@ video, .slide {
 <div id="mainOverlay"></div>
 
 <script>
-// コンテンツ設定 (Screen 1と完全に一致させてください)
+// --- ★ここで個別に時間を調整できます (ミリ秒単位) ---
 var contents = [
-  {type:'video', src:'video1.mp4', duration:10000},
-  {type:'image', src:'calendar.jpg', duration:10000},
-  {type:'video', src:'video2.mp4', duration:10000},
-  {type:'image', src:'holiday.jpg', duration:10000},
-  {type:'image', src:'event.jpg', duration:10000}
+  {type:'video', src:'video1.mp4',  duration:12000}, // ビデオ1を12秒に
+  {type:'image', src:'calendar.jpg', duration:8000},  // 画像を8秒に
+  {type:'video', src:'video2.mp4',  duration:12000},
+  {type:'image', src:'holiday.jpg',  duration:5000},
+  {type:'image', src:'event.jpg',    duration:5000}
 ];
-var MAIN_MS = 10000;
+var MAIN_MS = 10000; // ロゴ表示時間
 
+// --- ★Screen 2専用の微調整設定 ---
+var VIDEO_OFFSET_MS = 500; // 動画の再生位置を500ms進める
+var IMAGE_DELAY_MS  = 300; // 画像の切り替えタイミングを300ms遅らせる
+
+// --- ロジック計算 ---
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
@@ -90,11 +74,9 @@ var elements = contents.map(function(c) {
   var el;
   if (c.type === 'video') {
     el = document.createElement('video');
-    el.src = c.src;
-    el.muted = true;
-    el.setAttribute('muted', '');
-    el.setAttribute('playsinline', '');
-    el.preload = 'auto'; 
+    el.src = c.src; el.muted = true;
+    el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
+    el.preload = 'auto';
   } else {
     el = document.createElement('div');
     el.className = 'slide';
@@ -104,19 +86,6 @@ var elements = contents.map(function(c) {
   return el;
 });
 
-// フルスクリーン要求関数
-function enterFullscreen() {
-  var el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen();
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
-  else if (el.msRequestFullscreen) el.msRequestFullscreen();
-}
-
-// Screen 2 (右側) の updateDisplay 関数内を修正
-
-// Screen 2 (右側) の updateDisplay 関数内を修正
-
 function updateDisplay(idx) {
   elements.forEach(function(el, i) {
     if (i === idx) {
@@ -124,33 +93,29 @@ function updateDisplay(idx) {
       el.style.zIndex = '10';
       if (contents[i].type === 'video') {
         var offset = Date.now() % CYCLE_MS;
-        
-        // ★ ここを修正：0.5秒分（500ms）足して、再生位置を未来に進める
-        // これにより、Screen 2の遅れを相殺します
-        var targetTime = (offset - offsets[i] + 500) / 1000; 
-
+        var targetTime = (offset - offsets[i] + VIDEO_OFFSET_MS) / 1000;
         if(el.src === "") el.src = contents[i].src;
-        el.play().then(function() {
-          el.currentTime = targetTime;
-        }).catch(function(e) {
-          setTimeout(function() { el.play(); }, 200);
-        });
+        el.play().then(function() { el.currentTime = targetTime; })
+        .catch(function() { setTimeout(function() { el.play(); }, 200); });
       }
     } else {
-      // (中略：他の非表示処理)
       el.style.opacity = '0';
       el.style.zIndex = '1';
       if (el.tagName === 'VIDEO') {
-        el.pause();
-        el.src = ""; 
-        el.load();
+        el.pause(); el.src = ""; el.load();
       }
     }
   });
 }
+
 function tick() {
   if (!started) return;
-  var offset = Date.now() % CYCLE_MS;
+  
+  // ★画像の場合のみ、計算上の時刻から IMAGE_DELAY_MS 分だけ過去の判定にする
+  var now = Date.now();
+  var offset = now % CYCLE_MS;
+  
+  // ロゴフェーズの判定
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
@@ -158,44 +123,40 @@ function tick() {
       lastContentIdx = 999;
       elements.forEach(function(el){ 
         el.style.opacity = '0'; 
-        if(el.tagName==='VIDEO') {
-          el.pause();
-          el.src = ""; // メモリ解放
-          el.load();
-          el.src = contents[elements.indexOf(el)].src;
-        }
+        if(el.tagName==='VIDEO') { el.pause(); el.src = ""; el.load(); }
       });
       overlay.classList.add('visible');
     }
   } else {
+    // 現在のインデックスを取得（画像ラグ補正を考慮）
+    var checkOffset = offset;
     var idx = 0;
     for (var i = contents.length - 1; i >= 0; i--) {
-      if (offset >= offsets[i]) { idx = i; break; }
+        // 画像に切り替わる時、または画像から切り替わる時に判定を遅らせる
+        var lag = (contents[i].type === 'image') ? IMAGE_DELAY_MS : 0;
+        if (offset >= (offsets[i] + lag)) {
+            idx = i;
+            break;
+        }
     }
+
     if (idx !== lastContentIdx) {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
       updateDisplay(idx);
     }
-    // ★ tick内での自動シーク(syncVideo)は負荷が重すぎるため削除しました
   }
 }
-// 0.5秒ごとに同期チェック
-setInterval(tick, 500);
+
+setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';
-  enterFullscreen(); // タップ直後に実行
+  var el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   started = true;
   tick();
-});
-
-// フルスクリーンが解除された際の自動復帰
-document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement && started) setTimeout(enterFullscreen, 5000);
-});
-document.addEventListener('webkitfullscreenchange', function() {
-  if (!document.webkitFullscreenElement && started) setTimeout(enterFullscreen, 5000);
 });
 </script>
 </body>

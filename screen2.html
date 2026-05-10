@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 2 - LEFT</title>
+<title>SCREEN 2 - RIGHT</title>
 <style>
 html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
 body {
@@ -12,25 +12,33 @@ body {
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
 }
+
+/* --- SCREEN 2 の核となる設定 --- */
 video, .slide {
-  position:fixed; top:0; left:0; width:200%; height:100%;
+  position:fixed; top:0; 
+  /* 幅を2枚分(200%)にして、左に1枚分(100%)はみ出させる = 右半分が表示される */
+  left:-100%; 
+  width:200%; height:100%;
   object-fit:fill; opacity:0; z-index:1;
   transition:opacity 0.5s ease-in-out;
 }
-/* Screen 1 は左端から表示 */
-video, .slide { left:-100; }
 
 .slide {
   background-repeat:no-repeat;
-  background-position:left center;
+  /* 画像の右側を基準に表示 */
+  background-position:right center; 
   background-size:200% auto;
 }
+
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#fff url('四角ロゴ.PNG') no-repeat left center;
+  /* ロゴの右側を表示 */
+  background:#fff url('四角ロゴ.PNG') no-repeat right center;
   background-size:200% auto; opacity:0;
   transition:opacity 0.8s ease; z-index:20; pointer-events:none;
 }
+/* ------------------------------ */
+
 #mainOverlay.visible { opacity:1; }
 #startOverlay {
   position:fixed; inset:0; background:#000; color:#fff;
@@ -43,11 +51,12 @@ video, .slide { left:-100; }
 
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
-  <p>LEFT SIDE</p>
+  <p>SCREEN 2 (RIGHT SIDE)</p>
 </div>
 <div id="mainOverlay"></div>
 
 <script>
+// コンテンツ設定 (Screen 1と完全に一致させてください)
 var contents = [
   {type:'video', src:'video1.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000},
@@ -86,7 +95,7 @@ var elements = contents.map(function(c) {
   return el;
 });
 
-// フルスクリーン化の関数
+// フルスクリーン要求関数
 function enterFullscreen() {
   var el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen();
@@ -135,30 +144,22 @@ function tick() {
   }
 }
 
+// 0.5秒ごとに同期チェック
 setInterval(tick, 500);
 
-// スタートボタン（タップ）
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';
-  
-  // 1. フルスクリーン開始
-  enterFullscreen();
-  
-  // 2. 状態開始
+  enterFullscreen(); // タップ直後に実行
   started = true;
   tick();
 });
 
-// フルスクリーンが解除されたら5秒後に再要求する仕組み（Android対策）
+// フルスクリーンが解除された際の自動復帰
 document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement && started) {
-    setTimeout(enterFullscreen, 5000);
-  }
+  if (!document.fullscreenElement && started) setTimeout(enterFullscreen, 5000);
 });
 document.addEventListener('webkitfullscreenchange', function() {
-  if (!document.webkitFullscreenElement && started) {
-    setTimeout(enterFullscreen, 5000);
-  }
+  if (!document.webkitFullscreenElement && started) setTimeout(enterFullscreen, 5000);
 });
 </script>
 </body>

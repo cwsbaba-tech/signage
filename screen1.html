@@ -86,6 +86,15 @@ var elements = contents.map(function(c) {
   return el;
 });
 
+// フルスクリーン化の関数
+function enterFullscreen() {
+  var el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+  else if (el.msRequestFullscreen) el.msRequestFullscreen();
+}
+
 function updateDisplay(idx) {
   elements.forEach(function(el, i) {
     if (i === idx) {
@@ -126,12 +135,30 @@ function tick() {
   }
 }
 
-setInterval(tick, 500); // 負荷軽減のため0.5秒間隔に
+setInterval(tick, 500);
 
+// スタートボタン（タップ）
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';
+  
+  // 1. フルスクリーン開始
+  enterFullscreen();
+  
+  // 2. 状態開始
   started = true;
   tick();
+});
+
+// フルスクリーンが解除されたら5秒後に再要求する仕組み（Android対策）
+document.addEventListener('fullscreenchange', function() {
+  if (!document.fullscreenElement && started) {
+    setTimeout(enterFullscreen, 5000);
+  }
+});
+document.addEventListener('webkitfullscreenchange', function() {
+  if (!document.webkitFullscreenElement && started) {
+    setTimeout(enterFullscreen, 5000);
+  }
 });
 </script>
 </body>

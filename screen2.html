@@ -105,12 +105,13 @@ var elements = contents.map(function(c) {
     el = document.createElement('video');
     el.src = c.src;
     el.muted = true;
-    el.loop = false;
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
-    el.setAttribute('webkit-playsinline', '');
-    el.preload = 'none';
+    el.preload = 'auto'; // 事前に読み込む設定
+    // ⬇︎ ループ再生を有効にせず、JSで制御する
+    el.loop = false; 
   } else {
+    // 画像の処理（変更なし）
     el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
@@ -132,18 +133,26 @@ function showContent(i) {
   hideAll();
   var el = elements[i];
   var c = contents[i];
-  el.style.opacity = '1';
-
+  
   if (c.type === 'video') {
-    el.load();
-    // 現在のサイクル内のオフセットから、その動画の経過時間を計算
-    var currentOffset = Date.now() % CYCLE_MS;
-    var videoStartTime = offsets[i];
-    var seekTime = (currentOffset - videoStartTime) / 1000;
+    var offset = Date.now() % CYCLE_MS;
+    var videoOffset = offset - offsets[i];
+    var targetTime = Math.max(0, videoOffset / 1000);
 
-    // 0秒以下にならないように調整してシーク
-    el.currentTime = Math.max(0, seekTime);
-    el.play().catch(function(e) { console.log(e); });
+    el.currentTime = targetTime;
+    
+    // 再生が確実に始まるように promise をハンドル
+    var playPromise = el.play();
+    if (playPromise !== undefined) {
+      playPromise.then(function() {
+        el.style.opacity = '1'; // 再生が始まってから表示する
+      }).catch(function(error) {
+        console.log("再生失敗、再試行します");
+        el.play(); 
+      });
+    }
+  } else {
+    el.style.opacity = '1';
   }
 }
 
@@ -172,13 +181,25 @@ function tick() {
       syncPhase = 'individual';
       overlay.classList.remove('visible');
     }
+    
     if (idx !== lastContentIdx) {
       lastContentIdx = idx;
       showContent(idx);
     }
+
+    // ⬇︎ 動画のズレを監視・補正する処理を追加
+    var currentEl = elements[idx];
+    if (contents[idx].type === 'video' && !currentEl.paused) {
+      var videoOffset = offset - offsets[idx]; // この動画が始まってからの経過時間(ms)
+      var targetTime = videoOffset / 1000;      // 秒単位
+      
+      // 実際の再生位置が計算上の位置と 0.3秒以上ズレていたら強制補正
+      if (Math.abs(currentEl.currentTime - targetTime) > 0.3) {
+        currentEl.currentTime = targetTime;
+      }
+    }
   }
 }
-
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {

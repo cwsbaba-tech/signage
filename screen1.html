@@ -12,21 +12,18 @@ body {
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
 }
-/* ビデオの配置設定（左半分を切り出す） */
-video {
-  position:fixed; top:0; 
-  left:0; /* 左端から配置 */
-  width:200%; height:100%; /* 2枚分の幅 */
-  object-fit:fill; opacity:0;
+video, .slide {
+  position:fixed; top:0; left:0; width:200%; height:100%;
+  object-fit:fill; opacity:0; z-index:1;
   transition:opacity 0.5s ease-in-out;
 }
-/* 画像の配置設定 */
+/* Screen 1 は左端から表示 */
+video, .slide { left:0; }
+
 .slide {
-  position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
   background-position:left center;
   background-size:200% auto;
-  opacity:0; transition:opacity 0.5s ease-in-out;
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
@@ -46,12 +43,11 @@ video {
 
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
-  <p>SCREEN 1 (LEFT SIDE)</p>
+  <p>LEFT SIDE</p>
 </div>
 <div id="mainOverlay"></div>
 
 <script>
-// --- 同期設定 ---
 var contents = [
   {type:'video', src:'video1.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000},
@@ -72,7 +68,6 @@ var overlay = document.getElementById('mainOverlay');
 var started = false;
 var lastContentIdx = -1;
 
-// 要素作成（videoのpreloadをmetadataのみにして負荷軽減）
 var elements = contents.map(function(c) {
   var el;
   if (c.type === 'video') {
@@ -81,50 +76,30 @@ var elements = contents.map(function(c) {
     el.muted = true;
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
-    el.preload = 'metadata'; // 全体ではなくメタデータのみ先に読む
-    el.loop = false;
+    el.preload = 'auto'; 
   } else {
     el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
-  el.style.opacity = '0';
   document.body.appendChild(el);
   return el;
 });
 
-function hideAll() {
-  elements.forEach(function(el) {
-    el.style.opacity = '0';
-    // いきなりpauseせず、表示が消えてから少し遅らせる（フリーズ防止）
-    if (el.tagName === 'VIDEO') {
-      setTimeout(function() { if(el.style.opacity == '0') el.pause(); }, 100);
+function updateDisplay(idx) {
+  elements.forEach(function(el, i) {
+    if (i === idx) {
+      el.style.opacity = '1';
+      if (contents[i].type === 'video') {
+        var offset = Date.now() % CYCLE_MS;
+        el.currentTime = (offset - offsets[i]) / 1000;
+        el.play().catch(function(e){ console.log("Play failed", e); });
+      }
+    } else {
+      el.style.opacity = '0';
+      if (el.tagName === 'VIDEO') el.pause();
     }
   });
-  overlay.classList.remove('visible');
-}
-
-function showContent(i) {
-  var el = elements[i];
-  var c = contents[i];
-  
-  if (c.type === 'video') {
-    var offset = Date.now() % CYCLE_MS;
-    var targetTime = (offset - offsets[i]) / 1000;
-    
-    // 再生位置をセットしてから表示
-    el.currentTime = Math.max(0, targetTime);
-    el.play().then(function() {
-      hideAll(); // 他を消す
-      el.style.opacity = '1';
-    }).catch(function(e) {
-      console.log("Retry...");
-      setTimeout(function() { el.play(); el.style.opacity = '1'; }, 500);
-    });
-  } else {
-    hideAll();
-    el.style.opacity = '1';
-  }
 }
 
 function tick() {
@@ -135,7 +110,7 @@ function tick() {
   if (isMain) {
     if (lastContentIdx !== 999) {
       lastContentIdx = 999;
-      hideAll();
+      elements.forEach(function(el){ el.style.opacity = '0'; if(el.tagName==='VIDEO') el.pause(); });
       overlay.classList.add('visible');
     }
   } else {
@@ -146,32 +121,17 @@ function tick() {
     if (idx !== lastContentIdx) {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
-      showContent(idx);
-    }
-    
-    // ズレ補正の頻度を落とす（1秒以上のズレがある時だけにする）
-    var curEl = elements[idx];
-    if (contents[idx].type === 'video' && !curEl.paused) {
-      var target = (offset - offsets[idx]) / 1000;
-      if (Math.abs(curEl.currentTime - target) > 1.0) { // 判定を緩くして負荷軽減
-        curEl.currentTime = target;
-      }
+      updateDisplay(idx);
     }
   }
 }
 
-// 100msだとAndroidには速すぎる場合があるため200msに緩和
-setInterval(tick, 200);
+setInterval(tick, 500); // 負荷軽減のため0.5秒間隔に
 
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';
   started = true;
-  // 初回のみ全ビデオを一度play/pauseして「準備」させる（Androidの制約対策）
-  elements.forEach(function(el) {
-    if (el.tagName === 'VIDEO') {
-      el.play().then(function(){ el.pause(); });
-    }
-  });
+  tick();
 });
 </script>
 </body>

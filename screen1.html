@@ -2,53 +2,86 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>SCREEN 1 - LEFT (BASE)</title>
+<title>SCREEN 2 - CLOCK SYNC</title>
 <style>
   html, body { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
-  body { transform:rotate(-90deg); transform-origin:left top; position:absolute; top:100vh; left:0; width:100vh; height:100vw; }
-  video, .slide { position:fixed; top:0; left:0; width:200%; height:100%; object-fit:fill; opacity:0; transition:opacity 0.5s; z-index:1; }
-  .slide { background-repeat:no-repeat; background-size:100% 100%; background-position:left center; }
-  #mainOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff url('四角ロゴ.PNG') no-repeat left center; background-size:200% auto; opacity:0; transition:opacity 0.8s; z-index:20; pointer-events:none; }
+  body { 
+    margin:0; padding:0; width:100vh; height:100vw; 
+    transform:rotate(-90deg); transform-origin:left top; 
+    position:absolute; top:100vh; left:0; 
+    overflow:hidden; background:#000; 
+  }
+  /* 4台なら width:400% ですが、一旦2画面用の200%設定。必要に応じ400%へ */
+  video, .slide { 
+    position:fixed; top:0; left:-100%; width:200%; height:100%; 
+    object-fit:fill; opacity:0; transition:opacity 0.5s; z-index:1; 
+  }
+  .slide { background-repeat:no-repeat; background-size:100% 100%; background-position:right center; }
+  #mainOverlay { 
+    position:fixed; top:0; left:0; width:100%; height:100%; 
+    background:#fff url('四角ロゴ.PNG') no-repeat right center; 
+    background-size:200% auto; opacity:0; transition:opacity 0.8s; z-index:20; pointer-events:none; 
+  }
   #mainOverlay.visible { opacity:1; }
-  #startOverlay { position:fixed; inset:0; background:#000; color:#fff; display:flex; justify-content:center; align-items:center; z-index:9999; cursor:pointer; }
+  #startOverlay { 
+    position:fixed; inset:0; background:#000; color:#fff; 
+    display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; cursor:pointer; 
+  }
 </style>
 </head>
 <body>
-<div id="startOverlay"><h1>TAP TO START (SCREEN 1)</h1></div>
+<div id="startOverlay"><h1>START SYNC</h1><p>時計で全画面同期します</p></div>
 <div id="mainOverlay"></div>
 
 <script>
-var contents = [
+// --- 1. スケジュール (全画面共通) ---
+const contents = [
   {type:'video', src:'video1.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000},
   {type:'video', src:'video2.mp4', duration:10000},
   {type:'image', src:'holiday.jpg', duration:10000},
   {type:'image', src:'event.jpg', duration:10000}
 ];
-var MAIN_MS = 10000;
-var OFFSET_MS = 0; // ★Screen 1は 0 固定
+const MAIN_MS = 10000;
 
-var INDIVIDUAL_MS = contents.reduce((a, b) => a + b.duration, 0);
-var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
-var offsets = []; var acc = 0;
+// --- 2. ★この画面専用の微調整 (重要) ---
+// OSの時計がズレている分をここで直します。3秒遅いなら「3000」
+const ADJUST_MS = 3000; 
+// 動画の再生位置だけを微調整（秒単位：0.5秒進めるなら 0.5）
+const VIDEO_SEEK_ADJUST = 0.0;
+
+// --- ロジック ---
+const INDIVIDUAL_MS = contents.reduce((a, b) => a + b.duration, 0);
+const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+const offsets = []; let acc = 0;
 contents.forEach(c => { offsets.push(acc); acc += c.duration; });
 
-var startTime = 0;
-var started = false;
-var lastIdx = -1;
+let started = false;
+let lastIdx = -1;
 
-var elements = contents.map(c => {
-  var el = document.createElement(c.type === 'video' ? 'video' : 'div');
-  if (c.type === 'video') { el.src = c.src; el.muted = true; el.playsInline = true; el.preload = 'auto'; }
-  else { el.className = 'slide'; el.style.backgroundImage = "url('" + c.src + "')"; }
+const elements = contents.map(c => {
+  const el = document.createElement(c.type === 'video' ? 'video' : 'div');
+  if (c.type === 'video') { 
+    el.src = c.src; el.muted = true; el.playsInline = true; el.preload = 'auto'; 
+  } else { 
+    el.className = 'slide'; el.style.backgroundImage = `url('${c.src}')`; 
+  }
   document.body.appendChild(el); return el;
 });
 
+function enterFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+
 function tick() {
   if (!started) return;
-  var elapsed = (Date.now() - startTime) + OFFSET_MS;
-  var offset = elapsed % CYCLE_MS;
-  var isMain = offset >= INDIVIDUAL_MS;
+  
+  // 現在時刻に基づいた共通オフセットの算出
+  const now = Date.now() + ADJUST_MS;
+  const offset = now % CYCLE_MS;
+  const isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
     if (lastIdx !== 999) {
@@ -57,8 +90,9 @@ function tick() {
       document.getElementById('mainOverlay').classList.add('visible');
     }
   } else {
-    var idx = 0;
-    for (var i = contents.length - 1; i >= 0; i--) { if (offset >= offsets[i]) { idx = i; break; } }
+    let idx = 0;
+    for (let i = contents.length - 1; i >= 0; i--) { if (offset >= offsets[i]) { idx = i; break; } }
+    
     if (idx !== lastIdx) {
       document.getElementById('mainOverlay').classList.remove('visible');
       lastIdx = idx;
@@ -66,7 +100,9 @@ function tick() {
         if (i === idx) {
           el.style.opacity = 1;
           if (el.play) {
-            el.currentTime = (offset - offsets[i]) / 1000;
+            // 時計に基づいた正確な再生位置へジャンプ
+            const targetTime = ((offset - offsets[i]) / 1000) + VIDEO_SEEK_ADJUST;
+            el.currentTime = Math.max(0, targetTime);
             el.play().catch(()=>{});
           }
         } else { el.style.opacity = 0; if(el.pause) el.pause(); }
@@ -77,7 +113,7 @@ function tick() {
 
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';
-  startTime = Date.now();
+  enterFullscreen();
   started = true;
   setInterval(tick, 100);
 });

@@ -45,20 +45,22 @@ video, .slide {
 
 <script>
 // --- ★ここで個別に時間を調整できます (ミリ秒単位) ---
+// --- 共通設定 (Screen 1〜4で同じ値を入力) ---
 var contents = [
-  {type:'video', src:'video1.mp4',  duration:12000}, // ビデオ1を12秒に
-  {type:'image', src:'calendar.jpg', duration:8000},  // 画像を8秒に
+  {type:'video', src:'video1.mp4',  duration:12000},
+  {type:'image', src:'calendar.jpg', duration:8000},
   {type:'video', src:'video2.mp4',  duration:12000},
   {type:'image', src:'holiday.jpg',  duration:5000},
   {type:'image', src:'event.jpg',    duration:5000}
 ];
-var MAIN_MS = 10000; // ロゴ表示時間
+var MAIN_MS = 10000; // ロゴの表示時間
 
-// --- ★Screen 2専用の微調整設定 ---
-var VIDEO_OFFSET_MS = 500; // 動画の再生位置を500ms進める
-var IMAGE_DELAY_MS  = 300; // 画像の切り替えタイミングを300ms遅らせる
+// --- ★Screen 2 個別調整用 (ここをいじって同期を合わせる) ---
+// 3秒ずれているとのことなので、まずはここを 3000 にして様子を見ます
+var LOGIC_OFFSET_MS = 3000; // 全体の切り替えタイミングを3秒進める
+var VIDEO_PLAY_POS_MS = 500; // 動画内の再生位置をさらに0.5秒進める
 
-// --- ロジック計算 ---
+// --- 内部計算 (自動) ---
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
@@ -70,21 +72,7 @@ var overlay = document.getElementById('mainOverlay');
 var started = false;
 var lastContentIdx = -1;
 
-var elements = contents.map(function(c) {
-  var el;
-  if (c.type === 'video') {
-    el = document.createElement('video');
-    el.src = c.src; el.muted = true;
-    el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
-    el.preload = 'auto';
-  } else {
-    el = document.createElement('div');
-    el.className = 'slide';
-    el.style.backgroundImage = "url('" + c.src + "')";
-  }
-  document.body.appendChild(el);
-  return el;
-});
+// ... (要素作成 elements = contents.map... の部分は変更なし) ...
 
 function updateDisplay(idx) {
   elements.forEach(function(el, i) {
@@ -92,18 +80,23 @@ function updateDisplay(idx) {
       el.style.opacity = '1';
       el.style.zIndex = '10';
       if (contents[i].type === 'video') {
-        var offset = Date.now() % CYCLE_MS;
-        var targetTime = (offset - offsets[i] + VIDEO_OFFSET_MS) / 1000;
+        // 現在時刻から動画の再生すべき地点を計算
+        var now = Date.now() + LOGIC_OFFSET_MS;
+        var offsetInCycle = now % CYCLE_MS;
+        var targetTime = (offsetInCycle - offsets[i] + VIDEO_PLAY_POS_MS) / 1000;
+
         if(el.src === "") el.src = contents[i].src;
-        el.play().then(function() { el.currentTime = targetTime; })
-        .catch(function() { setTimeout(function() { el.play(); }, 200); });
+        el.play().then(function() {
+          // Androidの負荷を考え、0.2秒以上のズレがある時のみシーク
+          if(Math.abs(el.currentTime - targetTime) > 0.2) {
+            el.currentTime = targetTime;
+          }
+        }).catch(function(e) { setTimeout(function() { el.play(); }, 200); });
       }
     } else {
       el.style.opacity = '0';
       el.style.zIndex = '1';
-      if (el.tagName === 'VIDEO') {
-        el.pause(); el.src = ""; el.load();
-      }
+      if (el.tagName === 'VIDEO') { el.pause(); el.src = ""; el.load(); }
     }
   });
 }
@@ -111,11 +104,10 @@ function updateDisplay(idx) {
 function tick() {
   if (!started) return;
   
-  // ★画像の場合のみ、計算上の時刻から IMAGE_DELAY_MS 分だけ過去の判定にする
-  var now = Date.now();
+  // 現在時刻に「この端末専用のズレ補正」を加える
+  var now = Date.now() + LOGIC_OFFSET_MS;
   var offset = now % CYCLE_MS;
   
-  // ロゴフェーズの判定
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
@@ -128,18 +120,10 @@ function tick() {
       overlay.classList.add('visible');
     }
   } else {
-    // 現在のインデックスを取得（画像ラグ補正を考慮）
-    var checkOffset = offset;
     var idx = 0;
     for (var i = contents.length - 1; i >= 0; i--) {
-        // 画像に切り替わる時、または画像から切り替わる時に判定を遅らせる
-        var lag = (contents[i].type === 'image') ? IMAGE_DELAY_MS : 0;
-        if (offset >= (offsets[i] + lag)) {
-            idx = i;
-            break;
-        }
+      if (offset >= offsets[i]) { idx = i; break; }
     }
-
     if (idx !== lastContentIdx) {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
@@ -148,7 +132,10 @@ function tick() {
   }
 }
 
+// 精度を上げるため 100ms ごとにチェック
 setInterval(tick, 100);
+
+// ... (startOverlayのイベントは変更なし) ...
 
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';

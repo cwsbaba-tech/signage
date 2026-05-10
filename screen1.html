@@ -61,7 +61,6 @@ var contents = [
 ];
 var MAIN_MS = 10000;
 
-// --- ロジック ---
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
@@ -71,9 +70,9 @@ contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
 var overlay = document.getElementById('mainOverlay');
 var started = false;
-var syncPhase = null;
 var lastContentIdx = -1;
 
+// 要素作成（videoのpreloadをmetadataのみにして負荷軽減）
 var elements = contents.map(function(c) {
   var el;
   if (c.type === 'video') {
@@ -82,7 +81,7 @@ var elements = contents.map(function(c) {
     el.muted = true;
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
-    el.preload = 'auto';
+    el.preload = 'metadata'; // 全体ではなくメタデータのみ先に読む
     el.loop = false;
   } else {
     el = document.createElement('div');
@@ -97,27 +96,33 @@ var elements = contents.map(function(c) {
 function hideAll() {
   elements.forEach(function(el) {
     el.style.opacity = '0';
-    if (el.tagName === 'VIDEO') el.pause();
+    // いきなりpauseせず、表示が消えてから少し遅らせる（フリーズ防止）
+    if (el.tagName === 'VIDEO') {
+      setTimeout(function() { if(el.style.opacity == '0') el.pause(); }, 100);
+    }
   });
   overlay.classList.remove('visible');
 }
 
 function showContent(i) {
-  hideAll();
   var el = elements[i];
   var c = contents[i];
   
   if (c.type === 'video') {
     var offset = Date.now() % CYCLE_MS;
     var targetTime = (offset - offsets[i]) / 1000;
-    el.currentTime = Math.max(0, targetTime);
     
-    var playPromise = el.play();
-    if (playPromise !== undefined) {
-      playPromise.then(function() { el.style.opacity = '1'; })
-      .catch(function() { setTimeout(function(){ el.play(); }, 200); });
-    }
+    // 再生位置をセットしてから表示
+    el.currentTime = Math.max(0, targetTime);
+    el.play().then(function() {
+      hideAll(); // 他を消す
+      el.style.opacity = '1';
+    }).catch(function(e) {
+      console.log("Retry...");
+      setTimeout(function() { el.play(); el.style.opacity = '1'; }, 500);
+    });
   } else {
+    hideAll();
     el.style.opacity = '1';
   }
 }
@@ -128,38 +133,45 @@ function tick() {
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
-    if (syncPhase !== 'main') {
-      syncPhase = 'main'; lastContentIdx = -1;
-      hideAll(); overlay.classList.add('visible');
+    if (lastContentIdx !== 999) {
+      lastContentIdx = 999;
+      hideAll();
+      overlay.classList.add('visible');
     }
   } else {
     var idx = 0;
     for (var i = contents.length - 1; i >= 0; i--) {
       if (offset >= offsets[i]) { idx = i; break; }
     }
-    if (syncPhase !== 'individual') {
-      syncPhase = 'individual'; overlay.classList.remove('visible');
-    }
     if (idx !== lastContentIdx) {
-      lastContentIdx = idx; showContent(idx);
+      overlay.classList.remove('visible');
+      lastContentIdx = idx;
+      showContent(idx);
     }
-    // 強制同期
+    
+    // ズレ補正の頻度を落とす（1秒以上のズレがある時だけにする）
     var curEl = elements[idx];
     if (contents[idx].type === 'video' && !curEl.paused) {
       var target = (offset - offsets[idx]) / 1000;
-      if (Math.abs(curEl.currentTime - target) > 0.3) {
+      if (Math.abs(curEl.currentTime - target) > 1.0) { // 判定を緩くして負荷軽減
         curEl.currentTime = target;
       }
     }
   }
 }
 
-setInterval(tick, 100);
+// 100msだとAndroidには速すぎる場合があるため200msに緩和
+setInterval(tick, 200);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
   this.style.display = 'none';
-  if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
   started = true;
+  // 初回のみ全ビデオを一度play/pauseして「準備」させる（Androidの制約対策）
+  elements.forEach(function(el) {
+    if (el.tagName === 'VIDEO') {
+      el.play().then(function(){ el.pause(); });
+    }
+  });
 });
 </script>
 </body>

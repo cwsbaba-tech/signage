@@ -21,9 +21,18 @@ video, .slide {
 video, .slide { left:0; }
 
 .slide {
-  background-repeat:no-repeat;
-  background-position:left center;
-  background-size:200% auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  /* 縦を100%（画面ぴったり）に固定し、横を自動計算にする */
+  background-size: auto 100%; 
+  /* 左端を基準にする */
+  background-position: left center; 
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;

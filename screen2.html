@@ -113,42 +113,39 @@ function enterFullscreen() {
   else if (el.msRequestFullscreen) el.msRequestFullscreen();
 }
 
+// Screen 2 (右側) の updateDisplay 関数内を修正
+
 function updateDisplay(idx) {
   elements.forEach(function(el, i) {
     if (i === idx) {
       el.style.opacity = '1';
       el.style.zIndex = '10';
-      
       if (contents[i].type === 'video') {
         var offset = Date.now() % CYCLE_MS;
-        var targetTime = (offset - offsets[i]) / 1000;
         
-        // Androidの負荷軽減のため、まず再生を開始してから、
-        // ズレが大きい場合のみ1回だけシークします
+        // ★ ここを修正：0.5秒分（500ms）足して、再生位置を未来に進める
+        // これにより、Screen 2の遅れを相殺します
+        var targetTime = (offset - offsets[i] + 500) / 1000; 
+
+        if(el.src === "") el.src = contents[i].src;
         el.play().then(function() {
-          if (Math.abs(el.currentTime - targetTime) > 0.3) {
-            el.currentTime = targetTime;
-          }
+          el.currentTime = targetTime;
         }).catch(function(e) {
-          // 再生失敗時は少し待ってリトライ
           setTimeout(function() { el.play(); }, 200);
         });
       }
     } else {
+      // (中略：他の非表示処理)
       el.style.opacity = '0';
       el.style.zIndex = '1';
       if (el.tagName === 'VIDEO') {
         el.pause();
-        // ★重要: video2が止まる対策。ソースを一時的に空にしてメモリを解放する
-        var oldSrc = el.src;
         el.src = ""; 
         el.load();
-        el.src = oldSrc; 
       }
     }
   });
 }
-
 function tick() {
   if (!started) return;
   var offset = Date.now() % CYCLE_MS;

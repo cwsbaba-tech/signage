@@ -31,12 +31,22 @@ body {
   transition:opacity 0.5s ease-in-out;
 }
 video {
-  position:fixed; top:0; left:0;
-  width:200%; height:100%;
-  object-fit:fill;
-  object-position:right center;
-  opacity:0;
-  transition:opacity 0.5s ease-in-out;
+  position: fixed;
+  top: 0;
+  /* 
+     ここが重要です！
+     幅を2枚分(200%)にして、左側に1枚分(100%)はみ出させます。
+     これで画面には右半分だけが残ります。
+  */
+  left: -100%; 
+  width: 200%; 
+  height: 100%;
+  
+  /* 動画を枠いっぱいに強制的に広げます */
+  object-fit: fill; 
+  
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;

@@ -116,47 +116,37 @@ function enterFullscreen() {
 function updateDisplay(idx) {
   elements.forEach(function(el, i) {
     if (i === idx) {
-      // 再生するコンテンツの処理
       el.style.opacity = '1';
-      el.style.zIndex = '10'; // 前面に持ってくる
+      el.style.zIndex = '10';
       
       if (contents[i].type === 'video') {
         var offset = Date.now() % CYCLE_MS;
         var targetTime = (offset - offsets[i]) / 1000;
         
-        el.currentTime = targetTime;
-        // 再生命令の前に一度ロードを明示（Androidのフリーズ対策）
-        el.play().catch(function(e){
-          console.log("Retry play...");
+        // Androidの負荷軽減のため、まず再生を開始してから、
+        // ズレが大きい場合のみ1回だけシークします
+        el.play().then(function() {
+          if (Math.abs(el.currentTime - targetTime) > 0.3) {
+            el.currentTime = targetTime;
+          }
+        }).catch(function(e) {
+          // 再生失敗時は少し待ってリトライ
           setTimeout(function() { el.play(); }, 200);
         });
       }
     } else {
-      // 再生しないコンテンツの処理（ここが重要）
       el.style.opacity = '0';
       el.style.zIndex = '1';
-      
       if (el.tagName === 'VIDEO') {
         el.pause();
-        // メモリ解放のため、再生位置を0に戻し、ソースを再ロード状態にする
-        // これによりAndroidのデコーダーを空けます
-        el.currentTime = 0; 
+        // ★重要: video2が止まる対策。ソースを一時的に空にしてメモリを解放する
+        var oldSrc = el.src;
+        el.src = ""; 
+        el.load();
+        el.src = oldSrc; 
       }
     }
   });
-}
-
-// 同期のズレを補正する処理（頻度を下げて負荷を減らす）
-function syncVideo(idx) {
-  var el = elements[idx];
-  if (contents[idx].type === 'video' && !el.paused) {
-    var offset = Date.now() % CYCLE_MS;
-    var target = (offset - offsets[idx]) / 1000;
-    // 1.5秒以上の大きなズレがある時だけシークする（負荷対策）
-    if (Math.abs(el.currentTime - target) > 1.5) {
-      el.currentTime = target;
-    }
-  }
 }
 
 function tick() {
@@ -167,12 +157,13 @@ function tick() {
   if (isMain) {
     if (lastContentIdx !== 999) {
       lastContentIdx = 999;
-      // 全ビデオを停止してメモリを空ける
       elements.forEach(function(el){ 
         el.style.opacity = '0'; 
         if(el.tagName==='VIDEO') {
           el.pause();
-          el.currentTime = 0;
+          el.src = ""; // メモリ解放
+          el.load();
+          el.src = contents[elements.indexOf(el)].src;
         }
       });
       overlay.classList.add('visible');
@@ -186,10 +177,8 @@ function tick() {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
       updateDisplay(idx);
-    } else {
-      // 同じ動画が再生中の場合のみ、たまに同期チェック
-      syncVideo(idx);
     }
+    // ★ tick内での自動シーク(syncVideo)は負荷が重すぎるため削除しました
   }
 }
 // 0.5秒ごとに同期チェック

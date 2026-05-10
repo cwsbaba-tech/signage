@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>SCREEN 2 - CLOCK SYNC</title>
+<title>SCREEN 1 - CLOCK SYNC</title>
 <style>
   html, body { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
   body { 
@@ -13,13 +13,13 @@
   }
   /* 4台なら width:400% ですが、一旦2画面用の200%設定。必要に応じ400%へ */
   video, .slide { 
-    position:fixed; top:0; left:-100%; width:200%; height:100%; 
+    position:fixed; top:0; left:0%; width:200%; height:100%; 
     object-fit:fill; opacity:0; transition:opacity 0.5s; z-index:1; 
   }
-  .slide { background-repeat:no-repeat; background-size:100% 100%; background-position:right center; }
+  .slide { background-repeat:no-repeat; background-size:100% 100%; background-position:left center; }
   #mainOverlay { 
     position:fixed; top:0; left:0; width:100%; height:100%; 
-    background:#fff url('四角ロゴ.PNG') no-repeat right center; 
+    background:#fff url('四角ロゴ.PNG') no-repeat reft center; 
     background-size:200% auto; opacity:0; transition:opacity 0.8s; z-index:20; pointer-events:none; 
   }
   #mainOverlay.visible { opacity:1; }

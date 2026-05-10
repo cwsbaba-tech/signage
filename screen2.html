@@ -3,80 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 2</title>
+<title>SCREEN 1 - LEFT</title>
 <style>
-html {
-  margin:0; padding:0;
-  width:100vw; height:100vh;
-  background:#000; overflow:hidden;
-}
+html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
 body {
-  margin:0; padding:0;
-  width:100vh;
-  height:100vw;
-  transform:rotate(-90deg);
-  transform-origin:left top;
-  position:absolute;
-  top:100vh;
-  left:0;
-  overflow:hidden;
-  background:#000;
+  margin:0; padding:0; width:100vh; height:100vw;
+  transform:rotate(-90deg); transform-origin:left top;
+  position:absolute; top:100vh; left:0;
+  overflow:hidden; background:#000;
 }
+/* Screen 2 用のビデオ配置：左に1枚分追い出して右半分を表示 */
+video {
+  position:fixed; top:0; 
+  left:-100%; /* ここを変更 */
+  width:200%; height:100%;
+  object-fit:fill; opacity:0;
+  transition:opacity 0.5s ease-in-out;
+}
+
+/* Screen 2 用の画像配置 */
 .slide {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
-  background-position:right center;
+  background-position:right center; /* ここを変更 */
   background-size:200% auto;
-  opacity:0;
-  transition:opacity 0.5s ease-in-out;
-}
-video {
-  position: fixed;
-  top: 0;
-  /* 
-     ここが重要です！
-     幅を2枚分(200%)にして、左側に1枚分(100%)はみ出させます。
-     これで画面には右半分だけが残ります。
-  */
-  left: -100%; 
-  width: 200%; 
-  height: 100%;
-  
-  /* 動画を枠いっぱいに強制的に広げます */
-  object-fit: fill; 
-  
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  opacity:0; transition:opacity 0.5s ease-in-out;
 }
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat right center;
-  background-size:200% auto;
-  opacity:0;
-  transition:opacity 0.8s ease;
-  z-index:20; pointer-events:none;
+  background-size:200% auto; opacity:0;
+  transition:opacity 0.8s ease; z-index:20; pointer-events:none;
 }
 #mainOverlay.visible { opacity:1; }
 #startOverlay {
-  position:fixed; inset:0;
-  background:#000; color:#fff;
-  display:flex; flex-direction:column;
-  justify-content:center; align-items:center;
+  position:fixed; inset:0; background:#000; color:#fff;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
 }
-#startOverlay h1 { font-size:7vw; margin-bottom:2vh; }
-#startOverlay p  { font-size:4vw; opacity:0.8; }
 </style>
 </head>
 <body>
 
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
-  <p>映像の右半分を表示します</p>
+  <p>SCREEN 1 (LEFT SIDE)</p>
 </div>
 <div id="mainOverlay"></div>
 
 <script>
+// --- 同期設定 ---
 var contents = [
   {type:'video', src:'video1.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000},
@@ -84,20 +60,20 @@ var contents = [
   {type:'image', src:'holiday.jpg', duration:10000},
   {type:'image', src:'event.jpg', duration:10000}
 ];
+var MAIN_MS = 10000;
 
+// --- ロジック ---
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
-var MAIN_MS  = 10000;
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
-
-var overlay        = document.getElementById('mainOverlay');
-var started        = false;
-var syncPhase      = null;
-var lastContentIdx = -1;
-
 var offsets = [];
 var acc = 0;
 contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
+
+var overlay = document.getElementById('mainOverlay');
+var started = false;
+var syncPhase = null;
+var lastContentIdx = -1;
 
 var elements = contents.map(function(c) {
   var el;
@@ -107,11 +83,9 @@ var elements = contents.map(function(c) {
     el.muted = true;
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
-    el.preload = 'auto'; // 事前に読み込む設定
-    // ⬇︎ ループ再生を有効にせず、JSで制御する
-    el.loop = false; 
+    el.preload = 'auto';
+    el.loop = false;
   } else {
-    // 画像の処理（変更なし）
     el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
@@ -136,31 +110,17 @@ function showContent(i) {
   
   if (c.type === 'video') {
     var offset = Date.now() % CYCLE_MS;
-    var videoOffset = offset - offsets[i];
-    var targetTime = Math.max(0, videoOffset / 1000);
-
-    el.currentTime = targetTime;
+    var targetTime = (offset - offsets[i]) / 1000;
+    el.currentTime = Math.max(0, targetTime);
     
-    // 再生が確実に始まるように promise をハンドル
     var playPromise = el.play();
     if (playPromise !== undefined) {
-      playPromise.then(function() {
-        el.style.opacity = '1'; // 再生が始まってから表示する
-      }).catch(function(error) {
-        console.log("再生失敗、再試行します");
-        el.play(); 
-      });
+      playPromise.then(function() { el.style.opacity = '1'; })
+      .catch(function() { setTimeout(function(){ el.play(); }, 200); });
     }
   } else {
     el.style.opacity = '1';
   }
-}
-
-function getIdx(offset) {
-  for (var i = contents.length - 1; i >= 0; i--) {
-    if (offset >= offsets[i]) return i;
-  }
-  return 0;
 }
 
 function tick() {
@@ -170,56 +130,37 @@ function tick() {
 
   if (isMain) {
     if (syncPhase !== 'main') {
-      syncPhase = 'main';
-      lastContentIdx = -1;
-      hideAll();
-      overlay.classList.add('visible');
+      syncPhase = 'main'; lastContentIdx = -1;
+      hideAll(); overlay.classList.add('visible');
     }
   } else {
-    var idx = getIdx(offset);
+    var idx = 0;
+    for (var i = contents.length - 1; i >= 0; i--) {
+      if (offset >= offsets[i]) { idx = i; break; }
+    }
     if (syncPhase !== 'individual') {
-      syncPhase = 'individual';
-      overlay.classList.remove('visible');
+      syncPhase = 'individual'; overlay.classList.remove('visible');
     }
-    
     if (idx !== lastContentIdx) {
-      lastContentIdx = idx;
-      showContent(idx);
+      lastContentIdx = idx; showContent(idx);
     }
-
-    // ⬇︎ 動画のズレを監視・補正する処理を追加
-    var currentEl = elements[idx];
-    if (contents[idx].type === 'video' && !currentEl.paused) {
-      var videoOffset = offset - offsets[idx]; // この動画が始まってからの経過時間(ms)
-      var targetTime = videoOffset / 1000;      // 秒単位
-      
-      // 実際の再生位置が計算上の位置と 0.3秒以上ズレていたら強制補正
-      if (Math.abs(currentEl.currentTime - targetTime) > 0.3) {
-        currentEl.currentTime = targetTime;
+    // 強制同期
+    var curEl = elements[idx];
+    if (contents[idx].type === 'video' && !curEl.paused) {
+      var target = (offset - offsets[idx]) / 1000;
+      if (Math.abs(curEl.currentTime - target) > 0.3) {
+        curEl.currentTime = target;
       }
     }
   }
 }
+
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
-  document.getElementById('startOverlay').style.display = 'none';
-  ensureFullscreen();
+  this.style.display = 'none';
+  if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
   started = true;
-  showContent(0);
-  lastContentIdx = 0;
-});
-
-function ensureFullscreen() {
-  var el = document.documentElement;
-  if (!document.fullscreenElement) {
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (el.msRequestFullscreen) el.msRequestFullscreen();
-  }
-}
-document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement) setTimeout(ensureFullscreen, 500);
 });
 </script>
 </body>

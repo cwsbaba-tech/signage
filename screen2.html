@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 1 - LEFT</title>
+<title>SCREEN 2 - RIGHT</title>
 <style>
 html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
 body {
@@ -12,21 +12,31 @@ body {
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
 }
-/* コンテンツの配置（Screen 1は左端） */
+
+/* --- SCREEN 2 の右側表示設定 --- */
 video, .slide {
-  position:fixed; top:0; left:0; width:200%; height:100%;
+  position:fixed; top:0; 
+  left: -100%; /* 左に1枚分追い出して「右半分」を画面に出す */
+  width: 200%; 
+  height: 100%;
   object-fit:fill; opacity:0; z-index:1;
   transition:opacity 0.5s ease-in-out;
 }
+
 .slide {
-  background-repeat:no-repeat; background-size:100% 100%; background-position:left center;
+  background-repeat:no-repeat;
+  background-size:100% 100%; 
+  background-position:right center; /* 画像の右端を基準にする */
 }
+
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#fff url('四角ロゴ.PNG') no-repeat left center;
+  /* ロゴの右半分を表示 */
+  background:#fff url('四角ロゴ.PNG') no-repeat right center;
   background-size:200% auto; opacity:0;
   transition:opacity 0.8s ease; z-index:20; pointer-events:none;
 }
+
 #mainOverlay.visible { opacity:1; }
 #startOverlay {
   position:fixed; inset:0; background:#000; color:#fff;
@@ -39,27 +49,26 @@ video, .slide {
 
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
-  <p>SCREEN 1 (BASE)</p>
+  <p>SCREEN 2 (RIGHT)</p>
 </div>
 <div id="mainOverlay"></div>
 
 <script>
-// --- 1. 全画面共通の再生スケジュール ---
+// --- 1. 時間設定 (Screen 1と完全に一致させてください) ---
 var contents = [
-  {type:'video', src:'video1.mp4',  duration:12000},
-  {type:'image', src:'calendar.jpg', duration:8000},
-  {type:'video', src:'video2.mp4',  duration:12000},
-  {type:'image', src:'holiday.jpg',  duration:5000},
-  {type:'image', src:'event.jpg',    duration:5000}
+  {type:'video', src:'video1.mp4',  duration:12000}, // 12秒
+  {type:'image', src:'calendar.jpg', duration:8000},  // 8秒
+  {type:'video', src:'video2.mp4',  duration:12000}, // 12秒
+  {type:'image', src:'holiday.jpg',  duration:5000},  // 5秒
+  {type:'image', src:'event.jpg',    duration:5000}   // 5秒
 ];
-var MAIN_MS = 10000; // ロゴの時間
+var MAIN_MS = 10000; // ロゴ 10秒
 
-// --- 2. ★この画面専用の微調整設定 ---
-// 他の画面とズレる場合、ここだけ書き換えます
-var OFFSET_MS = 0;    // 切り替えタイミング補正（例: 500 で0.5秒早める）
-var VIDEO_ADJUST = 0; // 動画の再生位置補正（秒単位。例: 0.2 で0.2秒進める）
+// --- 2. ★Screen 2 用の微調整 ---
+var OFFSET_MS = 0;    // 全体のズレ補正 (例: 3000 で3秒進める)
+var VIDEO_ADJUST = 0; // 動画内の再生位置補正
 
-// --- 3. 同期ロジックの計算 ---
+// --- ロジック計算 ---
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
@@ -71,7 +80,6 @@ var overlay = document.getElementById('mainOverlay');
 var started = false;
 var lastContentIdx = -1;
 
-// 要素作成
 var elements = contents.map(function(c) {
   var el;
   if (c.type === 'video') {
@@ -97,7 +105,11 @@ function updateDisplay(idx) {
         var now = Date.now() + OFFSET_MS;
         var targetTime = ((now % CYCLE_MS) - offsets[i]) / 1000 + VIDEO_ADJUST;
         if(el.src === "") el.src = contents[i].src;
-        el.play().then(function() { el.currentTime = Math.max(0, targetTime); });
+        el.play().then(function() {
+          if (Math.abs(el.currentTime - targetTime) > 0.3) {
+            el.currentTime = Math.max(0, targetTime);
+          }
+        });
       }
     } else {
       el.style.opacity = '0';
@@ -111,12 +123,16 @@ function tick() {
   if (!started) return;
   var now = Date.now() + OFFSET_MS;
   var offset = now % CYCLE_MS;
+  
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
     if (lastContentIdx !== 999) {
       lastContentIdx = 999;
-      elements.forEach(function(el){ el.style.opacity = '0'; if(el.tagName==='VIDEO'){ el.pause(); el.src=""; el.load(); } });
+      elements.forEach(function(el){ 
+        el.style.opacity = '0'; 
+        if(el.tagName==='VIDEO'){ el.pause(); el.src=""; el.load(); } 
+      });
       overlay.classList.add('visible');
     }
   } else {
@@ -132,6 +148,7 @@ function tick() {
   }
 }
 
+// 精度を保つため100msで監視
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {

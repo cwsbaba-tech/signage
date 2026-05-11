@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 2</title>
 <style>
-/* 画面全体の基本設定 */
-html, body { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
+/* 1. 画面の土台を固定 */
+html, body { 
+  margin:0; padding:0; width:100vw; height:100vh; 
+  background:#000; overflow:hidden; 
+}
 
-/* 回転制御：Androidでの全画面表示に最適化 */
+/* 2. 90度回転の制御（親要素をはみ出さないように設定） */
 body {
   width: 100vh;
   height: 100vw;
@@ -19,7 +22,7 @@ body {
   left: 0;
 }
 
-/* スライド画像（右側） */
+/* 3. 画像スライド（右半分を切り出す） */
 .slide {
   position: absolute;
   top: 0;
@@ -27,35 +30,38 @@ body {
   width: 100%;
   height: 100%;
   background-repeat: no-repeat;
-  /* 右側を表示するために background-position を調整 */
-  background-position: right center; 
-  background-size: 200% 100%; /* 横を2画面分にして高さを100%に固定 */
+  /* background-positionを【left】にすると画像の左端が出るので、
+     右半分を出すために【-100%分ずらす】処理を行います */
+  background-size: 200% 100%; 
+  background-position: 100% 0%; /* 右端に合わせる */
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
 }
 
-/* 動画（右側） */
+/* 4. 動画（右半分を切り出す） */
 video {
   position: absolute;
   top: 0;
-  /* 200%の幅の動画を左に100%分ずらすことで、右半分を画面内に収める */
-  left: -100%; 
-  width: 200%; 
-  height: 100%;
+  /* 2倍の幅の動画を左に1画面分追い出す */
+  left: -100% !important; 
+  width: 200% !important;
+  height: 100% !important;
   object-fit: fill;
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
 }
 
-/* ロゴの右半分（Screen1と合体して中央に見える） */
+/* 5. ロゴの右半分（Screen1と合体して中央に見える） */
 #mainOverlay {
-  position: fixed;
+  position: absolute; /* fixedからabsoluteに変更して回転に追従させる */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #fff url('四角ロゴ.PNG') no-repeat left center; /* 左寄せ（画像の右半分を出す） */
-  background-size: 200% auto; /* 2画面分の幅にする */
+  background: #fff url('四角ロゴ.PNG') no-repeat;
+  /* ロゴの右半分を出すために背景位置を【左端(0%)】にする（画像自体の右側が表示される） */
+  background-position: 0% 50%; 
+  background-size: 200% auto; 
   opacity: 0;
   transition: opacity 0.8s ease;
   z-index: 20;
@@ -65,16 +71,11 @@ video {
 #mainOverlay.visible { opacity: 1; }
 
 #startOverlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  background: #000;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  cursor: pointer;
+  background:#000; color:#fff;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  z-index: 9999; cursor: pointer;
 }
 </style>
 </head>
@@ -87,7 +88,6 @@ video {
 <div id="mainOverlay"></div>
 
 <script>
-// 設定（Screen 1と必ず一致させる）
 var contents = [
   {type:'video', src:'video1.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000},
@@ -96,25 +96,21 @@ var contents = [
   {type:'image', src:'event.jpg', duration:10000}
 ];
 var MAIN_MS = 10000;
-var ADJUST_MS = 0; // ズレがある場合はここを調整
+var ADJUST_MS = 0; 
 
-var INDIVIDUAL_MS = contents.reduce(function(acc, c) { return acc + c.duration; }, 0);
+var INDIVIDUAL_MS = contents.reduce(function(a, b) { return a + b.duration; }, 0);
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 var offsets = [];
-var currentAcc = 0;
-contents.forEach(function(c) { offsets.push(currentAcc); currentAcc += c.duration; });
+var acc = 0;
+contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
 var elements = contents.map(function(c) {
-  var el;
+  var el = document.createElement(c.type === 'video' ? 'video' : 'div');
   if (c.type === 'video') {
-    el = document.createElement('video');
-    el.src = c.src;
-    el.muted = true;
-    el.setAttribute('muted', '');
-    el.setAttribute('playsinline', '');
+    el.src = c.src; el.muted = true;
+    el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
     el.preload = 'auto';
   } else {
-    el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
@@ -138,6 +134,9 @@ function showContent(idx, offset) {
   });
 }
 
+var lastIdx = -1;
+var started = false;
+
 function tick() {
   if (!started) return;
   var now = Date.now() + ADJUST_MS;
@@ -145,26 +144,22 @@ function tick() {
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
-    if (lastContentIdx !== 999) {
-      lastContentIdx = 999;
+    if (lastIdx !== 999) {
+      lastIdx = 999;
       elements.forEach(function(el){ el.style.opacity = '0'; if(el.pause) el.pause(); });
       document.getElementById('mainOverlay').classList.add('visible');
     }
   } else {
     var idx = 0;
-    for (var i = contents.length - 1; i >= 0; i--) {
-      if (offset >= offsets[i]) { idx = i; break; }
-    }
-    if (idx !== lastContentIdx) {
+    for (var i = contents.length - 1; i >= 0; i--) { if (offset >= offsets[i]) { idx = i; break; } }
+    if (idx !== lastIdx) {
       document.getElementById('mainOverlay').classList.remove('visible');
-      lastContentIdx = idx;
+      lastIdx = idx;
       showContent(idx, offset);
     }
   }
 }
 
-var started = false;
-var lastContentIdx = -1;
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {

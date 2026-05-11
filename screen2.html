@@ -3,89 +3,76 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 2</title>
+<title>SCREEN 2 - STABLE</title>
 <style>
-/* 1. 画面の土台を固定 */
-html, body { 
-  margin:0; padding:0; width:100vw; height:100vh; 
-  background:#000; overflow:hidden; 
-}
+  /* 根本的な解決：vw/vhではなく、画面全体を覆う絶対配置にする */
+  html, body { 
+    margin:0; padding:0; width:100%; height:100%; 
+    background:#000; overflow:hidden; position:fixed;
+  }
 
-/* 2. 90度回転の制御（親要素をはみ出さないように設定） */
-body {
-  width: 100vh;
-  height: 100vw;
-  transform: rotate(-90deg);
-  transform-origin: top left;
-  position: absolute;
-  top: 100vh;
-  left: 0;
-}
+  /* 回転とサイズを強制固定 */
+  #container {
+    position: absolute;
+    top: 50%; left: 50%;
+    /* 縦横を強制的に入れ替えたサイズを指定 */
+    width: 100vh; height: 100vw;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    background: #000;
+    overflow: hidden;
+  }
 
-/* 3. 画像スライド（右半分を切り出す） */
-.slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  /* background-positionを【left】にすると画像の左端が出るので、
-     右半分を出すために【-100%分ずらす】処理を行います */
-  background-size: 200% 100%; 
-  background-position: 100% 0%; /* 右端に合わせる */
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
+  /* スライド画像（右側） */
+  .slide {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-size: 200% 100%; /* 横2画面分 */
+    background-position: right center; /* 右側を表示 */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
 
-/* 4. 動画（右半分を切り出す） */
-video {
-  position: absolute;
-  top: 0;
-  /* 2倍の幅の動画を左に1画面分追い出す */
-  left: -100% !important; 
-  width: 200% !important;
-  height: 100% !important;
-  object-fit: fill;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
+  /* 動画（右側） */
+  video {
+    position: absolute;
+    top: 0; left: -100%; /* 左に1画面分追い出す */
+    width: 200%; height: 100%;
+    object-fit: fill;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
 
-/* 5. ロゴの右半分（Screen1と合体して中央に見える） */
-#mainOverlay {
-  position: absolute; /* fixedからabsoluteに変更して回転に追従させる */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #fff url('四角ロゴ.PNG') no-repeat;
-  /* ロゴの右半分を出すために背景位置を【左端(0%)】にする（画像自体の右側が表示される） */
-  background-position: 0% 50%; 
-  background-size: 200% auto; 
-  opacity: 0;
-  transition: opacity 0.8s ease;
-  z-index: 20;
-  pointer-events: none;
-}
+  /* ロゴ（右半分） */
+  #mainOverlay {
+    position: absolute;
+    inset: 0;
+    background: #fff url('四角ロゴ.PNG') no-repeat left center;
+    background-size: 200% auto;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    z-index: 20;
+  }
 
-#mainOverlay.visible { opacity: 1; }
+  #mainOverlay.visible { opacity: 1; }
 
-#startOverlay {
-  position: absolute;
-  inset: 0;
-  background:#000; color:#fff;
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
-  z-index: 9999; cursor: pointer;
-}
+  #startOverlay {
+    position: fixed; inset: 0; background: #000; color: #fff;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 9999; cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
 <div id="startOverlay">
   <h1>TAP TO START</h1>
-  <p>SCREEN 2 (RIGHT SIDE)</p>
+  <p>ズレ・サイズ崩れ対策版 (SCREEN 2)</p>
 </div>
-<div id="mainOverlay"></div>
+
+<div id="container">
+  <div id="mainOverlay"></div>
+</div>
 
 <script>
 var contents = [
@@ -98,13 +85,14 @@ var contents = [
 var MAIN_MS = 10000;
 var ADJUST_MS = 0; 
 
-var INDIVIDUAL_MS = contents.reduce(function(a, b) { return a + b.duration; }, 0);
+var INDIVIDUAL_MS = contents.reduce((a, b) => a + b.duration, 0);
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 var offsets = [];
 var acc = 0;
-contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
+contents.forEach(c => { offsets.push(acc); acc += c.duration; });
 
-var elements = contents.map(function(c) {
+var container = document.getElementById('container');
+var elements = contents.map(c => {
   var el = document.createElement(c.type === 'video' ? 'video' : 'div');
   if (c.type === 'video') {
     el.src = c.src; el.muted = true;
@@ -114,18 +102,21 @@ var elements = contents.map(function(c) {
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
-  document.body.appendChild(el);
+  container.appendChild(el);
   return el;
 });
 
+var lastIdx = -1;
+var started = false;
+
 function showContent(idx, offset) {
-  elements.forEach(function(el, i) {
+  elements.forEach((el, i) => {
     if (i === idx) {
       el.style.opacity = '1';
       if (contents[i].type === 'video') {
         var targetTime = (offset - offsets[i]) / 1000;
         el.currentTime = Math.max(0, targetTime);
-        el.play().catch(function(e){});
+        el.play().catch(()=>{});
       }
     } else {
       el.style.opacity = '0';
@@ -134,19 +125,15 @@ function showContent(idx, offset) {
   });
 }
 
-var lastIdx = -1;
-var started = false;
-
 function tick() {
   if (!started) return;
-  var now = Date.now() + ADJUST_MS;
-  var offset = now % CYCLE_MS;
+  var offset = (Date.now() + ADJUST_MS) % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
     if (lastIdx !== 999) {
       lastIdx = 999;
-      elements.forEach(function(el){ el.style.opacity = '0'; if(el.pause) el.pause(); });
+      elements.forEach(el => { el.style.opacity = 0; if(el.pause) el.pause(); });
       document.getElementById('mainOverlay').classList.add('visible');
     }
   } else {

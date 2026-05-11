@@ -13,11 +13,11 @@ body {
   overflow:hidden; background:#000;
 }
 .slide {
-  position:fixed; top:0; left:0; width:200%; height:100%;
+  position:fixed; top:0; left:0; width:100%; height:100%;
   background-repeat:no-repeat;
-  /* 画像の右半分を出す設定 */
-  background-position:right center; 
-  background-size:100% 100%;
+  /* 画像の右半分を表示 */
+  background-position:right center;
+  background-size:200% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
@@ -33,7 +33,7 @@ video {
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat right center;
-  background-size:200% auto; /* 2画面分の幅にして右寄せすることで右半分を表示 */
+  background-size:200% auto;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
@@ -66,7 +66,6 @@ var contents = [
 var MAIN_MS = 10000;
 
 // ★時計のズレ微調整用（ミリ秒）
-// Screen 1と数秒ずれている場合は、ここを「3000」などにして調整してください
 var ADJUST_MS = 0; 
 
 // --- 計算 ---
@@ -103,7 +102,6 @@ function showContent(idx, offset) {
     if (i === idx) {
       el.style.opacity = '1';
       if (contents[i].type === 'video') {
-        // 時計の時刻に合わせて再生位置をシーク（全画面同期）
         var targetTime = (offset - offsets[i]) / 1000;
         el.currentTime = targetTime > 0 ? targetTime : 0;
         el.play().catch(function(e){});
@@ -118,7 +116,6 @@ function showContent(idx, offset) {
 function tick() {
   if (!started) return;
   
-  // 現在時刻に微調整値を加算
   var now = Date.now() + ADJUST_MS;
   var offset = now % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;

@@ -5,89 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 2</title>
 <style>
-/* 画面全体の基本設定 */
-html, body { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
-
-/* 回転制御：Androidでの全画面表示に最適化 */
+html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
 body {
-  width: 100vh;
-  height: 100vw;
-  transform: rotate(-90deg);
-  transform-origin: top left;
-  position: absolute;
-  top: 100vh;
-  left: 0;
+  margin:0; padding:0; width:100vh; height:100vw;
+  transform:rotate(-90deg); transform-origin:left top;
+  position:absolute; top:100vh; left:0;
+  overflow:hidden; background:#000;
 }
-
-/* スライド画像（右側） */
 .slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  /* 右側を表示するために background-position を調整 */
-  background-position: right center; 
-  background-size: 200% 100%; /* 横を2画面分にして高さを100%に固定 */
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background-repeat:no-repeat;
+  /* 画像の右半分を表示 */
+  background-position:right center;
+  background-size:200% 100%;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
 }
-
-/* 動画（右側） */
 video {
-  position: absolute;
-  top: 0;
-  /* 200%の幅の動画を左に100%分ずらすことで、右半分を画面内に収める */
-  left: -100%; 
-  width: 200%; 
-  height: 100%;
-  object-fit: fill;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  position:fixed; top:0; 
+  left:-100%; /* 動画を左に追い出すことで右半分を表示 */
+  width:200%; height:100%;
+  object-fit:fill;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
 }
-
-/* ロゴの右半分（Screen1と合体して中央に見える） */
+/* ロゴの右半分を表示（SCREEN 2 RIGHT側） */
 #mainOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #fff url('四角ロゴ.PNG') no-repeat left center; /* 左寄せ（画像の右半分を出す） */
-  background-size: 200% auto; /* 2画面分の幅にする */
-  opacity: 0;
-  transition: opacity 0.8s ease;
-  z-index: 20;
-  pointer-events: none;
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#fff url('四角ロゴ.PNG') no-repeat right center;
+  background-size:200% auto;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20; pointer-events:none;
 }
-
-#mainOverlay.visible { opacity: 1; }
-
+#mainOverlay.visible { opacity:1; }
 #startOverlay {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  cursor: pointer;
+  position:fixed; inset:0; background:#000; color:#fff;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  z-index:9999; cursor:pointer; text-align:center;
 }
 </style>
 </head>
 <body>
 
 <div id="startOverlay">
-  <h1>TAP TO START</h1>
+  <h1>タップしてスタート</h1>
   <p>SCREEN 2 (RIGHT SIDE)</p>
 </div>
 <div id="mainOverlay"></div>
 
 <script>
-// 設定（Screen 1と必ず一致させる）
+// --- 設定 ---
 var contents = [
   {type:'video', src:'video1.mp4', duration:10000},
   {type:'image', src:'calendar.jpg', duration:10000},
@@ -96,22 +64,29 @@ var contents = [
   {type:'image', src:'event.jpg', duration:10000}
 ];
 var MAIN_MS = 10000;
-var ADJUST_MS = 0; // ズレがある場合はここを調整
 
-var INDIVIDUAL_MS = contents.reduce(function(acc, c) { return acc + c.duration; }, 0);
+// ★時計のズレ微調整用（ミリ秒）
+var ADJUST_MS = 0; 
+
+// --- 計算 ---
+var INDIVIDUAL_MS = 0;
+contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+
+var overlay = document.getElementById('mainOverlay');
+var started = false;
+var lastContentIdx = -1;
+
 var offsets = [];
-var currentAcc = 0;
-contents.forEach(function(c) { offsets.push(currentAcc); currentAcc += c.duration; });
+var acc = 0;
+contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
 var elements = contents.map(function(c) {
   var el;
   if (c.type === 'video') {
     el = document.createElement('video');
-    el.src = c.src;
-    el.muted = true;
-    el.setAttribute('muted', '');
-    el.setAttribute('playsinline', '');
+    el.src = c.src; el.muted = true;
+    el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
     el.preload = 'auto';
   } else {
     el = document.createElement('div');
@@ -128,7 +103,7 @@ function showContent(idx, offset) {
       el.style.opacity = '1';
       if (contents[i].type === 'video') {
         var targetTime = (offset - offsets[i]) / 1000;
-        el.currentTime = Math.max(0, targetTime);
+        el.currentTime = targetTime > 0 ? targetTime : 0;
         el.play().catch(function(e){});
       }
     } else {
@@ -140,6 +115,7 @@ function showContent(idx, offset) {
 
 function tick() {
   if (!started) return;
+  
   var now = Date.now() + ADJUST_MS;
   var offset = now % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;
@@ -148,7 +124,7 @@ function tick() {
     if (lastContentIdx !== 999) {
       lastContentIdx = 999;
       elements.forEach(function(el){ el.style.opacity = '0'; if(el.pause) el.pause(); });
-      document.getElementById('mainOverlay').classList.add('visible');
+      overlay.classList.add('visible');
     }
   } else {
     var idx = 0;
@@ -156,24 +132,26 @@ function tick() {
       if (offset >= offsets[i]) { idx = i; break; }
     }
     if (idx !== lastContentIdx) {
-      document.getElementById('mainOverlay').classList.remove('visible');
+      overlay.classList.remove('visible');
       lastContentIdx = idx;
       showContent(idx, offset);
     }
   }
 }
 
-var started = false;
-var lastContentIdx = -1;
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
-  this.style.display = 'none';
+  document.getElementById('startOverlay').style.display = 'none';
+  ensureFullscreen();
+  started = true;
+});
+
+function ensureFullscreen() {
   var el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  started = true;
-});
+}
 </script>
 </body>
 </html>

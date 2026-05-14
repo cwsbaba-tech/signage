@@ -19,8 +19,9 @@ body {
   background-size:100% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
-  /* 右半分だけ見せるためにleft方向に100%ずらす */
-  margin-left:-100%;
+  /* 右半分を表示するためにtransformで左にずらす */
+  -webkit-transform:translateX(-50%);
+  transform:translateX(-50%);
 }
 video {
   position:fixed; top:0;
@@ -31,15 +32,15 @@ video {
   transition:opacity 0.5s ease-in-out;
 }
 #mainOverlay {
-  position:fixed; top:0; left:0; width:100%; height:100%;
+  position:fixed; top:0; left:0; width:200%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat left center;
   background-size:100% 100%;
   opacity:0;
   transition:opacity 0.8s ease;
   z-index:20; pointer-events:none;
-  /* 右半分だけ見せるためにleft方向に100%ずらす */
-  margin-left:-100%;
-  width:200%;
+  /* 右半分を表示するためにtransformで左にずらす */
+  -webkit-transform:translateX(-50%);
+  transform:translateX(-50%);
 }
 #mainOverlay.visible { opacity:1; }
 #startOverlay {
@@ -108,12 +109,12 @@ function seekAndPlay(el, idx, offset) {
 
   if (el.readyState >= 2) {
     el.currentTime = targetTime;
-    el.play().catch(function(e){});
+    try { el.play(); } catch(e) {}
   } else {
     el.addEventListener('canplay', function handler() {
       el.removeEventListener('canplay', handler);
       el.currentTime = targetTime;
-      el.play().catch(function(e){});
+      try { el.play(); } catch(e) {}
     });
     el.load();
   }

@@ -27,7 +27,6 @@ video {
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
-/* ロゴの左半分を表示（SCREEN 1 LEFT側） */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat left center;
@@ -53,20 +52,16 @@ video {
 <div id="mainOverlay"></div>
 
 <script>
-// --- 設定 ---
 var contents = [
-  {type:'video', src:'video1.mp4', duration:9900},  // 9.9秒に合わせて調整
+  {type:'video', src:'video1.mp4', duration:9900},
   {type:'image', src:'calendar.jpg', duration:10000},
   {type:'video', src:'video2.mp4', duration:10000},
   {type:'image', src:'holiday.jpg', duration:10000},
   {type:'image', src:'event.jpg', duration:10000}
 ];
 var MAIN_MS = 10000;
+var ADJUST_MS = 0;
 
-// ★時計のズレ微調整用（ミリ秒）
-var ADJUST_MS = 0; 
-
-// --- 計算 ---
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
@@ -79,13 +74,28 @@ var offsets = [];
 var acc = 0;
 contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
-var elements = contents.map(function(c) {
+// 動画の読み込み完了フラグ
+var videoReady = {};
+
+var elements = contents.map(function(c, i) {
   var el;
   if (c.type === 'video') {
     el = document.createElement('video');
-    el.src = c.src; el.muted = true;
-    el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
+    el.src = c.src;
+    el.muted = true;
+    el.setAttribute('muted', '');
+    el.setAttribute('playsinline', '');
     el.preload = 'auto';
+    videoReady[i] = false;
+
+    // 再生可能になったらフラグを立てる
+    el.addEventListener('canplaythrough', function() {
+      videoReady[i] = true;
+    });
+    // エラー時も一応フラグを立てて固まらないようにする
+    el.addEventListener('error', function() {
+      videoReady[i] = true;
+    });
   } else {
     el = document.createElement('div');
     el.className = 'slide';
@@ -95,16 +105,32 @@ var elements = contents.map(function(c) {
   return el;
 });
 
+function seekAndPlay(el, idx, offset) {
+  var targetTime = (offset - offsets[idx]) / 1000;
+  var maxTime = contents[idx].duration / 1000 - 0.1;
+  targetTime = Math.min(targetTime > 0 ? targetTime : 0, maxTime);
+
+  // seekできる状態かチェック
+  if (el.readyState >= 2) {
+    el.currentTime = targetTime;
+    el.play().catch(function(e){});
+  } else {
+    // まだ読み込めていない場合は読み込み完了を待つ
+    el.addEventListener('canplay', function handler() {
+      el.removeEventListener('canplay', handler);
+      el.currentTime = targetTime;
+      el.play().catch(function(e){});
+    });
+    el.load(); // 再度ロードを試みる
+  }
+}
+
 function showContent(idx, offset) {
   elements.forEach(function(el, i) {
     if (i === idx) {
       el.style.opacity = '1';
       if (contents[i].type === 'video') {
-        var targetTime = (offset - offsets[i]) / 1000;
-        // 動画の長さを超えないようにクランプ
-        var maxTime = contents[i].duration / 1000 - 0.1;
-        el.currentTime = Math.min(targetTime > 0 ? targetTime : 0, maxTime);
-        el.play().catch(function(e){});
+        seekAndPlay(el, idx, offset);
       }
     } else {
       el.style.opacity = '0';
@@ -115,7 +141,7 @@ function showContent(idx, offset) {
 
 function tick() {
   if (!started) return;
-  
+
   var now = Date.now() + ADJUST_MS;
   var offset = now % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;

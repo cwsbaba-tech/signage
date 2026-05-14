@@ -74,9 +74,6 @@ var offsets = [];
 var acc = 0;
 contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
-// 動画の読み込み完了フラグ
-var videoReady = {};
-
 var elements = contents.map(function(c, i) {
   var el;
   if (c.type === 'video') {
@@ -86,15 +83,8 @@ var elements = contents.map(function(c, i) {
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
     el.preload = 'auto';
-    videoReady[i] = false;
-
-    // 再生可能になったらフラグを立てる
-    el.addEventListener('canplaythrough', function() {
-      videoReady[i] = true;
-    });
-    // エラー時も一応フラグを立てて固まらないようにする
     el.addEventListener('error', function() {
-      videoReady[i] = true;
+      console.log('video error: ' + c.src);
     });
   } else {
     el = document.createElement('div');
@@ -110,18 +100,16 @@ function seekAndPlay(el, idx, offset) {
   var maxTime = contents[idx].duration / 1000 - 0.1;
   targetTime = Math.min(targetTime > 0 ? targetTime : 0, maxTime);
 
-  // seekできる状態かチェック
   if (el.readyState >= 2) {
     el.currentTime = targetTime;
     el.play().catch(function(e){});
   } else {
-    // まだ読み込めていない場合は読み込み完了を待つ
     el.addEventListener('canplay', function handler() {
       el.removeEventListener('canplay', handler);
       el.currentTime = targetTime;
       el.play().catch(function(e){});
     });
-    el.load(); // 再度ロードを試みる
+    el.load();
   }
 }
 

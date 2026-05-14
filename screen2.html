@@ -12,13 +12,21 @@ body {
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
 }
-.slide {
-  position:fixed; top:0; left:0; width:200%; height:100%;
-  background-repeat:no-repeat;
-  background-position:right center;
-  background-size:100% 100%;
+/* 画像を右半分だけ表示するラッパー */
+.slide-wrap {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  overflow:hidden;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
+}
+.slide-wrap img {
+  position:absolute;
+  top:0; right:0;
+  height:100%;
+  width:auto;
+  /* 2画面分の幅の画像の右半分を表示 */
+  max-width:none;
+  transform:translateX(50%);
 }
 video {
   position:fixed; top:0;
@@ -84,15 +92,16 @@ var elements = contents.map(function(c, i) {
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
     el.preload = 'auto';
-
-    // エラー時も固まらないようにする
     el.addEventListener('error', function() {
       console.log('video error: ' + c.src);
     });
   } else {
+    // ラッパーdivにimgを入れる
     el = document.createElement('div');
-    el.className = 'slide';
-    el.style.backgroundImage = "url('" + c.src + "')";
+    el.className = 'slide-wrap';
+    var img = document.createElement('img');
+    img.src = c.src;
+    el.appendChild(img);
   }
   document.body.appendChild(el);
   return el;

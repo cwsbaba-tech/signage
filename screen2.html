@@ -12,21 +12,13 @@ body {
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
 }
-/* 画像を右半分だけ表示するラッパー */
-.slide-wrap {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  overflow:hidden;
+.slide {
+  position:fixed; top:0; left:0; width:200%; height:100%;
+  background-repeat:no-repeat;
+  background-position:right center;
+  background-size:100% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
-}
-.slide-wrap img {
-  position:absolute;
-  top:0; right:0;
-  height:100%;
-  width:auto;
-  /* 2画面分の幅の画像の右半分を表示 */
-  max-width:none;
-  transform:translateX(50%);
 }
 video {
   position:fixed; top:0;
@@ -96,16 +88,37 @@ var elements = contents.map(function(c, i) {
       console.log('video error: ' + c.src);
     });
   } else {
-    // ラッパーdivにimgを入れる
     el = document.createElement('div');
-    el.className = 'slide-wrap';
-    var img = document.createElement('img');
-    img.src = c.src;
-    el.appendChild(img);
+    el.className = 'slide';
+    el.style.backgroundImage = "url('" + c.src + "')";
   }
   document.body.appendChild(el);
   return el;
 });
+
+// 回転後の実際の画面サイズに合わせてスライドのサイズを動的に設定
+function resizeSlides() {
+  var W = window.innerWidth;
+  var H = window.innerHeight;
+  // body は回転しているので実際の表示幅=H、表示高さ=W
+  var dispW = H;
+  var dispH = W;
+
+  elements.forEach(function(el, i) {
+    if (contents[i].type === 'image') {
+      el.style.width = (dispW * 2) + 'px';
+      el.style.height = dispH + 'px';
+      el.style.backgroundSize = '50% 100%';
+      el.style.backgroundPosition = 'right center';
+    }
+  });
+
+  // ロゴも動的に設定
+  overlay.style.width = dispW + 'px';
+  overlay.style.height = dispH + 'px';
+  overlay.style.backgroundSize = (dispW * 2) + 'px auto';
+  overlay.style.backgroundPosition = 'right center';
+}
 
 function seekAndPlay(el, idx, offset) {
   var targetTime = (offset - offsets[idx]) / 1000;
@@ -169,9 +182,12 @@ setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
+  resizeSlides();
   ensureFullscreen();
   started = true;
 });
+
+window.addEventListener('resize', resizeSlides);
 
 function ensureFullscreen() {
   var el = document.documentElement;
@@ -181,3 +197,4 @@ function ensureFullscreen() {
 </script>
 </body>
 </html>
+

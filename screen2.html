@@ -3,122 +3,125 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SCREEN 2 - RIGHT SIDE</title>
+<title>SCREEN 2</title>
 <style>
-  html, body { 
-    margin:0; padding:0; width:100%; height:100%; 
-    background:#000; overflow:hidden; position:fixed;
-  }
-
-  #container {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 100vh; height: 100vw;
-    transform: translate(-50%, -50%) rotate(-90deg);
-    background: #000;
-    overflow: hidden;
-  }
-
-  /* 背景スライド：右半分を表示 */
-  .slide {
-    position: absolute;
-    inset: 0;
-    background-repeat: no-repeat;
-    background-size: 200% 100%; 
-    /* 右半分を映すために 100% (右端) に合わせる */
-    background-position: 100% center; 
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-
-  /* ビデオ：右半分を表示 */
-  video {
-    position: absolute;
-    top: 0; 
-    left: -100%; /* 左側1画面分を外に追い出す */
-    width: 200%; height: 100%;
-    object-fit: fill;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-
-  /* 【重要修正】ロゴ：右半分を表示 */
-  #mainOverlay {
-    position: absolute;
-    inset: 0;
-    background: #fff url('四角ロゴ.PNG') no-repeat;
-    /* ロゴ画像の右半分を映すために 100% (右端) に合わせる */
-    background-position: 100% center; 
-    background-size: 200% auto;
-    opacity: 0;
-    transition: opacity 0.8s ease;
-    z-index: 20;
-  }
-
-  #mainOverlay.visible { opacity: 1; }
-
-  #startOverlay {
-    position: fixed; inset: 0; background: #000; color: #fff;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    z-index: 9999; cursor: pointer;
-  }
+html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
+body {
+  margin:0; padding:0; width:100vh; height:100vw;
+  transform:rotate(-90deg); transform-origin:left top;
+  position:absolute; top:100vh; left:0;
+  overflow:hidden; background:#000;
+}
+.slide {
+  position:fixed; top:0; left:0; width:200%; height:100%;
+  background-repeat:no-repeat;
+  background-position:right center;
+  background-size:100% 100%;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
+}
+video {
+  position:fixed; top:0;
+  left:-100%;
+  width:200%; height:100%;
+  object-fit:fill;
+  opacity:0;
+  transition:opacity 0.5s ease-in-out;
+}
+#mainOverlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#fff url('四角ロゴ.PNG') no-repeat right center;
+  background-size:200% auto;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:20; pointer-events:none;
+}
+#mainOverlay.visible { opacity:1; }
+#startOverlay {
+  position:fixed; inset:0; background:#000; color:#fff;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  z-index:9999; cursor:pointer; text-align:center;
+}
 </style>
 </head>
 <body>
 
 <div id="startOverlay">
-  <h1>TAP TO START</h1>
+  <h1>タップしてスタート</h1>
   <p>SCREEN 2 (RIGHT SIDE)</p>
 </div>
-
-<div id="container">
-  <div id="mainOverlay"></div>
-</div>
+<div id="mainOverlay"></div>
 
 <script>
-// --- 設定 ---
 var contents = [
-  {type:'video', src:'video1.mp4', duration:10000},
+  {type:'video', src:'video1.mp4', duration:9900},
   {type:'image', src:'calendar.jpg', duration:10000},
   {type:'video', src:'video2.mp4', duration:10000},
   {type:'image', src:'holiday.jpg', duration:10000},
   {type:'image', src:'event.jpg', duration:10000}
 ];
 var MAIN_MS = 10000;
-var ADJUST_MS = 0; 
+var ADJUST_MS = 0;
 
-var INDIVIDUAL_MS = contents.reduce((a, b) => a + b.duration, 0);
+var INDIVIDUAL_MS = 0;
+contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
 var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+
+var overlay = document.getElementById('mainOverlay');
+var started = false;
+var lastContentIdx = -1;
+
 var offsets = [];
 var acc = 0;
-contents.forEach(c => { offsets.push(acc); acc += c.duration; });
+contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
-var container = document.getElementById('container');
-var elements = contents.map(c => {
-  var el = document.createElement(c.type === 'video' ? 'video' : 'div');
+var elements = contents.map(function(c, i) {
+  var el;
   if (c.type === 'video') {
-    el.src = c.src; el.muted = true;
-    el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
+    el = document.createElement('video');
+    el.src = c.src;
+    el.muted = true;
+    el.setAttribute('muted', '');
+    el.setAttribute('playsinline', '');
     el.preload = 'auto';
+
+    // エラー時も固まらないようにする
+    el.addEventListener('error', function() {
+      console.log('video error: ' + c.src);
+    });
   } else {
+    el = document.createElement('div');
     el.className = 'slide';
     el.style.backgroundImage = "url('" + c.src + "')";
   }
-  container.appendChild(el);
+  document.body.appendChild(el);
   return el;
 });
 
-var lastIdx = -1;
-var started = false;
+function seekAndPlay(el, idx, offset) {
+  var targetTime = (offset - offsets[idx]) / 1000;
+  var maxTime = contents[idx].duration / 1000 - 0.1;
+  targetTime = Math.min(targetTime > 0 ? targetTime : 0, maxTime);
+
+  if (el.readyState >= 2) {
+    el.currentTime = targetTime;
+    el.play().catch(function(e){});
+  } else {
+    el.addEventListener('canplay', function handler() {
+      el.removeEventListener('canplay', handler);
+      el.currentTime = targetTime;
+      el.play().catch(function(e){});
+    });
+    el.load();
+  }
+}
 
 function showContent(idx, offset) {
-  elements.forEach((el, i) => {
+  elements.forEach(function(el, i) {
     if (i === idx) {
       el.style.opacity = '1';
       if (contents[i].type === 'video') {
-        var targetTime = (offset - offsets[i]) / 1000;
-        el.currentTime = Math.max(0, targetTime);
-        el.play().catch(()=>{});
+        seekAndPlay(el, idx, offset);
       }
     } else {
       el.style.opacity = '0';
@@ -129,21 +132,25 @@ function showContent(idx, offset) {
 
 function tick() {
   if (!started) return;
-  var offset = (Date.now() + ADJUST_MS) % CYCLE_MS;
+
+  var now = Date.now() + ADJUST_MS;
+  var offset = now % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;
 
   if (isMain) {
-    if (lastIdx !== 999) {
-      lastIdx = 999;
-      elements.forEach(el => { el.style.opacity = 0; if(el.pause) el.pause(); });
-      document.getElementById('mainOverlay').classList.add('visible');
+    if (lastContentIdx !== 999) {
+      lastContentIdx = 999;
+      elements.forEach(function(el){ el.style.opacity = '0'; if(el.pause) el.pause(); });
+      overlay.classList.add('visible');
     }
   } else {
     var idx = 0;
-    for (var i = contents.length - 1; i >= 0; i--) { if (offset >= offsets[i]) { idx = i; break; } }
-    if (idx !== lastIdx) {
-      document.getElementById('mainOverlay').classList.remove('visible');
-      lastIdx = idx;
+    for (var i = contents.length - 1; i >= 0; i--) {
+      if (offset >= offsets[i]) { idx = i; break; }
+    }
+    if (idx !== lastContentIdx) {
+      overlay.classList.remove('visible');
+      lastContentIdx = idx;
       showContent(idx, offset);
     }
   }
@@ -152,12 +159,16 @@ function tick() {
 setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', function() {
-  this.style.display = 'none';
+  document.getElementById('startOverlay').style.display = 'none';
+  ensureFullscreen();
+  started = true;
+});
+
+function ensureFullscreen() {
   var el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  started = true;
-});
+}
 </script>
 </body>
 </html>

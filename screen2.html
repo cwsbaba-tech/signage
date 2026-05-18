@@ -13,14 +13,12 @@ body {
   overflow:hidden; background:#000;
 }
 .slide {
-  position:fixed; top:0; left:0; width:200%; height:100%;
+  position:fixed; top:0; left:-100%; width:200%; height:100%;
   background-repeat:no-repeat;
   background-position:left center;
   background-size:100% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
-  -webkit-transform:translateX(-50%);
-  transform:translateX(-50%);
 }
 video {
   position:fixed; top:0;
@@ -30,7 +28,6 @@ video {
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
-/* ロゴ: screen1と同じ構造でright centerのみ変更 */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat right center;
@@ -173,3 +170,4 @@ function ensureFullscreen() {
 </script>
 </body>
 </html>
+

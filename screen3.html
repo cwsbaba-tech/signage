@@ -67,11 +67,10 @@ html, body {
 .qrItem { text-align: center; color: #fff; font-size: 1vw; }
 .qrItem img { width: 5vw; height: auto; border-radius: 10px; }
 
-/* 同期用オーバーレイ */
 #mainOverlay {
   position: fixed; top: 0; left: 0;
   width: 100%; height: 100%;
-  background: #000 no-repeat center center;
+  background: #fff url('横長ロゴ.jpg') no-repeat center center;
   background-size: contain;
   opacity: 0;
   transition: opacity 0.8s ease;
@@ -174,9 +173,22 @@ slides.forEach(function(s) {
 });
 
 var slideEls = document.querySelectorAll('.slide');
-var current  = 0;
 var started  = false;
-var slideInterval = null;
+var lastSlideIdx = -1;
+var syncPhase    = null;
+
+/* screen1・2と同じ計算式 */
+var contents = [
+  {duration:9900},
+  {duration:10000},
+  {duration:10000},
+  {duration:10000},
+  {duration:10000}
+];
+var MAIN_MS = 10000;
+var INDIVIDUAL_MS = 0;
+contents.forEach(function(c){ INDIVIDUAL_MS += c.duration; });
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
 function showSlide(i) {
   slideEls.forEach(function(el, idx) {
@@ -190,28 +202,6 @@ function showSlide(i) {
   captionEl.innerHTML = slides[i].caption;
 }
 
-function nextSlide() {
-  current = (current + 1) % slides.length;
-  showSlide(current);
-}
-
-/* ===== 同期 ===== */
-var INDIVIDUAL_MS = slides.length * 10000; // 5枚×10秒=50秒
-var MAIN_MS       = 10000;
-var CYCLE_MS      = INDIVIDUAL_MS + MAIN_MS;
-var syncPhase     = null;
-var lastSlideIdx  = -1;
-
-function loadMainVisual() {
-  fetch('playlist.json?t=' + Date.now())
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      var main = (data['main'] || [])[0];
-      if (main) overlay.style.backgroundImage = "url('" + main.src + "')";
-    })
-    .catch(function(e) {});
-}
-
 function tick() {
   if (!started) return;
   var offset = Date.now() % CYCLE_MS;
@@ -220,7 +210,6 @@ function tick() {
   if (isMain) {
     if (syncPhase !== 'main') {
       syncPhase = 'main';
-      clearInterval(slideInterval);
       captionEl.style.opacity = '0';
       phoneEl.style.opacity   = '0';
       qrEl.style.opacity      = '0';
@@ -234,33 +223,24 @@ function tick() {
       captionEl.style.opacity = '1';
       phoneEl.style.opacity   = '1';
       qrEl.style.opacity      = '1';
-      loadMainVisual();
-      // スライドショー再開
-      clearInterval(slideInterval);
-      slideInterval = setInterval(nextSlide, 10000);
     }
     if (slideIdx !== lastSlideIdx) {
       lastSlideIdx = slideIdx;
-      current = slideIdx;
       showSlide(slideIdx);
     }
   }
 }
 
-loadMainVisual();
-setInterval(tick, 500);
+setInterval(tick, 100);
 
-/* ===== スタート ===== */
 startOverlay.addEventListener('click', function() {
   ensureFullscreen();
   startOverlay.style.display = 'none';
   slideshowScreen.style.display = 'flex';
   started = true;
   showSlide(0);
-  slideInterval = setInterval(nextSlide, 10000);
 });
 
-/* ===== メニュー ===== */
 slideshowScreen.addEventListener('click', function() {
   ensureFullscreen();
   slideshowScreen.style.display = 'none';
@@ -273,7 +253,6 @@ document.getElementById('backBtn').addEventListener('click', function() {
   ensureFullscreen();
 });
 
-/* ===== フルスクリーン ===== */
 function ensureFullscreen() {
   var el = document.documentElement;
   if (!document.fullscreenElement) {
@@ -288,3 +267,4 @@ document.addEventListener('fullscreenchange', function() {
 </script>
 </body>
 </html>
+

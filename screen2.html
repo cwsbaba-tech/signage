@@ -2,61 +2,78 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>SCREEN 2</title>
 
 <style>
-html,
-body{
+html{
   margin:0;
   padding:0;
-  width:100%;
-  height:100%;
+  width:100vw;
+  height:100vh;
   overflow:hidden;
   background:#000;
 }
 
-/* 画面全体を90度回転 */
 body{
+  margin:0;
+  padding:0;
+
   position:fixed;
-  inset:0;
+
+  width:100vh;
+  height:100vw;
+
+  top:100vh;
+  left:0;
+
+  overflow:hidden;
+
+  background:#000;
+
   transform:rotate(-90deg);
-  transform-origin:center center;
+  transform-origin:left top;
 }
 
-/* 画像 */
+/* 右側モニター表示用 */
 .slide{
   position:fixed;
-  inset:0;
+
+  top:0;
+  left:-100%;
+
+  width:200%;
+  height:100%;
 
   background-repeat:no-repeat;
   background-position:center center;
-  background-size:cover;
+
+  /* 横長映像を2画面で分割 */
+  background-size:200% 100%;
 
   opacity:0;
-  transition:opacity .5s ease-in-out;
 
-  z-index:1;
+  transition:opacity .5s ease-in-out;
 }
 
-/* 動画 */
 video{
   position:fixed;
-  inset:0;
 
-  width:100%;
+  top:0;
+  left:-100%;
+
+  width:200%;
   height:100%;
 
-  object-fit:cover;
+  object-fit:fill;
 
   opacity:0;
-  transition:opacity .5s ease-in-out;
 
-  z-index:1;
+  transition:opacity .5s ease-in-out;
 }
 
-/* ロゴオーバーレイ */
+/* ロゴ */
 #mainOverlay{
   position:fixed;
   inset:0;
@@ -70,6 +87,7 @@ video{
   background-size:contain;
 
   opacity:0;
+
   transition:opacity .8s ease;
 
   z-index:20;
@@ -81,7 +99,7 @@ video{
   opacity:1;
 }
 
-/* スタート画面 */
+/* スタート */
 #startOverlay{
   position:fixed;
   inset:0;
@@ -99,69 +117,37 @@ video{
   cursor:pointer;
 
   font-family:sans-serif;
-  text-align:center;
-}
-
-#startOverlay h1{
-  margin:0 0 20px;
-  font-size:48px;
-}
-
-#startOverlay p{
-  margin:0;
-  opacity:.7;
-  font-size:24px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- スタート画面 -->
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
   <p>SCREEN 2 (RIGHT SIDE)</p>
 </div>
 
-<!-- ロゴ画面 -->
 <div id="mainOverlay"></div>
 
 <script>
-/* =========================
-   コンテンツ設定
-========================= */
-
 const contents = [
 
-  { type:'video', src:'video1.mp4', duration:9900 },
+  {type:'video', src:'video1.mp4', duration:10000},
 
-  { type:'image', src:'calendar.jpg', duration:10000 },
+  {type:'image', src:'calendar.jpg', duration:10000},
 
-  { type:'video', src:'video2.mp4', duration:10000 },
+  {type:'video', src:'video2.mp4', duration:10000},
 
-  { type:'image', src:'holiday.jpg', duration:10000 },
+  {type:'image', src:'holiday.jpg', duration:10000},
 
-  { type:'image', src:'event.jpg', duration:10000 }
+  {type:'image', src:'event.jpg', duration:10000}
 
 ];
 
-/* ロゴ表示時間 */
 const MAIN_MS = 10000;
-
-/* 時刻補正 */
 const ADJUST_MS = 0;
 
-
-/* =========================
-   内部処理
-========================= */
-
-const overlay = document.getElementById('mainOverlay');
-
-let started = false;
-let lastContentIdx = -1;
-
-/* 合計時間 */
 let INDIVIDUAL_MS = 0;
 
 contents.forEach(c => {
@@ -170,17 +156,22 @@ contents.forEach(c => {
 
 const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-/* 各コンテンツ開始位置 */
+const overlay = document.getElementById('mainOverlay');
+
+let started = false;
+let lastContentIdx = -1;
+
 const offsets = [];
 
 let acc = 0;
 
 contents.forEach(c => {
+
   offsets.push(acc);
+
   acc += c.duration;
 });
 
-/* 要素生成 */
 const elements = contents.map(c => {
 
   let el;
@@ -192,7 +183,7 @@ const elements = contents.map(c => {
     el.src = c.src;
 
     el.muted = true;
-    el.loop = false;
+
     el.preload = 'auto';
 
     el.setAttribute('muted','');
@@ -212,26 +203,6 @@ const elements = contents.map(c => {
   return el;
 });
 
-
-/* =========================
-   表示切替
-========================= */
-
-function hideAll(){
-
-  elements.forEach(el => {
-
-    el.style.opacity = '0';
-
-    if(el.tagName === 'VIDEO'){
-      el.pause();
-      el.currentTime = 0;
-    }
-
-  });
-
-}
-
 function showContent(idx){
 
   elements.forEach((el, i) => {
@@ -245,7 +216,6 @@ function showContent(idx){
         el.currentTime = 0;
 
         el.play().catch(()=>{});
-
       }
 
     }else{
@@ -255,19 +225,12 @@ function showContent(idx){
       if(el.tagName === 'VIDEO'){
 
         el.pause();
-        el.currentTime = 0;
 
+        el.currentTime = 0;
       }
     }
-
   });
-
 }
-
-
-/* =========================
-   メインループ
-========================= */
 
 function tick(){
 
@@ -279,49 +242,53 @@ function tick(){
 
   const isMain = offset >= INDIVIDUAL_MS;
 
-  /* ロゴ画面 */
   if(isMain){
 
     if(lastContentIdx !== 999){
 
       lastContentIdx = 999;
 
-      hideAll();
+      elements.forEach(el => {
+
+        el.style.opacity = '0';
+
+        if(el.tagName === 'VIDEO'){
+
+          el.pause();
+
+          el.currentTime = 0;
+        }
+      });
 
       overlay.classList.add('visible');
     }
 
-    return;
-  }
+  }else{
 
-  /* 通常コンテンツ */
-  let idx = 0;
+    let idx = 0;
 
-  for(let i = contents.length - 1; i >= 0; i--){
+    for(let i = contents.length - 1; i >= 0; i--){
 
-    if(offset >= offsets[i]){
+      if(offset >= offsets[i]){
 
-      idx = i;
-      break;
+        idx = i;
+
+        break;
+      }
     }
-  }
 
-  if(idx !== lastContentIdx){
+    if(idx !== lastContentIdx){
 
-    overlay.classList.remove('visible');
+      overlay.classList.remove('visible');
 
-    lastContentIdx = idx;
+      lastContentIdx = idx;
 
-    showContent(idx);
+      showContent(idx);
+    }
   }
 }
 
 setInterval(tick, 100);
-
-
-/* =========================
-   スタート処理
-========================= */
 
 document
 .getElementById('startOverlay')
@@ -332,13 +299,7 @@ document
   ensureFullscreen();
 
   started = true;
-
 });
-
-
-/* =========================
-   フルスクリーン
-========================= */
 
 function ensureFullscreen(){
 

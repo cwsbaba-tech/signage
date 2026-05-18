@@ -130,13 +130,26 @@ const elements = contents.map(c => {
   return el;
 });
 
+function playVideo(el){
+  if(el.readyState >= 2){
+    el.currentTime = 0;
+    el.play().catch(()=>{});
+  }else{
+    el.addEventListener('canplay', function handler(){
+      el.removeEventListener('canplay', handler);
+      el.currentTime = 0;
+      el.play().catch(()=>{});
+    });
+    el.load();
+  }
+}
+
 function showContent(idx){
   elements.forEach((el, i) => {
     if(i === idx){
       el.style.opacity = '1';
       if(el.tagName === 'VIDEO'){
-        el.currentTime = 0;
-        el.play().catch(()=>{});
+        playVideo(el);
       }
     }else{
       el.style.opacity = '0';

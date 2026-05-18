@@ -21,8 +21,7 @@ body {
   transition:opacity 0.5s ease-in-out;
 }
 video {
-  position:fixed; top:0;
-  left:-100%;
+  position:fixed; top:0; left:-100%;
   width:200%; height:100%;
   object-fit:fill;
   opacity:0;
@@ -45,7 +44,6 @@ video {
 </style>
 </head>
 <body>
-
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
   <p>SCREEN 2 (RIGHT SIDE)</p>
@@ -75,7 +73,7 @@ var offsets = [];
 var acc = 0;
 contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
-var elements = contents.map(function(c, i) {
+var elements = contents.map(function(c) {
   var el;
   if (c.type === 'video') {
     el = document.createElement('video');
@@ -84,9 +82,6 @@ var elements = contents.map(function(c, i) {
     el.setAttribute('muted', '');
     el.setAttribute('playsinline', '');
     el.preload = 'auto';
-    el.addEventListener('error', function() {
-      console.log('video error: ' + c.src);
-    });
   } else {
     el = document.createElement('div');
     el.className = 'slide';
@@ -96,41 +91,26 @@ var elements = contents.map(function(c, i) {
   return el;
 });
 
-function seekAndPlay(el, idx, offset) {
-  var targetTime = (offset - offsets[idx]) / 1000;
-  var maxTime = contents[idx].duration / 1000 - 0.1;
-  targetTime = Math.min(targetTime > 0 ? targetTime : 0, maxTime);
-
-  if (el.readyState >= 2) {
-    el.currentTime = targetTime;
-    try { el.play(); } catch(e) {}
-  } else {
-    el.addEventListener('canplay', function handler() {
-      el.removeEventListener('canplay', handler);
-      el.currentTime = targetTime;
-      try { el.play(); } catch(e) {}
-    });
-    el.load();
-  }
-}
-
-function showContent(idx, offset) {
+function showContent(idx) {
   elements.forEach(function(el, i) {
     if (i === idx) {
       el.style.opacity = '1';
-      if (contents[i].type === 'video') {
-        seekAndPlay(el, idx, offset);
+      if (el.tagName === 'VIDEO') {
+        el.currentTime = 0;
+        try { el.play(); } catch(e) {}
       }
     } else {
       el.style.opacity = '0';
-      if (el.tagName === 'VIDEO') el.pause();
+      if (el.tagName === 'VIDEO') {
+        el.pause();
+        el.currentTime = 0;
+      }
     }
   });
 }
 
 function tick() {
   if (!started) return;
-
   var now = Date.now() + ADJUST_MS;
   var offset = now % CYCLE_MS;
   var isMain = offset >= INDIVIDUAL_MS;
@@ -138,7 +118,7 @@ function tick() {
   if (isMain) {
     if (lastContentIdx !== 999) {
       lastContentIdx = 999;
-      elements.forEach(function(el){ el.style.opacity = '0'; if(el.pause) el.pause(); });
+      elements.forEach(function(el){ el.style.opacity = '0'; if(el.tagName==='VIDEO'){el.pause();el.currentTime=0;} });
       overlay.classList.add('visible');
     }
   } else {
@@ -149,7 +129,7 @@ function tick() {
     if (idx !== lastContentIdx) {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
-      showContent(idx, offset);
+      showContent(idx);
     }
   }
 }
@@ -170,4 +150,3 @@ function ensureFullscreen() {
 </script>
 </body>
 </html>
-

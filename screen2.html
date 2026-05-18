@@ -2,21 +2,21 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-<title>SCREEN 2 RIGHT</title>
+<title>SCREEN 2</title>
 
 <style>
-html{
+html {
   margin:0;
   padding:0;
   width:100vw;
   height:100vh;
-  overflow:hidden;
   background:#000;
+  overflow:hidden;
 }
 
-body{
+body {
   margin:0;
   padding:0;
 
@@ -36,8 +36,8 @@ body{
   transform-origin:left top;
 }
 
-/* 右画面用 */
-.media{
+/* 右側モニター用 */
+.slide {
   position:fixed;
 
   top:0;
@@ -46,55 +46,63 @@ body{
   width:200%;
   height:100%;
 
+  background-repeat:no-repeat;
+  background-position:left center;
+
+  background-size:100% 100%;
+
   opacity:0;
 
-  transition:opacity .5s ease-in-out;
-
-  z-index:1;
+  transition:opacity 0.5s ease-in-out;
 }
 
-/* 画像 */
-img.media{
-  object-fit:fill;
-}
+video {
+  position:fixed;
 
-/* 動画 */
-video.media{
+  top:0;
+  left:-100%;
+
+  width:200%;
+  height:100%;
+
   object-fit:fill;
+
+  opacity:0;
+
+  transition:opacity 0.5s ease-in-out;
 }
 
 /* ロゴ */
-#mainOverlay{
+#mainOverlay {
   position:fixed;
-  inset:0;
 
-  background:
-    #fff
-    url('四角ロゴ.PNG')
-    no-repeat;
+  top:0;
+  left:0;
 
-  /* 右側へ寄せる */
-  background-position:75% center;
+  width:100%;
+  height:100%;
 
-  /* 2画面分サイズ */
+  background:#fff url('四角ロゴ.PNG') no-repeat right center;
+
   background-size:200% auto;
 
   opacity:0;
 
-  transition:opacity .8s ease;
+  transition:opacity 0.8s ease;
 
   z-index:20;
 
   pointer-events:none;
 }
 
-#mainOverlay.visible{
+#mainOverlay.visible {
   opacity:1;
 }
 
-/* スタート */
-#startOverlay{
+/* スタート画面 */
+#startOverlay {
   position:fixed;
+
   inset:0;
 
   background:#000;
@@ -108,6 +116,8 @@ video.media{
   z-index:9999;
 
   cursor:pointer;
+
+  text-align:center;
 
   font-family:sans-serif;
 }
@@ -124,9 +134,9 @@ video.media{
 <div id="mainOverlay"></div>
 
 <script>
-const contents = [
+var contents = [
 
-  {type:'video', src:'video1.mp4', duration:10000},
+  {type:'video', src:'video1.mp4', duration:9900},
 
   {type:'image', src:'calendar.jpg', duration:10000},
 
@@ -138,41 +148,48 @@ const contents = [
 
 ];
 
-const MAIN_MS = 10000;
+var MAIN_MS = 10000;
 
 /* 時刻補正 */
-const ADJUST_MS = 0;
+var ADJUST_MS = 0;
 
-let INDIVIDUAL_MS = 0;
 
-contents.forEach(c => {
+/* 合計時間 */
+var INDIVIDUAL_MS = 0;
+
+contents.forEach(function(c) {
+
   INDIVIDUAL_MS += c.duration;
 });
 
-const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-const overlay = document.getElementById('mainOverlay');
+var overlay = document.getElementById('mainOverlay');
 
-let started = false;
+var started = false;
 
-let lastContentIdx = -1;
+var lastContentIdx = -1;
 
-const offsets = [];
 
-let acc = 0;
+/* 各コンテンツ開始位置 */
+var offsets = [];
 
-contents.forEach(c => {
+var acc = 0;
+
+contents.forEach(function(c) {
 
   offsets.push(acc);
 
   acc += c.duration;
 });
 
-const elements = contents.map(c => {
 
-  let el;
+/* 要素生成 */
+var elements = contents.map(function(c) {
 
-  if(c.type === 'video'){
+  var el;
+
+  if (c.type === 'video') {
 
     el = document.createElement('video');
 
@@ -180,46 +197,52 @@ const elements = contents.map(c => {
 
     el.muted = true;
 
+    el.setAttribute('muted', '');
+
+    el.setAttribute('playsinline', '');
+
     el.preload = 'auto';
 
-    el.setAttribute('muted','');
+  } else {
 
-    el.setAttribute('playsinline','');
+    el = document.createElement('div');
 
-  }else{
+    el.className = 'slide';
 
-    el = document.createElement('img');
-
-    el.src = c.src;
+    el.style.backgroundImage = "url('" + c.src + "')";
   }
-
-  el.className = 'media';
 
   document.body.appendChild(el);
 
   return el;
 });
 
-function showContent(idx){
 
-  elements.forEach((el, i) => {
+/* 表示切替 */
+function showContent(idx) {
 
-    if(i === idx){
+  elements.forEach(function(el, i) {
+
+    if (i === idx) {
 
       el.style.opacity = '1';
 
-      if(el.tagName === 'VIDEO'){
+      if (el.tagName === 'VIDEO') {
 
         el.currentTime = 0;
 
-        el.play().catch(()=>{});
+        try {
+
+          el.play();
+
+        } catch(e) {}
       }
 
-    }else{
+    } else {
 
       el.style.opacity = '0';
 
-      if(el.tagName === 'VIDEO'){
+      if (el.tagName === 'VIDEO') {
 
         el.pause();
 
@@ -229,23 +252,27 @@ function showContent(idx){
   });
 }
 
-function tick(){
 
-  if(!started) return;
+/* メインループ */
+function tick() {
 
-  const now = Date.now() + ADJUST_MS;
+  if (!started) return;
 
-  const offset = now % CYCLE_MS;
+  var now = Date.now() + ADJUST_MS;
 
-  const isMain = offset >= INDIVIDUAL_MS;
+  var offset = now % CYCLE_MS;
 
-  if(isMain){
+  var isMain = offset >= INDIVIDUAL_MS;
 
-    if(lastContentIdx !== 999){
+
+  /* ロゴ画面 */
+  if (isMain) {
+
+    if (lastContentIdx !== 999) {
 
       lastContentIdx = 999;
 
-      elements.forEach(el => {
+      elements.forEach(function(el){
 
         el.style.opacity = '0';
 
@@ -260,13 +287,13 @@ function tick(){
       overlay.classList.add('visible');
     }
 
-  }else{
+  } else {
 
-    let idx = 0;
+    var idx = 0;
 
-    for(let i = contents.length - 1; i >= 0; i--){
+    for (var i = contents.length - 1; i >= 0; i--) {
 
-      if(offset >= offsets[i]){
+      if (offset >= offsets[i]) {
 
         idx = i;
 
@@ -274,7 +301,7 @@ function tick(){
       }
     }
 
-    if(idx !== lastContentIdx){
+    if (idx !== lastContentIdx) {
 
       overlay.classList.remove('visible');
 
@@ -287,9 +314,11 @@ function tick(){
 
 setInterval(tick, 100);
 
+
+/* スタート */
 document
 .getElementById('startOverlay')
-.addEventListener('click', () => {
+.addEventListener('click', function() {
 
   document.getElementById('startOverlay').style.display = 'none';
 
@@ -298,15 +327,17 @@ document
   started = true;
 });
 
-function ensureFullscreen(){
 
-  const el = document.documentElement;
+/* フルスクリーン */
+function ensureFullscreen() {
 
-  if(el.requestFullscreen){
+  var el = document.documentElement;
+
+  if (el.requestFullscreen) {
 
     el.requestFullscreen();
 
-  }else if(el.webkitRequestFullscreen){
+  } else if (el.webkitRequestFullscreen) {
 
     el.webkitRequestFullscreen();
   }

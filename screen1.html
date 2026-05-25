@@ -19,6 +19,7 @@ body {
   background-size:100% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
+  z-index: 10; /* 動画やロゴとの重ね順を正常化 */
 }
 video {
   position:fixed; top:0; left:0;
@@ -26,7 +27,17 @@ video {
   object-fit:fill;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
+  z-index: 10; /* 動画やロゴとの重ね順を正常化 */
 }
+
+/* ★ 左画面用のAIカレンダー巨大化＆継ぎ目（水曜日カケ）回避設定 */
+.slide.calendar-large {
+  width: 200% !important;
+  background-size: contain !important; /* 上下が切れないように収める */
+  /* 位置を38.5%に微調整することで、左画面側に「日月火水」が綺麗に収まり、水曜日が真ん中で切れません */
+  background-position: 38.5% center !important; 
+}
+
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('四角ロゴ.PNG') no-repeat left center;
@@ -59,7 +70,7 @@ var contents = [
   {type:'image', src:'event.jpg', duration:10000}
 ];
 var MAIN_MS = 10000;
-var ADJUST_MS = 0;
+var ADJUST_MS = 0; // ★もし右画面とズレる場合は、ここを「50」や「-50」にして微調整してください
 
 var INDIVIDUAL_MS = 0;
 contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
@@ -73,7 +84,7 @@ var offsets = [];
 var acc = 0;
 contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
-var elements = contents.map(function(c) {
+var elements = contents.map(function(c, idx) {
   var el;
   if (c.type === 'video') {
     el = document.createElement('video');
@@ -85,18 +96,26 @@ var elements = contents.map(function(c) {
   } else {
     el = document.createElement('div');
     el.className = 'slide';
+    
+    // カレンダー（配列の1番目）に大画面＆継ぎ目回避クラスを適用
+    if (idx === 1) {
+      el.classList.add('calendar-large');
+    }
+    
     el.style.backgroundImage = "url('" + c.src + "')";
   }
   document.body.appendChild(el);
   return el;
 });
 
-function showContent(idx) {
+function showContent(idx, currentOffset) {
   elements.forEach(function(el, i) {
     if (i === idx) {
       el.style.opacity = '1';
       if (el.tagName === 'VIDEO') {
-        el.currentTime = 0;
+        // 動画開始の瞬間、現在時刻から逆算した正しい秒数から再生させる（同期のブレを防止）
+        var startProgressSec = (currentOffset - offsets[i]) / 1000;
+        el.currentTime = Math.max(0, startProgressSec);
         try { el.play(); } catch(e) {}
       }
     } else {
@@ -129,7 +148,7 @@ function tick() {
     if (idx !== lastContentIdx) {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
-      showContent(idx);
+      showContent(idx, offset);
     }
   }
 }
@@ -150,3 +169,4 @@ function ensureFullscreen() {
 </script>
 </body>
 </html>
+

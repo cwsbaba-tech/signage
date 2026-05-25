@@ -2,97 +2,60 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 2</title>
 <style>
-html{
-  margin:0;
-  padding:0;
-  width:100vw;
-  height:100vh;
-  overflow:hidden;
-  background:#000;
+html { margin:0; padding:0; width:100vw; height:100vh; background:#000; overflow:hidden; }
+body {
+  margin:0; padding:0; width:100vh; height:100vw;
+  transform:rotate(-90deg); transform-origin:left top;
+  position:absolute; top:100vh; left:0;
+  overflow:hidden; background:#000;
 }
-body{
-  margin:0;
-  padding:0;
-  position:fixed;
-  width:100vh;
-  height:100vw;
-  top:100vh;
-  left:0;
-  overflow:hidden;
-  background:#000;
-  transform:rotate(-90deg);
-  transform-origin:left top;
-}
-.slide{
-  position:fixed;
-  top:0;
-  left:-100%;
-  width:200%;
-  height:100%;
+.slide {
+  position:fixed; top:0; left:-100%; width:200%; height:100%;
   background-repeat:no-repeat;
   background-position:center center;
   background-size:100% 100%;
   opacity:0;
-  transition:opacity .5s ease-in-out;
-  z-index: 10; /* 動画やロゴとの重ね順を正常化 */
+  transition:opacity 0.5s ease-in-out;
+  z-index: 10;
 }
-video{
-  position:fixed;
-  top:0;
-  left:-100%;
-  width:200%;
-  height:100%;
+video {
+  position:fixed; top:0; left:-100%;
+  width:200%; height:100%;
   object-fit:fill;
   opacity:0;
-  transition:opacity .5s ease-in-out;
-  z-index: 10; /* 動画やロゴとの重ね順を正常化 */
+  transition:opacity 0.5s ease-in-out;
+  z-index: 10;
 }
 
-/* ★ 右画面用のAIカレンダー巨大化＆継ぎ目（水曜日カケ）回避設定 */
+/* 右画面用のカレンダー巨大化＆継ぎ目（水曜日カケ）回避 */
 .slide.calendar-large {
   left: -100% !important;
   width: 200% !important;
-  background-size: contain !important; /* 上下が切れないように収める */
-  background-position: 58% center !important; /* 継ぎ目を水曜日の右側の線に合わせる */
+  background-size: contain !important;
+  background-position: 58% center !important; 
 }
 
-#mainOverlay{
-  position:fixed;
-  inset:0;
-  background:
-    #fff
-    url('四角ロゴ.PNG')
-    no-repeat
-    right center;
-  background-size:200% auto;
+/* トリックアートロゴ（右半分） */
+#mainOverlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#fff url('トリックロゴ.jpg') no-repeat right center;
+  background-size:200% 100%;
   opacity:0;
-  transition:opacity .8s ease;
-  z-index:20;
-  pointer-events:none;
+  transition:opacity 0.8s ease;
+  z-index:20; pointer-events:none;
 }
-#mainOverlay.visible{
-  opacity:1;
-}
-#startOverlay{
-  position:fixed;
-  inset:0;
-  background:#000;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-  cursor:pointer;
-  font-family:sans-serif;
+#mainOverlay.visible { opacity:1; }
+#startOverlay {
+  position:fixed; inset:0; background:#000; color:#fff;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  z-index:9999; cursor:pointer; text-align:center;
 }
 </style>
 </head>
 <body>
-
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
   <p>SCREEN 2 (RIGHT SIDE)</p>
@@ -100,68 +63,61 @@ video{
 <div id="mainOverlay"></div>
 
 <script>
-const contents = [
+var contents = [
   {type:'video', src:'video1.mp4', duration:9900},
   {type:'image', src:'calendar.jpg', duration:10000},
   {type:'video', src:'video2.mp4', duration:10000},
   {type:'image', src:'holiday.jpg', duration:10000},
   {type:'image', src:'event.jpg', duration:10000}
 ];
+var MAIN_MS = 10000;
+var ADJUST_MS = 50; /* ★左画面とズレる場合はこの数値を微調整してください */
 
-const MAIN_MS = 10000;
-const ADJUST_MS = 50;
+var INDIVIDUAL_MS = 0;
+contents.forEach(function(c) { INDIVIDUAL_MS += c.duration; });
+var CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
-let INDIVIDUAL_MS = 0;
-contents.forEach(c => { INDIVIDUAL_MS += c.duration; });
-const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+var overlay = document.getElementById('mainOverlay');
+var started = false;
+var lastContentIdx = -1;
 
-const overlay = document.getElementById('mainOverlay');
-let started = false;
-let lastContentIdx = -1;
+var offsets = [];
+var acc = 0;
+contents.forEach(function(c) { offsets.push(acc); acc += c.duration; });
 
-const offsets = [];
-let acc = 0;
-contents.forEach(c => { offsets.push(acc); acc += c.duration; });
-
-const elements = contents.map((c, idx) => {
-  let el;
-  if(c.type === 'video'){
+var elements = contents.map(function(c, idx) {
+  var el;
+  if (c.type === 'video') {
     el = document.createElement('video');
     el.src = c.src;
     el.muted = true;
+    el.setAttribute('muted', '');
+    el.setAttribute('playsinline', '');
     el.preload = 'auto';
-    el.setAttribute('muted','');
-    el.setAttribute('playsinline','');
-  }else{
+  } else {
     el = document.createElement('div');
     el.className = 'slide';
-    
-    // カレンダー（配列の1番目）に大画面＆継ぎ目回避設定を適用
-    if(idx === 1) {
+    if (idx === 1) {
       el.classList.add('calendar-large');
     }
-    
-    el.style.backgroundImage = `url('${c.src}')`;
+    el.style.backgroundImage = "url('" + c.src + "')";
   }
   document.body.appendChild(el);
   return el;
 });
 
-// 元の滑らかな再生方式に戻しつつ、開始時点のズレだけをピンポイントで補正する処理
-function showContent(idx, currentOffset){
-  elements.forEach((el, i) => {
-    if(i === idx){
+function showContent(idx, currentOffset) {
+  elements.forEach(function(el, i) {
+    if (i === idx) {
       el.style.opacity = '1';
-      if(el.tagName === 'VIDEO'){
-        // 動画が始まった「その瞬間」の現在時刻から逆算して、正しい秒数から再生スタートさせる
-        const startProgressSec = (currentOffset - offsets[i]) / 1000;
-        el.currentTime = Math.max(0, startProgressSec); 
-        
-        el.play().catch(()=>{});
+      if (el.tagName === 'VIDEO') {
+        var startProgressSec = (currentOffset - offsets[i]) / 1000;
+        el.currentTime = Math.max(0, startProgressSec);
+        try { el.play(); } catch(e) {}
       }
-    }else{
+    } else {
       el.style.opacity = '0';
-      if(el.tagName === 'VIDEO'){
+      if (el.tagName === 'VIDEO') {
         el.pause();
         el.currentTime = 0;
       }
@@ -169,29 +125,24 @@ function showContent(idx, currentOffset){
   });
 }
 
-function tick(){
-  if(!started) return;
-  const now = Date.now() + ADJUST_MS;
-  const offset = now % CYCLE_MS;
-  const isMain = offset >= INDIVIDUAL_MS;
+function tick() {
+  if (!started) return;
+  var now = Date.now() + ADJUST_MS;
+  var offset = now % CYCLE_MS;
+  var isMain = offset >= INDIVIDUAL_MS;
 
-  if(isMain){
-    if(lastContentIdx !== 999){
+  if (isMain) {
+    if (lastContentIdx !== 999) {
       lastContentIdx = 999;
-      elements.forEach(el => {
-        el.style.opacity = '0';
-        if(el.tagName === 'VIDEO'){ el.pause(); el.currentTime = 0; }
-      });
+      elements.forEach(function(el){ el.style.opacity = '0'; if(el.tagName==='VIDEO'){el.pause();el.currentTime=0;} });
       overlay.classList.add('visible');
     }
-  }else{
-    let idx = 0;
-    for(let i = contents.length - 1; i >= 0; i--){
-      if(offset >= offsets[i]){ idx = i; break; }
+  } else {
+    var idx = 0;
+    for (var i = contents.length - 1; i >= 0; i--) {
+      if (offset >= offsets[i]) { idx = i; break; }
     }
-    
-    // 画面（コンテンツ）が切り替わった時だけ処理を走らせる（元のスムーズな方式）
-    if(idx !== lastContentIdx){
+    if (idx !== lastContentIdx) {
       overlay.classList.remove('visible');
       lastContentIdx = idx;
       showContent(idx, offset);
@@ -199,20 +150,20 @@ function tick(){
   }
 }
 
-// 元の100ms周期に戻してブラウザの負荷を下げます
 setInterval(tick, 100);
 
-document.getElementById('startOverlay').addEventListener('click', () => {
+document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
   ensureFullscreen();
   started = true;
 });
 
-function ensureFullscreen(){
-  const el = document.documentElement;
-  if(el.requestFullscreen) el.requestFullscreen();
-  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+function ensureFullscreen() {
+  var el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 }
 </script>
 </body>
 </html>
+

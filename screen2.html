@@ -34,20 +34,20 @@ body{
   height:100%;
   background-repeat:no-repeat;
   background-position:center center;
-  background-size:100% 100%;
+  background-size:cover; /* 比率を保って大画面表示 */
   opacity:0;
-  transition:opacity .5s ease-in-out;
+  transition:opacity 0s; /* 同期のため一瞬で切り替え */
 }
-video{
-  position:fixed;
-  top:0;
-  left:-100%;
-  width:200%;
-  height:100%;
-  object-fit:fill;
-  opacity:0;
-  transition:opacity .5s ease-in-out;
+
+/* ★ 右画面用のカレンダー巨大化＆継ぎ目回避設定 */
+.slide.calendar-large {
+  left: -100% !important;
+  width: 200% !important;
+  background-size: contain !important; /* カレンダーの上下が切れないように収める */
+  /* 位置の微調整：58%にすることで、中央の継ぎ目を水曜日の右側の線に合わせ、文字カケを防ぎます */
+  background-position: 58% center !important; 
 }
+
 #mainOverlay{
   position:fixed;
   inset:0;
@@ -58,7 +58,7 @@ video{
     right center;
   background-size:200% auto;
   opacity:0;
-  transition:opacity .8s ease;
+  transition:opacity 0s; 
   z-index:20;
   pointer-events:none;
 }
@@ -89,43 +89,32 @@ video{
 <div id="mainOverlay"></div>
 
 <script>
+// 再生したい静止画リスト（10秒ずつ固定）
 const contents = [
-  {type:'video', src:'video1.mp4', duration:9900},
-  {type:'image', src:'calendar.jpg', duration:10000},
-  {type:'video', src:'video2.mp4', duration:10000},
-  {type:'image', src:'holiday.jpg', duration:10000},
-  {type:'image', src:'event.jpg', duration:10000}
+  {src:'calendar.jpg'}, // 0秒〜10秒
+  {src:'holiday.jpg'},  // 10秒〜20秒
+  {src:'event.jpg'}     // 20秒〜30秒
+  // 30秒〜40秒は自動的に「ロゴ（mainOverlay）」が表示されます
 ];
 
-const MAIN_MS = 10000;
+const CYCLE_MS = 40000; // 全体で40秒の固定サイクル
 const ADJUST_MS = 50;
-
-let INDIVIDUAL_MS = 0;
-contents.forEach(c => { INDIVIDUAL_MS += c.duration; });
-const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
 
 const overlay = document.getElementById('mainOverlay');
 let started = false;
 let lastContentIdx = -1;
 
-const offsets = [];
-let acc = 0;
-contents.forEach(c => { offsets.push(acc); acc += c.duration; });
-
-const elements = contents.map(c => {
-  let el;
-  if(c.type === 'video'){
-    el = document.createElement('video');
-    el.src = c.src;
-    el.muted = true;
-    el.preload = 'auto';
-    el.setAttribute('muted','');
-    el.setAttribute('playsinline','');
-  }else{
-    el = document.createElement('div');
-    el.className = 'slide';
-    el.style.backgroundImage = `url('${c.src}')`;
+// divスライドを生成
+const elements = contents.map((c, idx) => {
+  const el = document.createElement('div');
+  el.className = 'slide';
+  
+  // カレンダー画像（0番目）に特大＆位置調整クラスを付与
+  if(idx === 0) {
+    el.classList.add('calendar-large');
   }
+  
+  el.style.backgroundImage = `url('${c.src}')`;
   document.body.appendChild(el);
   return el;
 });
@@ -134,16 +123,8 @@ function showContent(idx){
   elements.forEach((el, i) => {
     if(i === idx){
       el.style.opacity = '1';
-      if(el.tagName === 'VIDEO'){
-        el.currentTime = 0;
-        el.play().catch(()=>{});
-      }
     }else{
       el.style.opacity = '0';
-      if(el.tagName === 'VIDEO'){
-        el.pause();
-        el.currentTime = 0;
-      }
     }
   });
 }
@@ -151,23 +132,20 @@ function showContent(idx){
 function tick(){
   if(!started) return;
   const now = Date.now() + ADJUST_MS;
-  const offset = now % CYCLE_MS;
-  const isMain = offset >= INDIVIDUAL_MS;
+  const offset = now % CYCLE_MS; // 現在の時間が40秒のサイクルのどこにいるか
 
-  if(isMain){
+  // 完全固定の時間軸で判定（各10秒）
+  if (offset >= 30000) {
+    // 30秒〜40秒の間は一律で「ロゴ」
     if(lastContentIdx !== 999){
       lastContentIdx = 999;
-      elements.forEach(el => {
-        el.style.opacity = '0';
-        if(el.tagName === 'VIDEO'){ el.pause(); el.currentTime = 0; }
-      });
+      elements.forEach(el => { el.style.opacity = '0'; });
       overlay.classList.add('visible');
     }
-  }else{
-    let idx = 0;
-    for(let i = contents.length - 1; i >= 0; i--){
-      if(offset >= offsets[i]){ idx = i; break; }
-    }
+  } else {
+    // 0〜30秒の間は、10秒ごとにインデックスを計算 (0, 1, 2)
+    let idx = Math.floor(offset / 10000);
+    
     if(idx !== lastContentIdx){
       overlay.classList.remove('visible');
       lastContentIdx = idx;

@@ -34,20 +34,20 @@ body{
   height:100%;
   background-repeat:no-repeat;
   background-position:center center;
-  background-size:100% 100%;
+  /* ★ 100% 100%からcoverに変更：ヘルメットPOPが比率を保ったままドカンと大画面になります */
+  background-size:cover; 
   opacity:0;
-  transition:opacity .5s ease-in-out;
+  /* ★ 同期ズレを徹底排除するため、あえて0秒（パッと切り替わる）に設定。もしフェードが欲しければ .3s 等にしてください */
+  transition:opacity 0s; 
 }
-video{
-  position:fixed;
-  top:0;
-  left:-100%;
-  width:200%;
-  height:100%;
-  object-fit:fill;
-  opacity:0;
-  transition:opacity .5s ease-in-out;
+
+/* ★ カレンダー（2枚目のスライド）だけは継ぎ目を避けるため、右画面の中に収める特殊設定 */
+.slide.calendar-fix {
+  left: 0 !important;
+  width: 100% !important;
+  background-size: contain !important; /* 全体が入るように縮小表示 */
 }
+
 #mainOverlay{
   position:fixed;
   inset:0;
@@ -58,7 +58,7 @@ video{
     right center;
   background-size:200% auto;
   opacity:0;
-  transition:opacity .8s ease;
+  transition:opacity 0s; /* 同期のため0秒に統一 */
   z-index:20;
   pointer-events:none;
 }
@@ -89,20 +89,19 @@ video{
 <div id="mainOverlay"></div>
 
 <script>
+// すべて静止画（image）で統一し、各10秒（10000ms）に設定
 const contents = [
-  {type:'video', src:'video1.mp4', duration:9900},
-  {type:'image', src:'calendar.jpg', duration:10000},
-  {type:'video', src:'video2.mp4', duration:10000},
-  {type:'image', src:'holiday.jpg', duration:10000},
-  {type:'image', src:'event.jpg', duration:10000}
+  {type:'image', src:'calendar.jpg', duration:10000}, // スライド2：カレンダー＆店休日補足
+  {type:'image', src:'holiday.jpg', duration:10000},  // スライド4：元動画の代わり（イチオシ自転車など）
+  {type:'image', src:'event.jpg', duration:10000}    // スライド5：ヘルメット助成金POP
 ];
 
-const MAIN_MS = 10000;
+const MAIN_MS = 10000; // ロゴの表示時間（10秒）
 const ADJUST_MS = 50;
 
 let INDIVIDUAL_MS = 0;
 contents.forEach(c => { INDIVIDUAL_MS += c.duration; });
-const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS;
+const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS; // 合計40秒のサイクル
 
 const overlay = document.getElementById('mainOverlay');
 let started = false;
@@ -112,20 +111,17 @@ const offsets = [];
 let acc = 0;
 contents.forEach(c => { offsets.push(acc); acc += c.duration; });
 
-const elements = contents.map(c => {
-  let el;
-  if(c.type === 'video'){
-    el = document.createElement('video');
-    el.src = c.src;
-    el.muted = true;
-    el.preload = 'auto';
-    el.setAttribute('muted','');
-    el.setAttribute('playsinline','');
-  }else{
-    el = document.createElement('div');
-    el.className = 'slide';
-    el.style.backgroundImage = `url('${c.src}')`;
+// video要素の生成を廃止し、すべてdivスライドとして生成
+const elements = contents.map((c, idx) => {
+  const el = document.createElement('div');
+  el.className = 'slide';
+  
+  // もしカレンダー（配列の0番目）なら、継ぎ目回避用の特別クラスを付与
+  if(idx === 0) {
+    el.classList.add('calendar-fix');
   }
+  
+  el.style.backgroundImage = `url('${c.src}')`;
   document.body.appendChild(el);
   return el;
 });
@@ -134,16 +130,8 @@ function showContent(idx){
   elements.forEach((el, i) => {
     if(i === idx){
       el.style.opacity = '1';
-      if(el.tagName === 'VIDEO'){
-        el.currentTime = 0;
-        el.play().catch(()=>{});
-      }
     }else{
       el.style.opacity = '0';
-      if(el.tagName === 'VIDEO'){
-        el.pause();
-        el.currentTime = 0;
-      }
     }
   });
 }
@@ -157,10 +145,7 @@ function tick(){
   if(isMain){
     if(lastContentIdx !== 999){
       lastContentIdx = 999;
-      elements.forEach(el => {
-        el.style.opacity = '0';
-        if(el.tagName === 'VIDEO'){ el.pause(); el.currentTime = 0; }
-      });
+      elements.forEach(el => { el.style.opacity = '0'; });
       overlay.classList.add('visible');
     }
   }else{

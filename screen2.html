@@ -34,18 +34,17 @@ body{
   height:100%;
   background-repeat:no-repeat;
   background-position:center center;
-  background-size:cover; /* 比率を保って大画面表示 */
+  background-size:cover;
   opacity:0;
-  transition:opacity 0s; /* 同期のため一瞬で切り替え */
+  transition:opacity 0s; /* 同期ズレを防ぐため一瞬で切り替え */
 }
 
-/* ★ 右画面用のカレンダー巨大化＆継ぎ目回避設定 */
+/* ★ カレンダーが2画面で大きく綺麗に繋がるための右画面用設定 */
 .slide.calendar-large {
   left: -100% !important;
   width: 200% !important;
-  background-size: contain !important; /* カレンダーの上下が切れないように収める */
-  /* 位置の微調整：58%にすることで、中央の継ぎ目を水曜日の右側の線に合わせ、文字カケを防ぎます */
-  background-position: 58% center !important; 
+  background-size: contain !important;
+  background-position: 58% center !important; /* 継ぎ目で水曜日が切れない位置 */
 }
 
 #mainOverlay{
@@ -89,28 +88,38 @@ body{
 <div id="mainOverlay"></div>
 
 <script>
-// 再生したい静止画リスト（10秒ずつ固定）
+// ★ 10秒×4枚 ＝ 計40秒の静止画リスト。最後の10秒（計50秒）はロゴになります。
+// 元動画の枠だった部分（0秒〜、20秒〜）はお好きな画像名に書き換えてください。
 const contents = [
-  {src:'calendar.jpg'}, // 0秒〜10秒
-  {src:'holiday.jpg'},  // 10秒〜20秒
-  {src:'event.jpg'}     // 20秒〜30秒
-  // 30秒〜40秒は自動的に「ロゴ（mainOverlay）」が表示されます
+  {src:'bike1.jpg', duration:10000},    // 0〜10秒：元video1の代わり（自転車写真など）
+  {src:'calendar.jpg', duration:10000}, // 10〜20秒：カレンダー（2画面大画面表示）
+  {src:'bike2.jpg', duration:10000},    // 20〜30秒：元video2の代わり（おすすめ商品など）
+  {src:'event.jpg', duration:10000}     // 30〜40秒：ヘルメット助成金POP
+  // 40〜50秒：自動的にロゴ（mainOverlay）が表示されます
 ];
 
-const CYCLE_MS = 40000; // 全体で40秒の固定サイクル
+const MAIN_MS = 10000; // ロゴの表示時間（10秒）
 const ADJUST_MS = 50;
+
+let INDIVIDUAL_MS = 0;
+contents.forEach(c => { INDIVIDUAL_MS += c.duration; });
+const CYCLE_MS = INDIVIDUAL_MS + MAIN_MS; // 40000 + 10000 = 50000ms（50秒）に固定されます
 
 const overlay = document.getElementById('mainOverlay');
 let started = false;
 let lastContentIdx = -1;
 
-// divスライドを生成
+const offsets = [];
+let acc = 0;
+contents.forEach(c => { offsets.push(acc); acc += c.duration; });
+
+// すべてdivスライドとして生成
 const elements = contents.map((c, idx) => {
   const el = document.createElement('div');
   el.className = 'slide';
   
-  // カレンダー画像（0番目）に特大＆位置調整クラスを付与
-  if(idx === 0) {
+  // 配列の1番目（calendar.jpg）に大画面＆継ぎ目回避クラスを適用
+  if(idx === 1) {
     el.classList.add('calendar-large');
   }
   
@@ -132,20 +141,20 @@ function showContent(idx){
 function tick(){
   if(!started) return;
   const now = Date.now() + ADJUST_MS;
-  const offset = now % CYCLE_MS; // 現在の時間が40秒のサイクルのどこにいるか
+  const offset = now % CYCLE_MS;
+  const isMain = offset >= INDIVIDUAL_MS;
 
-  // 完全固定の時間軸で判定（各10秒）
-  if (offset >= 30000) {
-    // 30秒〜40秒の間は一律で「ロゴ」
+  if(isMain){
     if(lastContentIdx !== 999){
       lastContentIdx = 999;
       elements.forEach(el => { el.style.opacity = '0'; });
       overlay.classList.add('visible');
     }
-  } else {
-    // 0〜30秒の間は、10秒ごとにインデックスを計算 (0, 1, 2)
-    let idx = Math.floor(offset / 10000);
-    
+  }else{
+    let idx = 0;
+    for(let i = contents.length - 1; i >= 0; i--){
+      if(offset >= offsets[i]){ idx = i; break; }
+    }
     if(idx !== lastContentIdx){
       overlay.classList.remove('visible');
       lastContentIdx = idx;
@@ -170,3 +179,4 @@ function ensureFullscreen(){
 </script>
 </body>
 </html>
+

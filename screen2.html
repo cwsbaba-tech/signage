@@ -36,8 +36,8 @@ body{
   background-position:center center;
   background-size:100% 100%;
   opacity:0;
-  transition:opacity .3s ease-in-out;
-  z-index: 10; /* ★重要：重ね順を明示して裏に隠れるのを防ぐ */
+  transition:opacity .5s ease-in-out;
+  z-index: 10; /* 動画やロゴとの重ね順を正常化 */
 }
 video{
   position:fixed;
@@ -47,8 +47,8 @@ video{
   height:100%;
   object-fit:fill;
   opacity:0;
-  transition:opacity .3s ease-in-out;
-  z-index: 10; /* ★重要：重ね順を明示して裏に隠れるのを防ぐ */
+  transition:opacity .5s ease-in-out;
+  z-index: 10; /* 動画やロゴとの重ね順を正常化 */
 }
 
 /* ★ 右画面用のAIカレンダー巨大化＆継ぎ目（水曜日カケ）回避設定 */
@@ -56,8 +56,7 @@ video{
   left: -100% !important;
   width: 200% !important;
   background-size: contain !important; /* 上下が切れないように収める */
-  /* 位置を58%にすることで、真ん中の継ぎ目が「水曜と木曜の区切り線」になり、文字が絶対に欠けません */
-  background-position: 58% center !important; 
+  background-position: 58% center !important; /* 継ぎ目を水曜日の右側の線に合わせる */
 }
 
 #mainOverlay{
@@ -70,8 +69,8 @@ video{
     right center;
   background-size:200% auto;
   opacity:0;
-  transition:opacity .5s ease;
-  z-index:20; /* スライドより常に上に配置 */
+  transition:opacity .8s ease;
+  z-index:20;
   pointer-events:none;
 }
 #mainOverlay.visible{
@@ -101,7 +100,6 @@ video{
 <div id="mainOverlay"></div>
 
 <script>
-// 元の順番・秒数を完全に維持（合計59.9秒のサイクル）
 const contents = [
   {type:'video', src:'video1.mp4', duration:9900},
   {type:'image', src:'calendar.jpg', duration:10000},
@@ -110,7 +108,7 @@ const contents = [
   {type:'image', src:'event.jpg', duration:10000}
 ];
 
-const MAIN_MS = 10000; // 最後のロゴ表示時間（10秒）
+const MAIN_MS = 10000;
 const ADJUST_MS = 50;
 
 let INDIVIDUAL_MS = 0;
@@ -125,7 +123,6 @@ const offsets = [];
 let acc = 0;
 contents.forEach(c => { offsets.push(acc); acc += c.duration; });
 
-// 要素の生成
 const elements = contents.map((c, idx) => {
   let el;
   if(c.type === 'video'){
@@ -139,7 +136,7 @@ const elements = contents.map((c, idx) => {
     el = document.createElement('div');
     el.className = 'slide';
     
-    // カレンダー（配列の1番目）に特大化＆継ぎ目回避設定を適用
+    // カレンダー（配列の1番目）に大画面＆継ぎ目回避設定を適用
     if(idx === 1) {
       el.classList.add('calendar-large');
     }
@@ -150,27 +147,23 @@ const elements = contents.map((c, idx) => {
   return el;
 });
 
-// 表示のコントロール処理（高精度シーク追従型）
+// 元の滑らかな再生方式に戻しつつ、開始時点のズレだけをピンポイントで補正する処理
 function showContent(idx, currentOffset){
   elements.forEach((el, i) => {
     if(i === idx){
       el.style.opacity = '1';
       if(el.tagName === 'VIDEO'){
-        // ★最重要：現在の時間軸上の位置（秒）を計算し、動画の再生位置を強制同期
-        const videoProgressSec = (currentOffset - offsets[i]) / 1000;
+        // 動画が始まった「その瞬間」の現在時刻から逆算して、正しい秒数から再生スタートさせる
+        const startProgressSec = (currentOffset - offsets[i]) / 1000;
+        el.currentTime = Math.max(0, startProgressSec); 
         
-        // Androidのフリーズを防ぐため、ズレが0.3秒以上ある時だけ再生位置を瞬間移動（シーク）させる
-        if(Math.abs(el.currentTime - videoProgressSec) > 0.3) {
-          el.currentTime = videoProgressSec;
-        }
-        if(el.paused) {
-          el.play().catch(()=>{});
-        }
+        el.play().catch(()=>{});
       }
     }else{
       el.style.opacity = '0';
       if(el.tagName === 'VIDEO'){
         el.pause();
+        el.currentTime = 0;
       }
     }
   });
@@ -187,7 +180,7 @@ function tick(){
       lastContentIdx = 999;
       elements.forEach(el => {
         el.style.opacity = '0';
-        if(el.tagName === 'VIDEO'){ el.pause(); }
+        if(el.tagName === 'VIDEO'){ el.pause(); el.currentTime = 0; }
       });
       overlay.classList.add('visible');
     }
@@ -197,15 +190,17 @@ function tick(){
       if(offset >= offsets[i]){ idx = i; break; }
     }
     
-    // ★動画の再生位置を常時監視・微調整するため、インデックスが変わっていなくても毎回showContentを呼び出す仕様に変更
-    overlay.classList.remove('visible');
-    lastContentIdx = idx;
-    showContent(idx, offset);
+    // 画面（コンテンツ）が切り替わった時だけ処理を走らせる（元のスムーズな方式）
+    if(idx !== lastContentIdx){
+      overlay.classList.remove('visible');
+      lastContentIdx = idx;
+      showContent(idx, offset);
+    }
   }
 }
 
-// チェックの頻度を100msから30ms（高精度）に引き上げ、ミリ秒単位のズレを即座に補正
-setInterval(tick, 30);
+// 元の100ms周期に戻してブラウザの負荷を下げます
+setInterval(tick, 100);
 
 document.getElementById('startOverlay').addEventListener('click', () => {
   document.getElementById('startOverlay').style.display = 'none';
@@ -221,4 +216,3 @@ function ensureFullscreen(){
 </script>
 </body>
 </html>
-

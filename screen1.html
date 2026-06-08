@@ -19,48 +19,62 @@ body {
 ============================== */
 #bar-top {
   position:fixed; top:0; left:0; width:100%; z-index:50;
-  background:rgba(0,0,0,0.82);
-  border-bottom:0.5px solid rgba(255,255,255,0.1);
-  padding:8px 16px 0;
+  background:rgba(0,0,0,0.85);
+  border-bottom:1px solid rgba(255,255,255,0.12);
+  padding:12px 20px 0;
 }
 #bar-info {
-  display:flex; justify-content:space-between; align-items:baseline;
-  margin-bottom:5px;
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:8px;
 }
-#weather { font-size:13px; color:rgba(255,255,255,0.8); letter-spacing:0.05em; }
-#clock   { font-size:20px; font-weight:300; color:#fff; letter-spacing:0.1em; font-variant-numeric:tabular-nums; }
+#weather {
+  font-size:18px; color:rgba(255,255,255,0.85);
+  letter-spacing:0.05em;
+}
+#clock {
+  font-size:32px; font-weight:200; color:#fff;
+  letter-spacing:0.12em; font-variant-numeric:tabular-nums;
+}
 #ticker-wrap {
-  overflow:hidden; height:20px;
-  border-top:0.5px solid rgba(255,255,255,0.07);
+  overflow:hidden; height:28px;
+  border-top:0.5px solid rgba(255,255,255,0.08);
+  display:flex; align-items:center;
 }
 #ticker {
   display:inline-block; white-space:nowrap;
-  font-size:11px; color:rgba(255,255,255,0.65); letter-spacing:0.05em;
-  animation:ticker 25s linear infinite;
-  padding-top:2px;
+  font-size:14px; color:rgba(255,255,255,0.7);
+  letter-spacing:0.06em;
+  animation:ticker 28s linear infinite;
 }
-@keyframes ticker { from{transform:translateX(100vw)} to{transform:translateX(-100%)} }
+@keyframes ticker {
+  from { transform:translateX(100vw); }
+  to   { transform:translateX(-100%); }
+}
 
 /* ==============================
    固定枠（下・QR）
 ============================== */
 #bar-qr {
   position:fixed; bottom:0; left:0; width:100%; z-index:50;
-  background:rgba(0,0,0,0.85);
-  border-top:0.5px solid rgba(255,255,255,0.1);
-  padding:6px 20px;
+  background:rgba(0,0,0,0.88);
+  border-top:1px solid rgba(255,255,255,0.12);
+  padding:10px 28px;
   display:flex; justify-content:space-between; align-items:center;
+  height:80px;
 }
-.qr-item { display:flex; align-items:center; gap:7px; }
+.qr-item { display:flex; align-items:center; gap:10px; }
 .qr-item img {
-  width:44px; height:44px;
-  border-radius:3px; background:#fff;
-  padding:2px; object-fit:contain;
+  width:56px; height:56px;
+  border-radius:5px; background:#fff;
+  padding:3px; object-fit:contain;
 }
-.qr-lbl { font-size:9px; color:rgba(255,255,255,0.45); letter-spacing:0.1em; }
+.qr-lbl {
+  font-size:13px; color:rgba(255,255,255,0.55);
+  letter-spacing:0.1em;
+}
 
 /* ==============================
-   通常スライド（calendar / holiday / event）
+   通常スライド
 ============================== */
 .slide {
   position:fixed; top:0; left:0; width:200%; height:100%;
@@ -92,30 +106,30 @@ body {
   background-position:center;
   opacity:0;
   transition:opacity 0.8s ease;
-  /* ケン・バーンズはJS側でanimation付与 */
 }
 @keyframes kb-zoom {
-  from { transform:scale(1);    transform-origin:center center; }
-  to   { transform:scale(1.09); transform-origin:center center; }
+  from { transform:scale(1); }
+  to   { transform:scale(1.09); }
 }
-
-/* オーバーレイテキスト */
 .kb-overlay {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:16px 18px 12px;
-  background:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+  position:absolute;
+  bottom:84px; /* bar-qrの高さ分上げる */
+  left:0; right:0;
+  padding:24px 24px 16px;
+  background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
   pointer-events:none; z-index:5;
 }
 .kb-label {
-  font-size:10px; letter-spacing:0.25em;
-  color:rgba(255,255,255,0.45); margin-bottom:2px;
+  font-size:12px; letter-spacing:0.3em;
+  color:rgba(255,255,255,0.45); margin-bottom:4px;
 }
 .kb-title {
-  font-size:15px; font-weight:500; color:#fff; letter-spacing:0.04em;
+  font-size:18px; font-weight:500;
+  color:#fff; letter-spacing:0.05em;
 }
 
 /* ==============================
-   ロゴオーバーレイ（全画面・固定枠なし）
+   ロゴ（全画面・固定枠なし）
 ============================== */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
@@ -132,20 +146,21 @@ body {
 ============================== */
 #startOverlay {
   position:fixed; inset:0; background:#000; color:#fff;
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
 }
+#startOverlay h1 { font-size:4vw; margin-bottom:2vh; }
+#startOverlay p  { font-size:2.5vw; opacity:0.7; }
 </style>
 </head>
 <body>
 
-<!-- スタート -->
 <div id="startOverlay">
   <h1>タップしてスタート</h1>
   <p>SCREEN 1 (LEFT SIDE)</p>
 </div>
 
-<!-- ロゴオーバーレイ -->
 <div id="mainOverlay"></div>
 
 <!-- 上部固定枠 -->
@@ -155,7 +170,7 @@ body {
     <span id="clock">--:--</span>
   </div>
   <div id="ticker-wrap">
-    <span id="ticker">サイクルセンター山口　自転車の販売・修理　お気軽にご相談ください　　　　　　　　　</span>
+    <span id="ticker">サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　</span>
   </div>
 </div>
 
@@ -171,7 +186,7 @@ body {
   </div>
 </div>
 
-<!-- フリーエリアコンテナ（フリー1・フリー2共用） -->
+<!-- フリーエリアコンテナ -->
 <div id="free-container">
   <div class="kb-slide" id="kb0"></div>
   <div class="kb-slide" id="kb1"></div>
@@ -184,38 +199,56 @@ body {
 
 <script>
 /* ============================================================
-   サイクル設定
-   各パートは10秒。合計60秒でループ。
-   順番：カレンダー→フリー1→店休日→フリー2→イベント→ロゴ
+   スクリーン3に合わせたCYCLE_MS
+   9900 + 10000*4 + 10000 = 59900ms
+   ※スクリーン3のcontents合計49900 + MAIN_MS10000 = 59900
 ============================================================ */
-var PART_MS  = 10000;
-var CYCLE_MS = PART_MS * 6; /* 60秒 */
+var CYCLE_MS = 59900;
 
 /* ============================================================
-   通常スライド定義
-   type:'image' のみ（videoは廃止）
-   freeX パートはJS内でケン・バーンズ制御
+   パート定義
+   offset: Date.now()%CYCLE_MS での開始位置（ms）
+   duration: パートの長さ（ms）
 ============================================================ */
 var PARTS = [
-  { id:'calendar', type:'image',  src:'calendar.jpg',  calendarLarge:true  },
-  { id:'free1',    type:'free',   images:['free1_01.png','free1_02.png','free1_03.png'],
+  {
+    id:'calendar', type:'image', src:'calendar.jpg',
+    offset:0, duration:10000, calendarLarge:true
+  },
+  {
+    id:'free1', type:'free',
+    offset:10000, duration:10000,
+    images:['free1_01.png','free1_02.png','free1_03.png'],
     labels:['BEFORE','DURING','AFTER'],
     titles:['クリーニング前','クリーニング中','クリーニング完了'],
-    durs:[3000,3000,4000] },
-  { id:'holiday',  type:'image',  src:'holiday.jpg'  },
-  { id:'free2',    type:'free',   images:['free2_01.png','free2_02.png','free2_03.png'],
+    durs:[3000,3000,4000]
+  },
+  {
+    id:'holiday', type:'image', src:'holiday.jpg',
+    offset:20000, duration:10000
+  },
+  {
+    id:'free2', type:'free',
+    offset:30000, duration:10000,
+    images:['free2_01.png','free2_02.png','free2_03.png'],
     labels:['STEP 1','STEP 2','STEP 3'],
     titles:['スケッチ','色入れ','完成'],
-    durs:[3300,3300,3400] },
-  { id:'event',    type:'image',  src:'event.jpg'    },
-  { id:'logo',     type:'logo'   }
+    durs:[3300,3300,3400]
+  },
+  {
+    id:'event', type:'image', src:'event.jpg',
+    offset:40000, duration:10000
+  },
+  {
+    id:'logo', type:'logo',
+    offset:50000, duration:9900
+  }
 ];
 
 /* ============================================================
    DOM生成（通常スライド）
 ============================================================ */
-var imageEls = {}; /* id -> element */
-
+var imageEls = {};
 PARTS.forEach(function(p) {
   if (p.type !== 'image') return;
   var el = document.createElement('div');
@@ -227,42 +260,53 @@ PARTS.forEach(function(p) {
 });
 
 /* ============================================================
-   フリーエリア制御
+   要素取得
 ============================================================ */
-var freeContainer = document.getElementById('free-container');
-var kbEls = [
+var overlay      = document.getElementById('mainOverlay');
+var barTop       = document.getElementById('bar-top');
+var barQr        = document.getElementById('bar-qr');
+var freeContainer= document.getElementById('free-container');
+var kbEls        = [
   document.getElementById('kb0'),
   document.getElementById('kb1'),
   document.getElementById('kb2')
 ];
-var kbLabel = document.getElementById('kb-label');
-var kbTitle = document.getElementById('kb-title');
+var kbLabelEl = document.getElementById('kb-label');
+var kbTitleEl = document.getElementById('kb-title');
 
-var freeActive    = false;   /* フリーエリア表示中か */
-var freePartId    = null;    /* 'free1' or 'free2' */
-var freeSlideIdx  = -1;      /* 現在のスライド番号 */
-var freeTimer     = null;
+/* ============================================================
+   状態管理
+============================================================ */
+var started      = false;
+var lastPartId   = null;
+var freeTimer    = null;
+var freeRunning  = false;
 
-function startFree(partId, offsetMs) {
-  /* 既に同じパートが動いていれば何もしない */
-  if (freeActive && freePartId === partId) return;
+/* ============================================================
+   パート特定（offsetからPARTSを検索）
+============================================================ */
+function getPartByOffset(offset) {
+  for (var i = PARTS.length - 1; i >= 0; i--) {
+    if (offset >= PARTS[i].offset) return PARTS[i];
+  }
+  return PARTS[0];
+}
 
-  freeActive   = true;
-  freePartId   = partId;
-  freeSlideIdx = -1;
-  if (freeTimer) clearTimeout(freeTimer);
+/* ============================================================
+   フリーエリア制御
+============================================================ */
+function startFree(part, partOff) {
+  freeRunning = true;
 
-  var part = PARTS.find(function(p){ return p.id === partId; });
-
-  /* 画像をセット */
+  /* 画像をセット・リセット */
   kbEls.forEach(function(el, i) {
     el.style.backgroundImage = "url('" + part.images[i] + "')";
     el.style.opacity = '0';
     el.style.animation = 'none';
   });
 
-  /* offsetMs からどのスライドの途中か計算 */
-  var elapsed = offsetMs;
+  /* partOff から何枚目の何ms目かを計算 */
+  var elapsed  = partOff;
   var startIdx = 0;
   var remaining = part.durs[0];
   for (var i = 0; i < part.durs.length; i++) {
@@ -278,83 +322,77 @@ function startFree(partId, offsetMs) {
 }
 
 function showKbSlide(part, idx, dur) {
-  freeSlideIdx = idx;
+  if (!freeRunning) return;
 
-  /* 前のスライドを隠す */
+  /* 他を隠す */
   kbEls.forEach(function(el, i) {
     if (i !== idx) {
-      el.style.opacity = '0';
-      el.style.animation = 'none';
+      el.style.transition = 'opacity 0.8s ease';
+      el.style.opacity    = '0';
+      el.style.animation  = 'none';
     }
   });
 
-  /* 現在のスライドを表示＋ケン・バーンズ */
+  /* 表示＋ケン・バーンズ */
   var el = kbEls[idx];
   el.style.animation = 'none';
-  /* アニメーションリセットのための1フレーム待ち */
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
-      el.style.animation = 'kb-zoom ' + (dur / 1000) + 's ease-out forwards';
-      el.style.opacity   = '1';
+      el.style.transition = 'opacity 0.8s ease';
+      el.style.opacity    = '1';
+      el.style.animation  = 'kb-zoom ' + (dur / 1000).toFixed(2) + 's ease-out forwards';
     });
   });
 
-  /* オーバーレイテキスト */
-  kbLabel.textContent = part.labels[idx];
-  kbTitle.textContent = part.titles[idx];
+  kbLabelEl.textContent = part.labels[idx];
+  kbTitleEl.textContent = part.titles[idx];
 
-  /* 次のスライドへ */
+  /* 次スライドへ */
+  if (freeTimer) clearTimeout(freeTimer);
   freeTimer = setTimeout(function() {
     var next = idx + 1;
-    if (next < part.durs.length) {
+    if (next < part.durs.length && freeRunning) {
       showKbSlide(part, next, part.durs[next]);
     }
-    /* 最後のスライドはタイムアウトしてもそのまま（tick側でパート切替を管理） */
   }, dur);
 }
 
 function stopFree() {
-  if (!freeActive) return;
-  freeActive = false;
-  freePartId = null;
+  freeRunning = false;
   if (freeTimer) { clearTimeout(freeTimer); freeTimer = null; }
   kbEls.forEach(function(el) {
     el.style.opacity   = '0';
     el.style.animation = 'none';
   });
-  freeContainer.style.opacity = '0';
 }
 
 /* ============================================================
-   メインループ（既存コードの tick 相当）
+   メインループ（100msごと）
 ============================================================ */
-var overlay  = document.getElementById('mainOverlay');
-var barTop   = document.getElementById('bar-top');
-var barQr    = document.getElementById('bar-qr');
-var started  = false;
-var lastPartId = null;
-
 function tick() {
   if (!started) return;
 
-  var offset  = Date.now() % CYCLE_MS;           /* 0〜59999 */
-  var partIdx = Math.floor(offset / PART_MS);    /* 0〜5 */
-  var partOff = offset % PART_MS;               /* パート内の経過ms */
-  var part    = PARTS[partIdx];
+  var offset = Date.now() % CYCLE_MS;
+  var part   = getPartByOffset(offset);
 
-  if (part.id === lastPartId) return; /* 変化なし */
+  /* パートが変わった時だけ切り替え処理 */
+  if (part.id === lastPartId) return;
   lastPartId = part.id;
 
-  /* --- ロゴパート --- */
+  var partOff = offset - part.offset;
+
+  /* --- ロゴ --- */
   if (part.type === 'logo') {
-    hideAll();
+    stopFree();
+    freeContainer.style.opacity = '0';
+    hideImageSlides();
     overlay.classList.add('visible');
     barTop.style.display = 'none';
     barQr.style.display  = 'none';
     return;
   }
 
-  /* --- 固定枠を戻す --- */
+  /* 固定枠を戻す */
   overlay.classList.remove('visible');
   barTop.style.display = '';
   barQr.style.display  = '';
@@ -362,23 +400,18 @@ function tick() {
   /* --- フリーパート --- */
   if (part.type === 'free') {
     hideImageSlides();
+    stopFree();
     freeContainer.style.opacity = '1';
-    startFree(part.id, partOff);
+    startFree(part, partOff);
     return;
   }
 
-  /* --- 通常画像パート --- */
+  /* --- 通常画像 --- */
   stopFree();
   freeContainer.style.opacity = '0';
   Object.keys(imageEls).forEach(function(id) {
     imageEls[id].style.opacity = (id === part.id) ? '1' : '0';
   });
-}
-
-function hideAll() {
-  stopFree();
-  freeContainer.style.opacity = '0';
-  hideImageSlides();
 }
 
 function hideImageSlides() {
@@ -390,23 +423,23 @@ function hideImageSlides() {
 setInterval(tick, 100);
 
 /* ============================================================
-   時計
+   時計（1分ごと更新）
 ============================================================ */
 function updateClock() {
   var now = new Date();
-  var h = String(now.getHours()).padStart(2,'0');
-  var m = String(now.getMinutes()).padStart(2,'0');
+  var h = String(now.getHours()).padStart(2, '0');
+  var m = String(now.getMinutes()).padStart(2, '0');
   document.getElementById('clock').textContent = h + ':' + m;
 }
 updateClock();
-setInterval(updateClock, 10000);
+setInterval(updateClock, 60000);
 
 /* ============================================================
-   天気（Open-Meteo 無料API・山口市）
+   天気（Open-Meteo・山口市）
 ============================================================ */
 function fetchWeather() {
   fetch('https://api.open-meteo.com/v1/forecast?latitude=34.18&longitude=131.47&current_weather=true')
-    .then(function(r){ return r.json(); })
+    .then(function(r) { return r.json(); })
     .then(function(d) {
       var t    = Math.round(d.current_weather.temperature);
       var code = d.current_weather.weathercode;
@@ -416,7 +449,7 @@ function fetchWeather() {
                  code <= 67 ? '🌧' : '❄';
       document.getElementById('weather').textContent = icon + ' ' + t + '°C';
     })
-    .catch(function(){ document.getElementById('weather').textContent = ''; });
+    .catch(function() { document.getElementById('weather').textContent = ''; });
 }
 fetchWeather();
 setInterval(fetchWeather, 600000);
@@ -427,7 +460,7 @@ setInterval(fetchWeather, 600000);
 document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
   var el = document.documentElement;
-  if (el.requestFullscreen)       el.requestFullscreen();
+  if (el.requestFullscreen)            el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   started = true;
 });

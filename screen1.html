@@ -52,15 +52,11 @@ body {
   background:#020d14;
   display:flex; align-items:center;
 }
-#ticker {
-  display:inline-block; white-space:nowrap;
-  font-size:20px; font-weight:700;
-  color:#00b4d8; letter-spacing:0.06em;
-  animation:ticker 30s linear infinite;
-}
-@keyframes ticker {
-  from { transform:translateX(100vw); }
-  to   { transform:translateX(-100%); }
+#ticker-canvas {
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
 }
 
 /* ==============================
@@ -213,7 +209,7 @@ body {
       <span id="clock">--:--</span>
     </div>
     <div id="ticker-wrap">
-      <span id="ticker">サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　</span>
+      <canvas id="ticker-canvas"></canvas>
     </div>
   </div>
 
@@ -534,7 +530,51 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   if (el.requestFullscreen)            el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   started = true;
+  initTicker();
+  requestAnimationFrame(drawTicker);
 });
+
+window.addEventListener('resize', initTicker);
+
+/* ==============================
+   テロップ：Canvasで位置計算
+   スクリーン2と同じロジック・同じ速度
+   スクリーン1なので位置オフセットなし
+============================== */
+var TICKER_TEXT = 'サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　';
+var TICKER_SPEED = 80;
+var tickerCanvas = document.getElementById('ticker-canvas');
+var tickerCtx    = tickerCanvas.getContext('2d');
+var tickerW = 0, tickerH = 0, textW = 0;
+
+function initTicker() {
+  tickerW = tickerCanvas.offsetWidth;
+  tickerH = tickerCanvas.offsetHeight;
+  tickerCanvas.width  = tickerW;
+  tickerCanvas.height = tickerH;
+  tickerCtx.font = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  textW = tickerCtx.measureText(TICKER_TEXT).width;
+}
+
+function drawTicker() {
+  if (!started) { requestAnimationFrame(drawTicker); return; }
+  tickerCtx.clearRect(0, 0, tickerW, tickerH);
+  var loopW   = textW + tickerW;
+  var elapsed = (Date.now() / 1000) * TICKER_SPEED;
+  /* スクリーン1は右端から始まるオフセット0 */
+  var pos = elapsed % loopW;
+  var x   = tickerW - pos;
+  tickerCtx.font         = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  tickerCtx.fillStyle    = '#00b4d8';
+  tickerCtx.textBaseline = 'middle';
+  tickerCtx.fillText(TICKER_TEXT, x, tickerH / 2);
+  if (x + textW < tickerW) {
+    tickerCtx.fillText(TICKER_TEXT, x + textW, tickerH / 2);
+  }
+  requestAnimationFrame(drawTicker);
+}
+
 </script>
 </body>
 </html>
+

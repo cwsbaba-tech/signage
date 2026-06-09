@@ -18,56 +18,45 @@ body {
    全体レイアウト：Flexbox 3段
 ============================== */
 #layout {
-  width:100%;
-  height:100%;
-  display:flex;
-  flex-direction:column;
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
 }
 
 /* ==============================
-   固定枠（上）
+   固定枠（上）LED掲示板スタイル
 ============================== */
 #bar-top {
   flex-shrink:0;
-  background:#111;
-  border-bottom:2px solid rgba(255,255,255,0.18);
-  padding:12px 24px 10px;
+  background:#050a0f;
+  border-bottom:2px solid #00b4d8;
+  padding:12px 24px 0;
   z-index:50;
+  transition:opacity 0.1s;
 }
 #bar-info {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  display:flex; justify-content:space-between; align-items:center;
   margin-bottom:8px;
 }
 #weather {
-  font-size:28px;
-  font-weight:700;
-  color:#fff;
-  letter-spacing:0.05em;
+  font-size:26px; font-weight:700;
+  color:#90e0ef; letter-spacing:0.05em;
 }
 #clock {
-  font-size:28px;
-  font-weight:700;
-  color:#fff;
-  letter-spacing:0.1em;
+  font-size:26px; font-weight:700;
+  color:#caf0f8; letter-spacing:0.12em;
   font-variant-numeric:tabular-nums;
 }
 #ticker-wrap {
-  overflow:hidden;
-  height:32px;
-  border-top:1px solid rgba(255,255,255,0.1);
-  display:flex;
-  align-items:center;
+  overflow:hidden; height:30px;
+  border-top:1px solid #00334d;
+  background:#020d14;
+  display:flex; align-items:center;
 }
 #ticker {
-  display:inline-block;
-  white-space:nowrap;
-  font-size:22px;
-  font-weight:700;
-  color:rgba(255,255,255,0.9);
-  letter-spacing:0.06em;
-  animation:ticker 28s linear infinite;
+  display:inline-block; white-space:nowrap;
+  font-size:20px; font-weight:700;
+  color:#00b4d8; letter-spacing:0.06em;
+  animation:ticker 30s linear infinite;
 }
 @keyframes ticker {
   from { transform:translateX(100vw); }
@@ -75,22 +64,17 @@ body {
 }
 
 /* ==============================
-   コンテンツエリア（中段）
+   コンテンツエリア
 ============================== */
 #content {
-  flex:1;
-  position:relative;
-  overflow:hidden;
-  background:#000;
+  flex:1; position:relative; overflow:hidden; background:#000;
 }
 
 /* ==============================
-   通常スライド
-   すべて左半分表示（スクリーン1）
+   通常スライド（左半分）
 ============================== */
 .slide {
-  position:absolute;
-  top:0; left:0;
+  position:absolute; top:0; left:0;
   width:200%; height:100%;
   background-repeat:no-repeat;
   background-position:left center;
@@ -108,107 +92,107 @@ body {
    フリーエリア（ケン・バーンズ）
 ============================== */
 #free-container {
-  position:absolute;
-  top:0; left:0;
+  position:absolute; top:0; left:0;
   width:100%; height:100%;
-  opacity:0;
-  transition:opacity 0.5s ease-in-out;
+  opacity:0; transition:opacity 0.5s ease-in-out;
   overflow:hidden;
 }
 .kb-slide {
   position:absolute; inset:0;
   background-size:200% 100%;
   background-position:left center;
-  opacity:0;
-  transition:opacity 0.8s ease;
+  opacity:0; transition:opacity 0.8s ease;
 }
 @keyframes kb-zoom {
   from { transform:scale(1); }
   to   { transform:scale(1.09); }
 }
 .kb-overlay {
-  position:absolute;
-  bottom:0; left:0; right:0;
+  position:absolute; bottom:0; left:0; right:0;
   padding:20px 24px 16px;
   background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
-  pointer-events:none;
-  z-index:5;
+  pointer-events:none; z-index:5;
 }
 .kb-label {
-  font-size:14px;
-  font-weight:700;
-  letter-spacing:0.3em;
-  color:rgba(255,255,255,0.5);
-  margin-bottom:4px;
+  font-size:14px; font-weight:700; letter-spacing:0.3em;
+  color:rgba(0,180,216,0.7); margin-bottom:4px;
 }
 .kb-title {
-  font-size:22px;
-  font-weight:700;
-  color:#fff;
-  letter-spacing:0.05em;
+  font-size:22px; font-weight:700;
+  color:#fff; letter-spacing:0.05em;
 }
 
 /* ==============================
    固定枠（下・QR）
-   スクリーン1はInstagramのみ
 ============================== */
 #bar-qr {
   flex-shrink:0;
-  background:#111;
-  border-top:2px solid rgba(255,255,255,0.18);
+  background:#050a0f;
+  border-top:2px solid #00b4d8;
   padding:10px 32px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100px;
-  z-index:50;
+  display:flex; justify-content:center; align-items:center;
+  height:96px; z-index:50;
+  transition:opacity 0.1s;
 }
-.qr-item {
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
+.qr-item { display:flex; align-items:center; gap:14px; }
 .qr-item img {
-  width:76px; height:76px;
-  border-radius:6px;
-  background:#fff;
-  padding:3px;
-  object-fit:contain;
+  width:72px; height:72px;
+  border-radius:6px; background:#fff;
+  padding:3px; object-fit:contain;
 }
 .qr-lbl {
-  font-size:20px;
-  font-weight:700;
-  color:rgba(255,255,255,0.7);
-  letter-spacing:0.08em;
+  font-size:20px; font-weight:700;
+  color:#00b4d8; letter-spacing:0.1em;
 }
 
 /* ==============================
-   ロゴ（全画面・固定枠の上に被せる）
+   ロゴオーバーレイ
 ============================== */
 #mainOverlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
+  position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('トリックロゴ.jpg') no-repeat left center;
   background-size:200% 100%;
-  opacity:0;
-  transition:opacity 0.8s ease;
+  opacity:0; pointer-events:none;
   z-index:100;
-  pointer-events:none;
 }
-#mainOverlay.visible { opacity:1; }
+
+/* ==============================
+   スキャンラインエフェクト用
+============================== */
+#scanline {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  z-index:99; pointer-events:none; opacity:0;
+  background:linear-gradient(
+    to bottom,
+    transparent 0%,
+    #00b4d8 49%, #00b4d8 51%,
+    transparent 100%
+  );
+  background-size:100% 200%;
+  background-position:0 -100%;
+}
+@keyframes scan-down {
+  0%   { background-position:0 -100%; opacity:0.9; }
+  100% { background-position:0 100%;  opacity:0; }
+}
+@keyframes flicker {
+  0%,100% { opacity:1; }
+  20%     { opacity:0.1; }
+  40%     { opacity:0.9; }
+  60%     { opacity:0.05; }
+  80%     { opacity:0.8; }
+}
 
 /* ==============================
    スタート画面
 ============================== */
 #startOverlay {
-  position:fixed; inset:0;
-  background:#000; color:#fff;
+  position:fixed; inset:0; background:#000; color:#fff;
   display:flex; flex-direction:column;
   justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
 }
-#startOverlay h1 { font-size:4vw; margin-bottom:2vh; }
+#startOverlay h1 { font-size:4vw; margin-bottom:2vh; color:#00b4d8; }
 #startOverlay p  { font-size:2.5vw; opacity:0.7; }
 </style>
 </head>
@@ -220,10 +204,9 @@ body {
 </div>
 
 <div id="mainOverlay"></div>
+<div id="scanline"></div>
 
 <div id="layout">
-
-  <!-- 上部固定枠 -->
   <div id="bar-top">
     <div id="bar-info">
       <span id="weather"></span>
@@ -234,7 +217,6 @@ body {
     </div>
   </div>
 
-  <!-- コンテンツエリア -->
   <div id="content">
     <div id="free-container">
       <div class="kb-slide" id="kb0"></div>
@@ -247,14 +229,12 @@ body {
     </div>
   </div>
 
-  <!-- 下部固定枠（Instagram QRのみ） -->
   <div id="bar-qr">
     <div class="qr-item">
       <img src="instagram.jpg" alt="Instagram QR">
       <span class="qr-lbl">Instagram</span>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -288,7 +268,6 @@ var PARTS = [
   {
     id:'event', type:'image', src:'event.jpg',
     offset:40000, duration:10000
-    /* eventFull廃止：他と同じく左半分表示 */
   },
   {
     id:'logo', type:'logo',
@@ -310,6 +289,9 @@ PARTS.forEach(function(p) {
 });
 
 var overlay       = document.getElementById('mainOverlay');
+var scanline      = document.getElementById('scanline');
+var barTop        = document.getElementById('bar-top');
+var barQr         = document.getElementById('bar-qr');
 var freeContainer = document.getElementById('free-container');
 var kbEls = [
   document.getElementById('kb0'),
@@ -331,6 +313,70 @@ function getPartByOffset(offset) {
   return PARTS[0];
 }
 
+/* ==============================
+   ロゴ切り替えエフェクト
+   1. 固定枠をフリッカーして消す
+   2. シアンのスキャンラインが走る
+   3. ロゴがフェードイン
+============================== */
+function playLogoEnter() {
+  /* Step1: 固定枠フリッカー → 非表示 */
+  barTop.style.animation = 'flicker 0.4s ease forwards';
+  barQr.style.animation  = 'flicker 0.4s ease forwards';
+
+  setTimeout(function() {
+    barTop.style.display = 'none';
+    barQr.style.display  = 'none';
+    barTop.style.animation = '';
+    barQr.style.animation  = '';
+
+    /* Step2: スキャンライン */
+    scanline.style.animation = 'none';
+    scanline.style.opacity   = '0';
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        scanline.style.animation = 'scan-down 0.5s ease-out forwards';
+      });
+    });
+
+    /* Step3: ロゴフェードイン */
+    setTimeout(function() {
+      overlay.style.transition = 'opacity 0.5s ease';
+      overlay.style.opacity    = '1';
+    }, 300);
+
+  }, 400);
+}
+
+/* ロゴ → 通常パートへの復帰エフェクト */
+function playLogoExit() {
+  /* スキャンラインを逆方向に */
+  scanline.style.animation = 'none';
+  scanline.style.opacity   = '0';
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      scanline.style.animation = 'scan-down 0.4s ease-out forwards';
+    });
+  });
+
+  overlay.style.transition = 'opacity 0.3s ease';
+  overlay.style.opacity    = '0';
+
+  setTimeout(function() {
+    barTop.style.display = '';
+    barQr.style.display  = '';
+    barTop.style.animation = 'flicker 0.3s ease forwards';
+    barQr.style.animation  = 'flicker 0.3s ease forwards';
+    setTimeout(function() {
+      barTop.style.animation = '';
+      barQr.style.animation  = '';
+    }, 300);
+  }, 200);
+}
+
+/* ==============================
+   フリーエリア制御
+============================== */
 function startFree(part, partOff) {
   freeRunning = true;
   kbEls.forEach(function(el, i) {
@@ -367,7 +413,7 @@ function showKbSlide(part, idx, dur) {
     requestAnimationFrame(function() {
       el.style.transition = 'opacity 0.8s ease';
       el.style.opacity    = '1';
-      el.style.animation  = 'kb-zoom ' + (dur / 1000).toFixed(2) + 's ease-out forwards';
+      el.style.animation  = 'kb-zoom ' + (dur/1000).toFixed(2) + 's ease-out forwards';
     });
   });
   kbLabelEl.textContent = part.labels[idx];
@@ -390,6 +436,17 @@ function stopFree() {
   });
 }
 
+function hideImageSlides() {
+  Object.keys(imageEls).forEach(function(id) {
+    imageEls[id].style.opacity = '0';
+  });
+}
+
+/* ==============================
+   メインループ
+============================== */
+var wasLogo = false;
+
 function tick() {
   if (!started) return;
   var offset  = Date.now() % CYCLE_MS;
@@ -402,11 +459,20 @@ function tick() {
     stopFree();
     freeContainer.style.opacity = '0';
     hideImageSlides();
-    overlay.classList.add('visible');
+    playLogoEnter();
+    wasLogo = true;
     return;
   }
 
-  overlay.classList.remove('visible');
+  if (wasLogo) {
+    wasLogo = false;
+    playLogoExit();
+  } else {
+    overlay.style.transition = '';
+    overlay.style.opacity    = '0';
+    barTop.style.display = '';
+    barQr.style.display  = '';
+  }
 
   if (part.type === 'free') {
     hideImageSlides();
@@ -423,14 +489,11 @@ function tick() {
   });
 }
 
-function hideImageSlides() {
-  Object.keys(imageEls).forEach(function(id) {
-    imageEls[id].style.opacity = '0';
-  });
-}
-
 setInterval(tick, 100);
 
+/* ==============================
+   時計（秒単位で更新）
+============================== */
 function updateClock() {
   var now = new Date();
   var h = String(now.getHours()).padStart(2,'0');
@@ -438,10 +501,13 @@ function updateClock() {
   document.getElementById('clock').textContent = h + ':' + m;
 }
 updateClock();
-setInterval(updateClock, 60000);
+setInterval(updateClock, 30000);
 
+/* ==============================
+   天気（中野区）
+============================== */
 function fetchWeather() {
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=34.18&longitude=131.47&current_weather=true')
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.71&longitude=139.66&current_weather=true')
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var t    = Math.round(d.current_weather.temperature);
@@ -459,6 +525,9 @@ function fetchWeather() {
 fetchWeather();
 setInterval(fetchWeather, 600000);
 
+/* ==============================
+   スタート
+============================== */
 document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
   var el = document.documentElement;

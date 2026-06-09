@@ -14,9 +14,6 @@ body {
   font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
 }
 
-/* ==============================
-   全体レイアウト：Flexbox 3段
-============================== */
 #layout {
   width:100%; height:100%;
   display:flex; flex-direction:column;
@@ -37,30 +34,26 @@ body {
   display:flex; justify-content:space-between; align-items:center;
   margin-bottom:8px;
 }
-#weather {
-  font-size:26px; font-weight:700;
-  color:#90e0ef; letter-spacing:0.05em;
-}
 #clock {
   font-size:26px; font-weight:700;
   color:#caf0f8; letter-spacing:0.12em;
   font-variant-numeric:tabular-nums;
+  margin-left:auto;
 }
+
+/* テロップ：スクリーン1と同じ高さ・同じフォント */
 #ticker-wrap {
   overflow:hidden; height:30px;
   border-top:1px solid #00334d;
   background:#020d14;
   display:flex; align-items:center;
+  position:relative;
 }
-#ticker {
-  display:inline-block; white-space:nowrap;
-  font-size:20px; font-weight:700;
-  color:#00b4d8; letter-spacing:0.06em;
-  animation:ticker 30s linear infinite;
-}
-@keyframes ticker {
-  from { transform:translateX(100vw); }
-  to   { transform:translateX(-100%); }
+#ticker-canvas {
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
 }
 
 /* ==============================
@@ -71,13 +64,13 @@ body {
 }
 
 /* ==============================
-   通常スライド（左半分）
+   通常スライド（右半分表示）
 ============================== */
 .slide {
   position:absolute; top:0; left:0;
   width:200%; height:100%;
   background-repeat:no-repeat;
-  background-position:right center;
+  background-position:right center;   /* 右半分 */
   background-size:100% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
@@ -85,11 +78,11 @@ body {
 .slide.calendar-large {
   width:200% !important;
   background-size:contain !important;
-  background-position:61.5% center !important;
+  background-position:61.5% center !important;  /* 右寄せ */
 }
 
 /* ==============================
-   フリーエリア（ケン・バーンズ）
+   フリーエリア（ケン・バーンズ・右半分）
 ============================== */
 #free-container {
   position:absolute; top:0; left:0;
@@ -100,7 +93,7 @@ body {
 .kb-slide {
   position:absolute; inset:0;
   background-size:200% 100%;
-  background-position:right center;
+  background-position:right center;   /* 右半分 */
   opacity:0; transition:opacity 0.8s ease;
 }
 @keyframes kb-zoom {
@@ -123,7 +116,7 @@ body {
 }
 
 /* ==============================
-   固定枠（下・QR）
+   固定枠（下・QR）HP のみ
 ============================== */
 #bar-qr {
   flex-shrink:0;
@@ -146,7 +139,7 @@ body {
 }
 
 /* ==============================
-   ロゴオーバーレイ
+   ロゴオーバーレイ（右半分）
 ============================== */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
@@ -157,7 +150,7 @@ body {
 }
 
 /* ==============================
-   スキャンラインエフェクト用
+   スキャンラインエフェクト
 ============================== */
 #scanline {
   position:fixed; top:0; left:0; width:100%; height:100%;
@@ -209,11 +202,10 @@ body {
 <div id="layout">
   <div id="bar-top">
     <div id="bar-info">
-      <span id="weather" style="display:none"></span>
       <span id="clock">--:--</span>
     </div>
     <div id="ticker-wrap">
-      <span id="ticker">サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　</span>
+      <canvas id="ticker-canvas"></canvas>
     </div>
   </div>
 
@@ -305,32 +297,65 @@ var started     = false;
 var lastPartId  = null;
 var freeTimer   = null;
 var freeRunning = false;
+var wasLogo     = false;
 
-function getPartByOffset(offset) {
-  for (var i = PARTS.length - 1; i >= 0; i--) {
-    if (offset >= PARTS[i].offset) return PARTS[i];
+/* ==============================
+   テロップ：Canvasで位置を
+   Date.now()から計算して
+   スクリーン1と継ぎ目なく繋がる
+============================== */
+var TICKER_TEXT = 'サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　';
+var TICKER_SPEED = 80; /* px/秒　スクリーン1のCSSアニメと合わせる */
+var tickerCanvas = document.getElementById('ticker-canvas');
+var tickerCtx    = tickerCanvas.getContext('2d');
+var tickerW = 0, tickerH = 0, textW = 0;
+var SCREEN_COUNT = 2; /* 2画面分の合計幅でループ */
+
+function initTicker() {
+  tickerW = tickerCanvas.offsetWidth;
+  tickerH = tickerCanvas.offsetHeight;
+  tickerCanvas.width  = tickerW;
+  tickerCanvas.height = tickerH;
+  tickerCtx.font = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  textW = tickerCtx.measureText(TICKER_TEXT).width;
+}
+
+function drawTicker() {
+  if (!started) { requestAnimationFrame(drawTicker); return; }
+  tickerCtx.clearRect(0, 0, tickerW, tickerH);
+
+  /* 2画面合計幅でループ位置を計算 */
+  var totalW   = tickerW * SCREEN_COUNT; /* 2画面分 */
+  var loopW    = textW + tickerW;        /* テキスト幅＋1画面幅 */
+  var elapsed  = (Date.now() / 1000) * TICKER_SPEED;
+  /* スクリーン2なので右画面分だけオフセット（1画面幅分ずらす） */
+  var pos = ((elapsed % loopW) + tickerW) % loopW;
+  var x   = tickerW - pos;
+
+  tickerCtx.font      = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  tickerCtx.fillStyle = '#00b4d8';
+  tickerCtx.textBaseline = 'middle';
+  tickerCtx.fillText(TICKER_TEXT, x, tickerH / 2);
+
+  /* 折り返し */
+  if (x + textW < tickerW) {
+    tickerCtx.fillText(TICKER_TEXT, x + textW, tickerH / 2);
   }
-  return PARTS[0];
+
+  requestAnimationFrame(drawTicker);
 }
 
 /* ==============================
-   ロゴ切り替えエフェクト
-   1. 固定枠をフリッカーして消す
-   2. シアンのスキャンラインが走る
-   3. ロゴがフェードイン
+   ロゴエフェクト
 ============================== */
 function playLogoEnter() {
-  /* Step1: 固定枠フリッカー → 非表示 */
   barTop.style.animation = 'flicker 0.4s ease forwards';
   barQr.style.animation  = 'flicker 0.4s ease forwards';
-
   setTimeout(function() {
-    barTop.style.display = 'none';
-    barQr.style.display  = 'none';
+    barTop.style.display   = 'none';
+    barQr.style.display    = 'none';
     barTop.style.animation = '';
     barQr.style.animation  = '';
-
-    /* Step2: スキャンライン */
     scanline.style.animation = 'none';
     scanline.style.opacity   = '0';
     requestAnimationFrame(function() {
@@ -338,19 +363,14 @@ function playLogoEnter() {
         scanline.style.animation = 'scan-down 0.5s ease-out forwards';
       });
     });
-
-    /* Step3: ロゴフェードイン */
     setTimeout(function() {
       overlay.style.transition = 'opacity 0.5s ease';
       overlay.style.opacity    = '1';
     }, 300);
-
   }, 400);
 }
 
-/* ロゴ → 通常パートへの復帰エフェクト */
 function playLogoExit() {
-  /* スキャンラインを逆方向に */
   scanline.style.animation = 'none';
   scanline.style.opacity   = '0';
   requestAnimationFrame(function() {
@@ -358,13 +378,11 @@ function playLogoExit() {
       scanline.style.animation = 'scan-down 0.4s ease-out forwards';
     });
   });
-
   overlay.style.transition = 'opacity 0.3s ease';
   overlay.style.opacity    = '0';
-
   setTimeout(function() {
-    barTop.style.display = '';
-    barQr.style.display  = '';
+    barTop.style.display   = '';
+    barQr.style.display    = '';
     barTop.style.animation = 'flicker 0.3s ease forwards';
     barQr.style.animation  = 'flicker 0.3s ease forwards';
     setTimeout(function() {
@@ -445,8 +463,6 @@ function hideImageSlides() {
 /* ==============================
    メインループ
 ============================== */
-var wasLogo = false;
-
 function tick() {
   if (!started) return;
   var offset  = Date.now() % CYCLE_MS;
@@ -489,10 +505,17 @@ function tick() {
   });
 }
 
+function getPartByOffset(offset) {
+  for (var i = PARTS.length - 1; i >= 0; i--) {
+    if (offset >= PARTS[i].offset) return PARTS[i];
+  }
+  return PARTS[0];
+}
+
 setInterval(tick, 100);
 
 /* ==============================
-   時計（秒単位で更新）
+   時計
 ============================== */
 function updateClock() {
   var now = new Date();
@@ -504,28 +527,6 @@ updateClock();
 setInterval(updateClock, 30000);
 
 /* ==============================
-   天気（中野区）
-============================== */
-function fetchWeather() {
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.71&longitude=139.66&current_weather=true')
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      var t    = Math.round(d.current_weather.temperature);
-      var code = d.current_weather.weathercode;
-      var icon = code <= 1  ? '☀' :
-                 code <= 3  ? '⛅' :
-                 code <= 45 ? '☁' :
-                 code <= 67 ? '🌧' : '❄';
-      /* screen2: weather shown on screen1 only */
-    })
-    .catch(function() {
-      /* screen2: weather shown on screen1 only */
-    });
-}
-fetchWeather();
-setInterval(fetchWeather, 600000);
-
-/* ==============================
    スタート
 ============================== */
 document.getElementById('startOverlay').addEventListener('click', function() {
@@ -534,8 +535,13 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   if (el.requestFullscreen)            el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   started = true;
+  initTicker();
+  requestAnimationFrame(drawTicker);
 });
+
+window.addEventListener('resize', initTicker);
 </script>
 </body>
 </html>
+
 

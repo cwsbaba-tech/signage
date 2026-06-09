@@ -15,8 +15,7 @@ body {
 }
 
 /* ==============================
-   全体レイアウト：Flexboxで3段積み
-   固定枠上 → コンテンツ → 固定枠下
+   全体レイアウト：Flexbox 3段
 ============================== */
 #layout {
   width:100%;
@@ -31,8 +30,8 @@ body {
 #bar-top {
   flex-shrink:0;
   background:#111;
-  border-bottom:2px solid rgba(255,255,255,0.15);
-  padding:14px 24px 8px;
+  border-bottom:2px solid rgba(255,255,255,0.18);
+  padding:12px 24px 10px;
   z-index:50;
 }
 #bar-info {
@@ -42,20 +41,21 @@ body {
   margin-bottom:8px;
 }
 #weather {
-  font-size:26px;
-  color:rgba(255,255,255,0.9);
+  font-size:28px;
+  font-weight:700;
+  color:#fff;
   letter-spacing:0.05em;
 }
 #clock {
-  font-size:44px;
-  font-weight:200;
+  font-size:28px;
+  font-weight:700;
   color:#fff;
-  letter-spacing:0.12em;
+  letter-spacing:0.1em;
   font-variant-numeric:tabular-nums;
 }
 #ticker-wrap {
   overflow:hidden;
-  height:34px;
+  height:32px;
   border-top:1px solid rgba(255,255,255,0.1);
   display:flex;
   align-items:center;
@@ -63,8 +63,9 @@ body {
 #ticker {
   display:inline-block;
   white-space:nowrap;
-  font-size:18px;
-  color:rgba(255,255,255,0.75);
+  font-size:22px;
+  font-weight:700;
+  color:rgba(255,255,255,0.9);
   letter-spacing:0.06em;
   animation:ticker 28s linear infinite;
 }
@@ -75,7 +76,6 @@ body {
 
 /* ==============================
    コンテンツエリア（中段）
-   固定枠の高さを除いた残り全部
 ============================== */
 #content {
   flex:1;
@@ -86,7 +86,7 @@ body {
 
 /* ==============================
    通常スライド
-   コンテンツエリア内に収まるよう position:absolute
+   すべて左半分表示（スクリーン1）
 ============================== */
 .slide {
   position:absolute;
@@ -102,11 +102,6 @@ body {
   width:200% !important;
   background-size:contain !important;
   background-position:38.5% center !important;
-}
-.slide.event-full {
-  width:100% !important;
-  background-size:cover !important;
-  background-position:center center !important;
 }
 
 /* ==============================
@@ -141,52 +136,54 @@ body {
 }
 .kb-label {
   font-size:14px;
+  font-weight:700;
   letter-spacing:0.3em;
   color:rgba(255,255,255,0.5);
   margin-bottom:4px;
 }
 .kb-title {
   font-size:22px;
-  font-weight:500;
+  font-weight:700;
   color:#fff;
   letter-spacing:0.05em;
 }
 
 /* ==============================
    固定枠（下・QR）
+   スクリーン1はInstagramのみ
 ============================== */
 #bar-qr {
   flex-shrink:0;
   background:#111;
-  border-top:2px solid rgba(255,255,255,0.15);
+  border-top:2px solid rgba(255,255,255,0.18);
   padding:10px 32px;
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
-  height:90px;
+  height:100px;
   z-index:50;
 }
 .qr-item {
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:14px;
 }
 .qr-item img {
-  width:64px; height:64px;
+  width:76px; height:76px;
   border-radius:6px;
   background:#fff;
   padding:3px;
   object-fit:contain;
 }
 .qr-lbl {
-  font-size:15px;
-  color:rgba(255,255,255,0.55);
-  letter-spacing:0.1em;
+  font-size:20px;
+  font-weight:700;
+  color:rgba(255,255,255,0.7);
+  letter-spacing:0.08em;
 }
 
 /* ==============================
-   ロゴ（全画面・固定枠なし）
-   layoutの上に被せる
+   ロゴ（全画面・固定枠の上に被せる）
 ============================== */
 #mainOverlay {
   position:fixed;
@@ -224,7 +221,6 @@ body {
 
 <div id="mainOverlay"></div>
 
-<!-- 3段Flexレイアウト -->
 <div id="layout">
 
   <!-- 上部固定枠 -->
@@ -240,9 +236,6 @@ body {
 
   <!-- コンテンツエリア -->
   <div id="content">
-    <!-- 通常スライドはJSで生成 -->
-
-    <!-- フリーエリア -->
     <div id="free-container">
       <div class="kb-slide" id="kb0"></div>
       <div class="kb-slide" id="kb1"></div>
@@ -254,29 +247,19 @@ body {
     </div>
   </div>
 
-  <!-- 下部固定枠（QR） -->
+  <!-- 下部固定枠（Instagram QRのみ） -->
   <div id="bar-qr">
     <div class="qr-item">
       <img src="instagram.jpg" alt="Instagram QR">
       <span class="qr-lbl">Instagram</span>
-    </div>
-    <div class="qr-item" style="flex-direction:row-reverse">
-      <img src="HP.png" alt="HP QR">
-      <span class="qr-lbl">ホームページ</span>
     </div>
   </div>
 
 </div>
 
 <script>
-/* ============================================================
-   CYCLE_MS はスクリーン3に合わせて 59900ms
-============================================================ */
 var CYCLE_MS = 59900;
 
-/* ============================================================
-   パート定義
-============================================================ */
 var PARTS = [
   {
     id:'calendar', type:'image', src:'calendar.jpg',
@@ -304,8 +287,8 @@ var PARTS = [
   },
   {
     id:'event', type:'image', src:'event.jpg',
-    offset:40000, duration:10000,
-    eventFull:true
+    offset:40000, duration:10000
+    /* eventFull廃止：他と同じく左半分表示 */
   },
   {
     id:'logo', type:'logo',
@@ -313,29 +296,20 @@ var PARTS = [
   }
 ];
 
-/* ============================================================
-   DOM生成（通常スライドをcontentの中に追加）
-============================================================ */
+/* DOM生成 */
 var contentEl = document.getElementById('content');
 var imageEls  = {};
-
 PARTS.forEach(function(p) {
   if (p.type !== 'image') return;
   var el = document.createElement('div');
   el.className = 'slide';
   if (p.calendarLarge) el.classList.add('calendar-large');
-  if (p.eventFull)     el.classList.add('event-full');
   el.style.backgroundImage = "url('" + p.src + "')";
   contentEl.appendChild(el);
   imageEls[p.id] = el;
 });
 
-/* ============================================================
-   要素取得
-============================================================ */
 var overlay       = document.getElementById('mainOverlay');
-var barTop        = document.getElementById('bar-top');
-var barQr         = document.getElementById('bar-qr');
 var freeContainer = document.getElementById('free-container');
 var kbEls = [
   document.getElementById('kb0'),
@@ -345,17 +319,11 @@ var kbEls = [
 var kbLabelEl = document.getElementById('kb-label');
 var kbTitleEl = document.getElementById('kb-title');
 
-/* ============================================================
-   状態管理
-============================================================ */
 var started     = false;
 var lastPartId  = null;
 var freeTimer   = null;
 var freeRunning = false;
 
-/* ============================================================
-   パート特定
-============================================================ */
 function getPartByOffset(offset) {
   for (var i = PARTS.length - 1; i >= 0; i--) {
     if (offset >= PARTS[i].offset) return PARTS[i];
@@ -363,9 +331,6 @@ function getPartByOffset(offset) {
   return PARTS[0];
 }
 
-/* ============================================================
-   フリーエリア制御
-============================================================ */
 function startFree(part, partOff) {
   freeRunning = true;
   kbEls.forEach(function(el, i) {
@@ -425,9 +390,6 @@ function stopFree() {
   });
 }
 
-/* ============================================================
-   メインループ
-============================================================ */
 function tick() {
   if (!started) return;
   var offset  = Date.now() % CYCLE_MS;
@@ -436,7 +398,6 @@ function tick() {
   lastPartId  = part.id;
   var partOff = offset - part.offset;
 
-  /* ロゴ：固定枠ごと全画面で覆う */
   if (part.type === 'logo') {
     stopFree();
     freeContainer.style.opacity = '0';
@@ -470,9 +431,6 @@ function hideImageSlides() {
 
 setInterval(tick, 100);
 
-/* ============================================================
-   時計
-============================================================ */
 function updateClock() {
   var now = new Date();
   var h = String(now.getHours()).padStart(2,'0');
@@ -482,9 +440,6 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 60000);
 
-/* ============================================================
-   天気（Open-Meteo・山口市）
-============================================================ */
 function fetchWeather() {
   fetch('https://api.open-meteo.com/v1/forecast?latitude=34.18&longitude=131.47&current_weather=true')
     .then(function(r) { return r.json(); })
@@ -504,9 +459,6 @@ function fetchWeather() {
 fetchWeather();
 setInterval(fetchWeather, 600000);
 
-/* ============================================================
-   スタート
-============================================================ */
 document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
   var el = document.documentElement;
@@ -517,5 +469,3 @@ document.getElementById('startOverlay').addEventListener('click', function() {
 </script>
 </body>
 </html>
-
-

@@ -99,17 +99,25 @@ body {
   to   { transform:scale(1.09); }
 }
 .kb-overlay {
-  position:absolute; top:0; left:0; right:0;
-  padding:24px 28px 40px;
-  background:linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  position:absolute; top:24px; left:24px; right:24px;
   pointer-events:none; z-index:5;
 }
+.kb-badge {
+  display:inline-block;
+  background:rgba(5,10,15,0.72);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(0,180,216,0.4);
+  border-left:6px solid #00b4d8;
+  border-radius:6px;
+  padding:10px 22px 12px;
+}
 .kb-label {
-  font-size:20px; font-weight:700; letter-spacing:0.35em;
-  color:rgba(0,180,216,0.85); margin-bottom:6px;
+  font-size:18px; font-weight:700; letter-spacing:0.35em;
+  color:#00b4d8; margin-bottom:4px;
 }
 .kb-title {
-  font-size:48px; font-weight:700;
+  font-size:46px; font-weight:700;
   color:#fff; letter-spacing:0.05em;
 }
 
@@ -206,7 +214,7 @@ body {
 <div id="layout">
   <div id="bar-top">
     <div id="bar-info">
-      <span id="weather"></span>
+      <span id="weather"><span id="weather-icon"></span> <span id="weather-temp"></span></span>
     </div>
     <div id="ticker-wrap">
       <canvas id="ticker-canvas"></canvas>
@@ -219,8 +227,10 @@ body {
       <div class="kb-slide" id="kb1"></div>
       <div class="kb-slide" id="kb2"></div>
       <div class="kb-overlay">
-        <div class="kb-label" id="kb-label"></div>
-        <div class="kb-title" id="kb-title"></div>
+        <div class="kb-badge">
+          <div class="kb-label" id="kb-label"></div>
+          <div class="kb-title" id="kb-title"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -346,28 +356,11 @@ function playLogoEnter() {
 
 /* ロゴ → 通常パートへの復帰エフェクト */
 function playLogoExit() {
-  /* フォーカスアウト（光が中央へ収束して消える） */
-  focuslight.style.animation = 'none';
-  focuslight.style.opacity   = '0';
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      focuslight.style.animation = 'focus-out 0.8s cubic-bezier(0.4,0,0.2,1) forwards';
-    });
-  });
-
-  overlay.style.transition = 'opacity 0.4s ease';
+  /* エフェクトなし：ロゴを即時に消して固定枠を戻す */
+  overlay.style.transition = '';
   overlay.style.opacity    = '0';
-
-  setTimeout(function() {
-    barTop.style.display = '';
-    barQr.style.display  = '';
-    barTop.style.animation = 'flicker 0.3s ease forwards';
-    barQr.style.animation  = 'flicker 0.3s ease forwards';
-    setTimeout(function() {
-      barTop.style.animation = '';
-      barQr.style.animation  = '';
-    }, 300);
-  }, 250);
+  barTop.style.display = '';
+  barQr.style.display  = '';
 }
 
 /* ==============================
@@ -496,26 +489,42 @@ function fetchWeather() {
     .then(function(d) {
       var t    = Math.round(d.current_weather.temperature);
       var code = d.current_weather.weathercode;
-      var icon, color;
+
+      /* 天気アイコンの色 */
+      var icon, iconColor;
       if (code <= 1) {        /* 晴れ */
-        icon = '☀'; color = '#ffb703';
+        icon = '☀'; iconColor = '#ffb703';
       } else if (code <= 3) { /* 晴れ時々曇り */
-        icon = '⛅'; color = '#ffd166';
+        icon = '⛅'; iconColor = '#ffd166';
       } else if (code <= 45) { /* 曇り・霧 */
-        icon = '☁'; color = '#cbd5e1';
+        icon = '☁'; iconColor = '#cbd5e1';
       } else if (code <= 67) { /* 雨 */
-        icon = '☂'; color = '#90e0ef';
+        icon = '☂'; iconColor = '#90e0ef';
       } else if (code <= 77) { /* 雪 */
-        icon = '❄'; color = '#e0fbfc';
+        icon = '❄'; iconColor = '#e0fbfc';
       } else {                 /* 雷雨など */
-        icon = '⛈'; color = '#a78bfa';
+        icon = '⛈'; iconColor = '#a78bfa';
       }
-      var weatherEl = document.getElementById('weather');
-      weatherEl.textContent = icon + ' ' + t + '°C';
-      weatherEl.style.color = color;
+
+      /* 気温の色（温度帯ごと） */
+      var tempColor;
+      if (t <= 0)       tempColor = '#90e0ef'; /* 極寒：水色 */
+      else if (t <= 10) tempColor = '#48cae4'; /* 寒い：青 */
+      else if (t <= 20) tempColor = '#52d68a'; /* 涼しい：緑 */
+      else if (t <= 28) tempColor = '#ffd166'; /* 快適〜暖かい：黄 */
+      else if (t <= 33) tempColor = '#ff9f1c'; /* 暑い：オレンジ */
+      else              tempColor = '#ef476f'; /* 猛暑：赤 */
+
+      var iconEl = document.getElementById('weather-icon');
+      var tempEl = document.getElementById('weather-temp');
+      iconEl.textContent = icon;
+      iconEl.style.color = iconColor;
+      tempEl.textContent = t + '°C';
+      tempEl.style.color = tempColor;
     })
     .catch(function() {
-      document.getElementById('weather').textContent = '';
+      document.getElementById('weather-icon').textContent = '';
+      document.getElementById('weather-temp').textContent = '';
     });
 }
 fetchWeather();

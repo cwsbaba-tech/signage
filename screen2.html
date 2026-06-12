@@ -13,77 +13,67 @@ body {
   overflow:hidden; background:#000;
   font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
 }
-
 #layout {
   width:100%; height:100%;
   display:flex; flex-direction:column;
 }
 
-/* ==============================
-   固定枠（上）LED掲示板スタイル
-============================== */
+/* 上部固定枠 */
 #bar-top {
   flex-shrink:0;
   background:#050a0f;
   border-bottom:2px solid #00b4d8;
   padding:12px 24px 0;
   z-index:50;
-  transition:opacity 0.1s;
 }
 #bar-info {
-  display:flex; justify-content:space-between; align-items:center;
+  display:flex; justify-content:flex-end; align-items:center;
   margin-bottom:8px;
 }
 #clock {
   font-size:26px; font-weight:700;
   color:#caf0f8; letter-spacing:0.12em;
   font-variant-numeric:tabular-nums;
-  margin-left:auto;
 }
-
-/* テロップ：スクリーン1と同じ高さ・同じフォント */
 #ticker-wrap {
   overflow:hidden; height:30px;
   border-top:1px solid #00334d;
   background:#020d14;
-  display:flex; align-items:center;
-  position:relative;
+  position:relative;   /* Canvasの絶対配置基点 */
 }
 #ticker-canvas {
   position:absolute;
   top:0; left:0;
   width:100%; height:100%;
-  pointer-events:none;
 }
 
-/* ==============================
-   コンテンツエリア
-============================== */
+/* コンテンツエリア */
 #content {
   flex:1; position:relative; overflow:hidden; background:#000;
 }
 
-/* ==============================
-   通常スライド（右半分表示）
-============================== */
+/*
+  右半分表示の仕組み：
+  画像は width:200% で2画面分の幅を持つ。
+  left:-100% でコンテナ外左にはみ出させることで
+  右半分だけがコンテナ内に見える。
+*/
 .slide {
-  position:absolute; top:0; left:0;
+  position:absolute;
+  top:0; left:-100%;    /* 左に1画面幅ずらして右半分を表示 */
   width:200%; height:100%;
   background-repeat:no-repeat;
-  background-position:right center;   /* 右半分 */
+  background-position:left center;
   background-size:100% 100%;
   opacity:0;
   transition:opacity 0.5s ease-in-out;
 }
 .slide.calendar-large {
-  width:200% !important;
   background-size:contain !important;
-  background-position:61.5% center !important;  /* 右寄せ */
+  background-position:38.5% center !important;
 }
 
-/* ==============================
-   フリーエリア（ケン・バーンズ・右半分）
-============================== */
+/* フリーエリア（ケン・バーンズ・右半分） */
 #free-container {
   position:absolute; top:0; left:0;
   width:100%; height:100%;
@@ -91,9 +81,11 @@ body {
   overflow:hidden;
 }
 .kb-slide {
-  position:absolute; inset:0;
-  background-size:200% 100%;
-  background-position:right center;   /* 右半分 */
+  position:absolute;
+  top:0; left:-100%;    /* 同じく右半分を表示 */
+  width:200%; height:100%;
+  background-size:100% 100%;
+  background-position:left center;
   opacity:0; transition:opacity 0.8s ease;
 }
 @keyframes kb-zoom {
@@ -115,9 +107,7 @@ body {
   color:#fff; letter-spacing:0.05em;
 }
 
-/* ==============================
-   固定枠（下・QR）HP のみ
-============================== */
+/* 下部固定枠 */
 #bar-qr {
   flex-shrink:0;
   background:#050a0f;
@@ -125,7 +115,6 @@ body {
   padding:10px 32px;
   display:flex; justify-content:center; align-items:center;
   height:96px; z-index:50;
-  transition:opacity 0.1s;
 }
 .qr-item { display:flex; align-items:center; gap:14px; }
 .qr-item img {
@@ -138,29 +127,20 @@ body {
   color:#00b4d8; letter-spacing:0.1em;
 }
 
-/* ==============================
-   ロゴオーバーレイ（右半分）
-============================== */
+/* ロゴオーバーレイ（右半分） */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
   background:#fff url('トリックロゴ.jpg') no-repeat right center;
   background-size:200% 100%;
-  opacity:0; pointer-events:none;
-  z-index:100;
+  opacity:0; pointer-events:none; z-index:100;
 }
 
-/* ==============================
-   スキャンラインエフェクト
-============================== */
+/* スキャンライン */
 #scanline {
   position:fixed; top:0; left:0; width:100%; height:100%;
   z-index:99; pointer-events:none; opacity:0;
-  background:linear-gradient(
-    to bottom,
-    transparent 0%,
-    #00b4d8 49%, #00b4d8 51%,
-    transparent 100%
-  );
+  background:linear-gradient(to bottom,
+    transparent 0%, #00b4d8 49%, #00b4d8 51%, transparent 100%);
   background-size:100% 200%;
   background-position:0 -100%;
 }
@@ -176,9 +156,7 @@ body {
   80%     { opacity:0.8; }
 }
 
-/* ==============================
-   スタート画面
-============================== */
+/* スタート画面 */
 #startOverlay {
   position:fixed; inset:0; background:#000; color:#fff;
   display:flex; flex-direction:column;
@@ -195,7 +173,6 @@ body {
   <h1>タップしてスタート</h1>
   <p>SCREEN 2 (RIGHT SIDE)</p>
 </div>
-
 <div id="mainOverlay"></div>
 <div id="scanline"></div>
 
@@ -233,38 +210,20 @@ body {
 var CYCLE_MS = 59900;
 
 var PARTS = [
-  {
-    id:'calendar', type:'image', src:'calendar.jpg',
-    offset:0, duration:10000, calendarLarge:true
-  },
-  {
-    id:'free1', type:'free',
-    offset:10000, duration:10000,
+  { id:'calendar', type:'image', src:'calendar.jpg',  offset:0,     duration:10000, calendarLarge:true },
+  { id:'free1',    type:'free',  offset:10000, duration:10000,
     images:['free1_01.png','free1_02.png','free1_03.png'],
     labels:['BEFORE','DURING','AFTER'],
     titles:['クリーニング前','クリーニング中','クリーニング完了'],
-    durs:[3000,3000,4000]
-  },
-  {
-    id:'holiday', type:'image', src:'holiday.jpg',
-    offset:20000, duration:10000
-  },
-  {
-    id:'free2', type:'free',
-    offset:30000, duration:10000,
+    durs:[3000,3000,4000] },
+  { id:'holiday',  type:'image', src:'holiday.jpg',   offset:20000, duration:10000 },
+  { id:'free2',    type:'free',  offset:30000, duration:10000,
     images:['free2_01.png','free2_02.png','free2_03.png'],
     labels:['STEP 1','STEP 2','STEP 3'],
     titles:['スケッチ','色入れ','完成'],
-    durs:[3300,3300,3400]
-  },
-  {
-    id:'event', type:'image', src:'event.jpg',
-    offset:40000, duration:10000
-  },
-  {
-    id:'logo', type:'logo',
-    offset:50000, duration:9900
-  }
+    durs:[3300,3300,3400] },
+  { id:'event',    type:'image', src:'event.jpg',     offset:40000, duration:10000 },
+  { id:'logo',     type:'logo',                       offset:50000, duration:9900  }
 ];
 
 /* DOM生成 */
@@ -285,225 +244,11 @@ var scanline      = document.getElementById('scanline');
 var barTop        = document.getElementById('bar-top');
 var barQr         = document.getElementById('bar-qr');
 var freeContainer = document.getElementById('free-container');
-var kbEls = [
-  document.getElementById('kb0'),
-  document.getElementById('kb1'),
-  document.getElementById('kb2')
-];
-var kbLabelEl = document.getElementById('kb-label');
-var kbTitleEl = document.getElementById('kb-title');
+var kbEls         = [document.getElementById('kb0'), document.getElementById('kb1'), document.getElementById('kb2')];
+var kbLabelEl     = document.getElementById('kb-label');
+var kbTitleEl     = document.getElementById('kb-title');
 
-var started     = false;
-var lastPartId  = null;
-var freeTimer   = null;
-var freeRunning = false;
-var wasLogo     = false;
-
-/* ==============================
-   テロップ：Canvasで位置を
-   Date.now()から計算して
-   スクリーン1と継ぎ目なく繋がる
-============================== */
-var TICKER_TEXT = 'サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　';
-var TICKER_SPEED = 80; /* px/秒　スクリーン1のCSSアニメと合わせる */
-var tickerCanvas = document.getElementById('ticker-canvas');
-var tickerCtx    = tickerCanvas.getContext('2d');
-var tickerW = 0, tickerH = 0, textW = 0;
-var SCREEN_COUNT = 2; /* 2画面分の合計幅でループ */
-
-function initTicker() {
-  tickerW = tickerCanvas.offsetWidth;
-  tickerH = tickerCanvas.offsetHeight;
-  tickerCanvas.width  = tickerW;
-  tickerCanvas.height = tickerH;
-  tickerCtx.font = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
-  textW = tickerCtx.measureText(TICKER_TEXT).width;
-}
-
-function drawTicker() {
-  if (!started) { requestAnimationFrame(drawTicker); return; }
-  tickerCtx.clearRect(0, 0, tickerW, tickerH);
-
-  /* 2画面合計幅でループ位置を計算 */
-  var totalW   = tickerW * SCREEN_COUNT; /* 2画面分 */
-  var loopW    = textW + tickerW;        /* テキスト幅＋1画面幅 */
-  var elapsed  = (Date.now() / 1000) * TICKER_SPEED;
-  /* スクリーン2なので右画面分だけオフセット（1画面幅分ずらす） */
-  var pos = ((elapsed % loopW) + tickerW) % loopW;
-  var x   = tickerW - pos;
-
-  tickerCtx.font      = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
-  tickerCtx.fillStyle = '#00b4d8';
-  tickerCtx.textBaseline = 'middle';
-  tickerCtx.fillText(TICKER_TEXT, x, tickerH / 2);
-
-  /* 折り返し */
-  if (x + textW < tickerW) {
-    tickerCtx.fillText(TICKER_TEXT, x + textW, tickerH / 2);
-  }
-
-  requestAnimationFrame(drawTicker);
-}
-
-/* ==============================
-   ロゴエフェクト
-============================== */
-function playLogoEnter() {
-  barTop.style.animation = 'flicker 0.4s ease forwards';
-  barQr.style.animation  = 'flicker 0.4s ease forwards';
-  setTimeout(function() {
-    barTop.style.display   = 'none';
-    barQr.style.display    = 'none';
-    barTop.style.animation = '';
-    barQr.style.animation  = '';
-    scanline.style.animation = 'none';
-    scanline.style.opacity   = '0';
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        scanline.style.animation = 'scan-down 0.5s ease-out forwards';
-      });
-    });
-    setTimeout(function() {
-      overlay.style.transition = 'opacity 0.5s ease';
-      overlay.style.opacity    = '1';
-    }, 300);
-  }, 400);
-}
-
-function playLogoExit() {
-  scanline.style.animation = 'none';
-  scanline.style.opacity   = '0';
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      scanline.style.animation = 'scan-down 0.4s ease-out forwards';
-    });
-  });
-  overlay.style.transition = 'opacity 0.3s ease';
-  overlay.style.opacity    = '0';
-  setTimeout(function() {
-    barTop.style.display   = '';
-    barQr.style.display    = '';
-    barTop.style.animation = 'flicker 0.3s ease forwards';
-    barQr.style.animation  = 'flicker 0.3s ease forwards';
-    setTimeout(function() {
-      barTop.style.animation = '';
-      barQr.style.animation  = '';
-    }, 300);
-  }, 200);
-}
-
-/* ==============================
-   フリーエリア制御
-============================== */
-function startFree(part, partOff) {
-  freeRunning = true;
-  kbEls.forEach(function(el, i) {
-    el.style.backgroundImage = "url('" + part.images[i] + "')";
-    el.style.opacity   = '0';
-    el.style.animation = 'none';
-  });
-  var elapsed   = partOff;
-  var startIdx  = 0;
-  var remaining = part.durs[0];
-  for (var i = 0; i < part.durs.length; i++) {
-    if (elapsed < part.durs[i]) {
-      startIdx  = i;
-      remaining = part.durs[i] - elapsed;
-      break;
-    }
-    elapsed -= part.durs[i];
-  }
-  showKbSlide(part, startIdx, remaining);
-}
-
-function showKbSlide(part, idx, dur) {
-  if (!freeRunning) return;
-  kbEls.forEach(function(el, i) {
-    if (i !== idx) {
-      el.style.transition = 'opacity 0.8s ease';
-      el.style.opacity    = '0';
-      el.style.animation  = 'none';
-    }
-  });
-  var el = kbEls[idx];
-  el.style.animation = 'none';
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      el.style.transition = 'opacity 0.8s ease';
-      el.style.opacity    = '1';
-      el.style.animation  = 'kb-zoom ' + (dur/1000).toFixed(2) + 's ease-out forwards';
-    });
-  });
-  kbLabelEl.textContent = part.labels[idx];
-  kbTitleEl.textContent = part.titles[idx];
-  if (freeTimer) clearTimeout(freeTimer);
-  freeTimer = setTimeout(function() {
-    var next = idx + 1;
-    if (next < part.durs.length && freeRunning) {
-      showKbSlide(part, next, part.durs[next]);
-    }
-  }, dur);
-}
-
-function stopFree() {
-  freeRunning = false;
-  if (freeTimer) { clearTimeout(freeTimer); freeTimer = null; }
-  kbEls.forEach(function(el) {
-    el.style.opacity   = '0';
-    el.style.animation = 'none';
-  });
-}
-
-function hideImageSlides() {
-  Object.keys(imageEls).forEach(function(id) {
-    imageEls[id].style.opacity = '0';
-  });
-}
-
-/* ==============================
-   メインループ
-============================== */
-function tick() {
-  if (!started) return;
-  var offset  = Date.now() % CYCLE_MS;
-  var part    = getPartByOffset(offset);
-  if (part.id === lastPartId) return;
-  lastPartId  = part.id;
-  var partOff = offset - part.offset;
-
-  if (part.type === 'logo') {
-    stopFree();
-    freeContainer.style.opacity = '0';
-    hideImageSlides();
-    playLogoEnter();
-    wasLogo = true;
-    return;
-  }
-
-  if (wasLogo) {
-    wasLogo = false;
-    playLogoExit();
-  } else {
-    overlay.style.transition = '';
-    overlay.style.opacity    = '0';
-    barTop.style.display = '';
-    barQr.style.display  = '';
-  }
-
-  if (part.type === 'free') {
-    hideImageSlides();
-    stopFree();
-    freeContainer.style.opacity = '1';
-    startFree(part, partOff);
-    return;
-  }
-
-  stopFree();
-  freeContainer.style.opacity = '0';
-  Object.keys(imageEls).forEach(function(id) {
-    imageEls[id].style.opacity = (id === part.id) ? '1' : '0';
-  });
-}
+var started = false, lastPartId = null, freeTimer = null, freeRunning = false, wasLogo = false;
 
 function getPartByOffset(offset) {
   for (var i = PARTS.length - 1; i >= 0; i--) {
@@ -512,23 +257,156 @@ function getPartByOffset(offset) {
   return PARTS[0];
 }
 
+/* テロップ（Canvasで位置をDate.now()から計算） */
+var TICKER_TEXT  = 'サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　';
+var TICKER_SPEED = 80; /* px/秒　screen1と同じ値 */
+var tc = document.getElementById('ticker-canvas');
+var tx = tc.getContext('2d');
+var tW = 0, tH = 0, textW = 0;
+
+function initTicker() {
+  tW = tc.offsetWidth; tH = tc.offsetHeight;
+  tc.width = tW; tc.height = tH;
+  tx.font = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  textW = tx.measureText(TICKER_TEXT).width;
+}
+
+function drawTicker() {
+  if (tW === 0) { requestAnimationFrame(drawTicker); return; }
+  tx.clearRect(0, 0, tW, tH);
+  var loopW = textW + tW;
+  var elapsed = (Date.now() / 1000) * TICKER_SPEED;
+  /*
+    スクリーン2はスクリーン1の右隣。
+    スクリーン1での位置 = tickerW - (elapsed % loopW)
+    スクリーン2での位置 = スクリーン1の位置 - tW（1画面幅分左）
+  */
+  var posS1 = elapsed % loopW;
+  var x = (tW - posS1) - tW; /* = -posS1 */
+  tx.font         = '700 20px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  tx.fillStyle    = '#00b4d8';
+  tx.textBaseline = 'middle';
+  tx.fillText(TICKER_TEXT, x, tH / 2);
+  /* 折り返し */
+  if (x + textW < tW) tx.fillText(TICKER_TEXT, x + textW, tH / 2);
+  if (x + textW * 2 < tW) tx.fillText(TICKER_TEXT, x + textW * 2, tH / 2);
+  requestAnimationFrame(drawTicker);
+}
+
+/* ロゴエフェクト */
+function playLogoEnter() {
+  barTop.style.animation = 'flicker 0.4s ease forwards';
+  barQr.style.animation  = 'flicker 0.4s ease forwards';
+  setTimeout(function() {
+    barTop.style.display = 'none'; barQr.style.display = 'none';
+    barTop.style.animation = ''; barQr.style.animation = '';
+    scanline.style.animation = 'none'; scanline.style.opacity = '0';
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+      scanline.style.animation = 'scan-down 0.5s ease-out forwards';
+    }); });
+    setTimeout(function() {
+      overlay.style.transition = 'opacity 0.5s ease';
+      overlay.style.opacity = '1';
+    }, 300);
+  }, 400);
+}
+
+function playLogoExit() {
+  scanline.style.animation = 'none'; scanline.style.opacity = '0';
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    scanline.style.animation = 'scan-down 0.4s ease-out forwards';
+  }); });
+  overlay.style.transition = 'opacity 0.3s ease';
+  overlay.style.opacity = '0';
+  setTimeout(function() {
+    barTop.style.display = ''; barQr.style.display = '';
+    barTop.style.animation = 'flicker 0.3s ease forwards';
+    barQr.style.animation  = 'flicker 0.3s ease forwards';
+    setTimeout(function() { barTop.style.animation = ''; barQr.style.animation = ''; }, 300);
+  }, 200);
+}
+
+/* フリーエリア */
+function startFree(part, partOff) {
+  freeRunning = true;
+  kbEls.forEach(function(el, i) {
+    el.style.backgroundImage = "url('" + part.images[i] + "')";
+    el.style.opacity = '0'; el.style.animation = 'none';
+  });
+  var elapsed = partOff, startIdx = 0, remaining = part.durs[0];
+  for (var i = 0; i < part.durs.length; i++) {
+    if (elapsed < part.durs[i]) { startIdx = i; remaining = part.durs[i] - elapsed; break; }
+    elapsed -= part.durs[i];
+  }
+  showKbSlide(part, startIdx, remaining);
+}
+
+function showKbSlide(part, idx, dur) {
+  if (!freeRunning) return;
+  kbEls.forEach(function(el, i) {
+    if (i !== idx) { el.style.transition = 'opacity 0.8s ease'; el.style.opacity = '0'; el.style.animation = 'none'; }
+  });
+  var el = kbEls[idx];
+  el.style.animation = 'none';
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    el.style.transition = 'opacity 0.8s ease';
+    el.style.opacity    = '1';
+    el.style.animation  = 'kb-zoom ' + (dur/1000).toFixed(2) + 's ease-out forwards';
+  }); });
+  kbLabelEl.textContent = part.labels[idx];
+  kbTitleEl.textContent = part.titles[idx];
+  if (freeTimer) clearTimeout(freeTimer);
+  freeTimer = setTimeout(function() {
+    var next = idx + 1;
+    if (next < part.durs.length && freeRunning) showKbSlide(part, next, part.durs[next]);
+  }, dur);
+}
+
+function stopFree() {
+  freeRunning = false;
+  if (freeTimer) { clearTimeout(freeTimer); freeTimer = null; }
+  kbEls.forEach(function(el) { el.style.opacity = '0'; el.style.animation = 'none'; });
+}
+
+function hideImageSlides() {
+  Object.keys(imageEls).forEach(function(id) { imageEls[id].style.opacity = '0'; });
+}
+
+function tick() {
+  if (!started) return;
+  var offset = Date.now() % CYCLE_MS;
+  var part   = getPartByOffset(offset);
+  if (part.id === lastPartId) return;
+  lastPartId = part.id;
+  var partOff = offset - part.offset;
+
+  if (part.type === 'logo') {
+    stopFree(); freeContainer.style.opacity = '0'; hideImageSlides();
+    playLogoEnter(); wasLogo = true; return;
+  }
+  if (wasLogo) { wasLogo = false; playLogoExit(); }
+  else { overlay.style.transition = ''; overlay.style.opacity = '0'; barTop.style.display = ''; barQr.style.display = ''; }
+
+  if (part.type === 'free') {
+    hideImageSlides(); stopFree();
+    freeContainer.style.opacity = '1'; startFree(part, partOff); return;
+  }
+  stopFree(); freeContainer.style.opacity = '0';
+  Object.keys(imageEls).forEach(function(id) {
+    imageEls[id].style.opacity = (id === part.id) ? '1' : '0';
+  });
+}
+
 setInterval(tick, 100);
 
-/* ==============================
-   時計
-============================== */
 function updateClock() {
   var now = new Date();
-  var h = String(now.getHours()).padStart(2,'0');
-  var m = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('clock').textContent = h + ':' + m;
+  document.getElementById('clock').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 }
 updateClock();
 setInterval(updateClock, 30000);
 
-/* ==============================
-   スタート
-============================== */
 document.getElementById('startOverlay').addEventListener('click', function() {
   document.getElementById('startOverlay').style.display = 'none';
   var el = document.documentElement;
@@ -538,10 +416,10 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   initTicker();
   requestAnimationFrame(drawTicker);
 });
-
 window.addEventListener('resize', initTicker);
 </script>
 </body>
 </html>
+
 
 

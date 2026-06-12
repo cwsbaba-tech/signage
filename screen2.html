@@ -23,16 +23,29 @@ body {
   flex-shrink:0;
   background:#050a0f;
   border-bottom:2px solid #00b4d8;
-  padding:14px 24px;
+  padding:12px 24px 0;
   z-index:50;
 }
 #bar-info {
   display:flex; justify-content:flex-end; align-items:center;
+  margin-bottom:8px;
 }
 #clock {
   font-size:48px; font-weight:700;
   color:#caf0f8; letter-spacing:0.12em;
   font-variant-numeric:tabular-nums;
+}
+#ticker-wrap {
+  overflow:hidden; height:48px;
+  border-top:1px solid #00334d;
+  background:#020d14;
+  position:relative;
+}
+#ticker-canvas {
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
 }
 
 /* コンテンツエリア */
@@ -79,20 +92,6 @@ body {
 @keyframes kb-zoom {
   from { transform:scale(1); }
   to   { transform:scale(1.09); }
-}
-.kb-overlay {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:20px 24px 16px;
-  background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
-  pointer-events:none; z-index:5;
-}
-.kb-label {
-  font-size:14px; font-weight:700; letter-spacing:0.3em;
-  color:rgba(0,180,216,0.7); margin-bottom:4px;
-}
-.kb-title {
-  font-size:22px; font-weight:700;
-  color:#fff; letter-spacing:0.05em;
 }
 
 /* 下部固定枠 */
@@ -179,6 +178,9 @@ body {
     <div id="bar-info">
       <span id="clock">--:--</span>
     </div>
+    <div id="ticker-wrap">
+      <canvas id="ticker-canvas"></canvas>
+    </div>
   </div>
 
   <div id="content">
@@ -186,10 +188,6 @@ body {
       <div class="kb-slide" id="kb0"></div>
       <div class="kb-slide" id="kb1"></div>
       <div class="kb-slide" id="kb2"></div>
-      <div class="kb-overlay">
-        <div class="kb-label" id="kb-label"></div>
-        <div class="kb-title" id="kb-title"></div>
-      </div>
     </div>
   </div>
 
@@ -240,8 +238,6 @@ var barTop        = document.getElementById('bar-top');
 var barQr         = document.getElementById('bar-qr');
 var freeContainer = document.getElementById('free-container');
 var kbEls         = [document.getElementById('kb0'), document.getElementById('kb1'), document.getElementById('kb2')];
-var kbLabelEl     = document.getElementById('kb-label');
-var kbTitleEl     = document.getElementById('kb-title');
 
 var started = false, lastPartId = null, freeTimer = null, freeRunning = false, wasLogo = false;
 
@@ -250,6 +246,47 @@ function getPartByOffset(offset) {
     if (offset >= PARTS[i].offset) return PARTS[i];
   }
   return PARTS[0];
+}
+
+/* ==============================
+   テロップ（Canvas・クロススクリーン）
+   スクリーン1は x = tickerW - pos
+   スクリーン2はその1画面分左 → x = -pos
+   両画面とも同じ Date.now() を基準にするため同期する
+============================== */
+var TICKER_TEXT  = 'サイクルセンター山口　自転車の販売・修理・クリーニング　お気軽にご相談ください　　　　　　　　　';
+var TICKER_SPEED = 80; /* px/秒　screen1と同じ値 */
+var tickerCanvas = document.getElementById('ticker-canvas');
+var tickerCtx    = tickerCanvas.getContext('2d');
+var tickerW = 0, tickerH = 0, textW = 0;
+
+function initTicker() {
+  tickerW = tickerCanvas.offsetWidth;
+  tickerH = tickerCanvas.offsetHeight;
+  tickerCanvas.width  = tickerW;
+  tickerCanvas.height = tickerH;
+  tickerCtx.font = '700 32px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  textW = tickerCtx.measureText(TICKER_TEXT).width;
+}
+
+function drawTicker() {
+  if (!started) { requestAnimationFrame(drawTicker); return; }
+  tickerCtx.clearRect(0, 0, tickerW, tickerH);
+  var loopW   = textW + tickerW;
+  var elapsed = (Date.now() / 1000) * TICKER_SPEED;
+  var pos = elapsed % loopW;
+  var x   = -pos; /* スクリーン1(x=tickerW-pos)より1画面分左 */
+  tickerCtx.font         = '700 32px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  tickerCtx.fillStyle    = '#00b4d8';
+  tickerCtx.textBaseline = 'middle';
+  tickerCtx.fillText(TICKER_TEXT, x, tickerH / 2);
+  if (x + textW < tickerW) {
+    tickerCtx.fillText(TICKER_TEXT, x + textW, tickerH / 2);
+  }
+  if (x + textW * 2 < tickerW) {
+    tickerCtx.fillText(TICKER_TEXT, x + textW * 2, tickerH / 2);
+  }
+  requestAnimationFrame(drawTicker);
 }
 
 /* ロゴエフェクト */
@@ -312,8 +349,6 @@ function showKbSlide(part, idx, dur) {
     el.style.opacity    = '1';
     el.style.animation  = 'kb-zoom ' + (dur/1000).toFixed(2) + 's ease-out forwards';
   }); });
-  kbLabelEl.textContent = part.labels[idx];
-  kbTitleEl.textContent = part.titles[idx];
   if (freeTimer) clearTimeout(freeTimer);
   freeTimer = setTimeout(function() {
     var next = idx + 1;
@@ -372,8 +407,10 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   if (el.requestFullscreen)            el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   started = true;
+  initTicker();
+  requestAnimationFrame(drawTicker);
 });
+window.addEventListener('resize', initTicker);
 </script>
 </body>
 </html>
-

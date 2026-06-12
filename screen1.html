@@ -38,8 +38,8 @@ body {
   margin-bottom:8px;
 }
 #weather {
-  font-size:38px; font-weight:700;
-  color:#90e0ef; letter-spacing:0.05em;
+  font-size:48px; font-weight:700;
+  letter-spacing:0.05em;
 }
 #ticker-wrap {
   overflow:hidden; height:48px;
@@ -99,17 +99,17 @@ body {
   to   { transform:scale(1.09); }
 }
 .kb-overlay {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:20px 24px 16px;
-  background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
+  position:absolute; top:0; left:0; right:0;
+  padding:24px 28px 40px;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
   pointer-events:none; z-index:5;
 }
 .kb-label {
-  font-size:14px; font-weight:700; letter-spacing:0.3em;
-  color:rgba(0,180,216,0.7); margin-bottom:4px;
+  font-size:20px; font-weight:700; letter-spacing:0.35em;
+  color:rgba(0,180,216,0.85); margin-bottom:6px;
 }
 .kb-title {
-  font-size:22px; font-weight:700;
+  font-size:48px; font-weight:700;
   color:#fff; letter-spacing:0.05em;
 }
 
@@ -496,11 +496,23 @@ function fetchWeather() {
     .then(function(d) {
       var t    = Math.round(d.current_weather.temperature);
       var code = d.current_weather.weathercode;
-      var icon = code <= 1  ? '☀' :
-                 code <= 3  ? '⛅' :
-                 code <= 45 ? '☁' :
-                 code <= 67 ? '🌧' : '❄';
-      document.getElementById('weather').textContent = icon + ' ' + t + '°C';
+      var icon, color;
+      if (code <= 1) {        /* 晴れ */
+        icon = '☀'; color = '#ffb703';
+      } else if (code <= 3) { /* 晴れ時々曇り */
+        icon = '⛅'; color = '#ffd166';
+      } else if (code <= 45) { /* 曇り・霧 */
+        icon = '☁'; color = '#cbd5e1';
+      } else if (code <= 67) { /* 雨 */
+        icon = '☂'; color = '#90e0ef';
+      } else if (code <= 77) { /* 雪 */
+        icon = '❄'; color = '#e0fbfc';
+      } else {                 /* 雷雨など */
+        icon = '⛈'; color = '#a78bfa';
+      }
+      var weatherEl = document.getElementById('weather');
+      weatherEl.textContent = icon + ' ' + t + '°C';
+      weatherEl.style.color = color;
     })
     .catch(function() {
       document.getElementById('weather').textContent = '';

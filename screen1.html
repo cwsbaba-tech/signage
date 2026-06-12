@@ -11,7 +11,7 @@ body {
   transform:rotate(-90deg); transform-origin:left top;
   position:absolute; top:100vh; left:0;
   overflow:hidden; background:#000;
-  font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+  font-family:a'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
 }
 
 /* ==============================
@@ -159,26 +159,14 @@ body {
    スキャンラインエフェクト用
 ============================== */
 #focuslight {
-  position:fixed; top:50%; left:50%;
-  width:200vmax; height:200vmax;
-  transform:translate(-50%,-50%) scale(0);
-  border-radius:50%;
-  background:radial-gradient(circle,
-    rgba(202,240,248,1) 0%,
-    rgba(0,180,216,0.85) 18%,
-    rgba(0,180,216,0.25) 38%,
-    transparent 65%);
-  z-index:99; pointer-events:none; opacity:0;
+  position:fixed; inset:0;
+  background:#fff;
+  z-index:101; pointer-events:none; opacity:0;
 }
-@keyframes focus-in {
-  0%   { transform:translate(-50%,-50%) scale(0);    opacity:0; }
-  35%  { transform:translate(-50%,-50%) scale(0.35); opacity:1; }
-  100% { transform:translate(-50%,-50%) scale(1);    opacity:0; }
-}
-@keyframes focus-out {
-  0%   { transform:translate(-50%,-50%) scale(0);    opacity:0; }
-  35%  { transform:translate(-50%,-50%) scale(0.3);  opacity:1; }
-  100% { transform:translate(-50%,-50%) scale(0.9);  opacity:0; }
+@keyframes white-flash {
+  0%   { opacity:0; }
+  12%  { opacity:1; }
+  100% { opacity:0; }
 }
 @keyframes flicker {
   0%,100% { opacity:1; }
@@ -336,20 +324,22 @@ function playLogoEnter() {
     barTop.style.animation = '';
     barQr.style.animation  = '';
 
-    /* Step2: フォーカスイン（中央から光が広がる） */
+    /* Step2: 白フラッシュ */
     focuslight.style.animation = 'none';
     focuslight.style.opacity   = '0';
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
-        focuslight.style.animation = 'focus-in 0.9s cubic-bezier(0.2,0.8,0.2,1) forwards';
+        focuslight.style.animation = 'white-flash 0.9s ease-out forwards';
       });
     });
 
-    /* Step3: 光が最大になるタイミングでロゴをフェードイン */
+    /* Step3: フラッシュが最大になったタイミングでロゴを表示
+       （白背景なのでフラッシュ中は見分けがつかず、
+         フラッシュが引くとロゴが浮かび上がって見える） */
     setTimeout(function() {
-      overlay.style.transition = 'opacity 0.6s ease';
+      overlay.style.transition = 'none';
       overlay.style.opacity    = '1';
-    }, 320);
+    }, 110);
 
   }, 400);
 }
@@ -586,4 +576,3 @@ function drawTicker() {
 </script>
 </body>
 </html>
-

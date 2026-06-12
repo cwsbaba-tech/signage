@@ -207,6 +207,30 @@ var PARTS = [
   { id:'logo',     type:'logo',                       offset:50000, duration:9900  }
 ];
 
+/* ============================================================
+   外部TXTファイルからテロップを読み込む
+   （HTMLを編集せず ticker.txt の中身を書き換えるだけで反映される。
+     screen1と同じファイルを参照するため両画面で同じ文章が流れる）
+============================================================ */
+function loadTextFile(path) {
+  return fetch(path, { cache: 'no-store' })
+    .then(function(r) { if (!r.ok) throw new Error('not found'); return r.text(); })
+    .catch(function() { return null; });
+}
+
+function loadConfig() {
+  loadTextFile('ticker.txt').then(function(tickerTxt) {
+    if (!tickerTxt) return;
+    var line = tickerTxt.split(/\r?\n/).map(function(l){return l.trim();})
+                         .filter(function(l){return l.length>0;}).join('　');
+    if (line) {
+      TICKER_TEXT = line + '　　　　　　　　　';
+      if (tickerW) textW = tickerCtx.measureText(TICKER_TEXT).width;
+    }
+  });
+}
+loadConfig();
+
 /* DOM生成 */
 var contentEl = document.getElementById('content');
 var imageEls  = {};
@@ -395,3 +419,4 @@ window.addEventListener('resize', initTicker);
 </script>
 </body>
 </html>
+

@@ -159,14 +159,15 @@ body {
    スキャンラインエフェクト用
 ============================== */
 #focuslight {
-  position:fixed; inset:0;
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
   background:#fff;
+  transform:translateX(0%);
   z-index:101; pointer-events:none; opacity:0;
 }
-@keyframes white-flash {
-  0%   { opacity:0; }
-  12%  { opacity:1; }
-  100% { opacity:0; }
+@keyframes wipe-right {
+  0%   { transform:translateX(0%); }
+  100% { transform:translateX(100%); }
 }
 @keyframes flicker {
   0%,100% { opacity:1; }
@@ -376,22 +377,27 @@ function playLogoEnter() {
     barTop.style.animation = '';
     barQr.style.animation  = '';
 
-    /* Step2: 白フラッシュ */
+    /* Step2: ロゴを先に表示（白い帯の下に隠れている状態） */
+    overlay.style.transition = 'none';
+    overlay.style.opacity    = '1';
+
+    /* Step3: 白い帯を左から右へスライドさせ、
+       通過した部分のロゴが少しずつ見えるようにする。
+       スクリーン1・2のタイミングが多少ズレても、
+       左→右のワイプとして自然に見える。 */
     focuslight.style.animation = 'none';
-    focuslight.style.opacity   = '0';
+    focuslight.style.transform = 'translateX(0%)';
+    focuslight.style.opacity   = '1';
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
-        focuslight.style.animation = 'white-flash 0.9s ease-out forwards';
+        focuslight.style.animation = 'wipe-right 0.7s ease-in-out forwards';
       });
     });
 
-    /* Step3: フラッシュが最大になったタイミングでロゴを表示
-       （白背景なのでフラッシュ中は見分けがつかず、
-         フラッシュが引くとロゴが浮かび上がって見える） */
+    /* アニメーション終了後に非表示へ */
     setTimeout(function() {
-      overlay.style.transition = 'none';
-      overlay.style.opacity    = '1';
-    }, 110);
+      focuslight.style.opacity = '0';
+    }, 720);
 
   }, 400);
 }

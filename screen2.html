@@ -123,16 +123,17 @@ body {
 }
 
 /* スキャンライン */
+/* 画面全体を覆う白（先に消える＝周辺から先に見える） */
 #focuslight {
-  position:fixed; top:0; left:0;
-  width:100%; height:100%;
+  position:fixed; inset:0;
   background:#fff;
-  transform:translateX(0%);
   z-index:101; pointer-events:none; opacity:0;
 }
-@keyframes wipe-right {
-  0%   { transform:translateX(0%); }
-  100% { transform:translateX(100%); }
+/* 中心だけ白が残るレイヤー（後から消える＝中心は最後に見える） */
+#focuslight-center {
+  position:fixed; inset:0;
+  background:radial-gradient(circle, #fff 0%, #fff 38%, transparent 72%);
+  z-index:102; pointer-events:none; opacity:0;
 }
 @keyframes flicker {
   0%,100% { opacity:1; }
@@ -161,6 +162,7 @@ body {
 </div>
 <div id="mainOverlay"></div>
 <div id="focuslight"></div>
+<div id="focuslight-center"></div>
 
 <div id="layout">
   <div id="bar-top">
@@ -246,7 +248,8 @@ PARTS.forEach(function(p) {
 });
 
 var overlay       = document.getElementById('mainOverlay');
-var focuslight    = document.getElementById('focuslight');
+var focuslight       = document.getElementById('focuslight');
+var focuslightCenter = document.getElementById('focuslight-center');
 var barTop        = document.getElementById('bar-top');
 var barQr         = document.getElementById('bar-qr');
 var freeContainer = document.getElementById('free-container');
@@ -310,19 +313,24 @@ function playLogoEnter() {
     barTop.style.display = 'none'; barQr.style.display = 'none';
     barTop.style.animation = ''; barQr.style.animation = '';
 
+    focuslight.style.transition       = 'none';
+    focuslightCenter.style.transition = 'none';
+    focuslight.style.opacity          = '1';
+    focuslightCenter.style.opacity    = '1';
+
     overlay.style.transition = 'none';
     overlay.style.opacity    = '1';
 
-    focuslight.style.animation = 'none';
-    focuslight.style.transform = 'translateX(0%)';
-    focuslight.style.opacity   = '1';
-    requestAnimationFrame(function() { requestAnimationFrame(function() {
-      focuslight.style.animation = 'wipe-right 0.7s ease-in-out forwards';
-    }); });
-
     setTimeout(function() {
-      focuslight.style.opacity = '0';
-    }, 720);
+      focuslight.style.transition = 'opacity 0.8s ease-in';
+      focuslight.style.opacity    = '0';
+
+      setTimeout(function() {
+        focuslightCenter.style.transition = 'opacity 0.8s ease-in';
+        focuslightCenter.style.opacity    = '0';
+      }, 250);
+
+    }, 350);
   }, 400);
 }
 
@@ -426,5 +434,3 @@ window.addEventListener('resize', initTicker);
 </script>
 </body>
 </html>
-
-

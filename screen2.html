@@ -308,18 +308,11 @@ function playLogoEnter() {
 }
 
 function playLogoExit() {
-  focuslight.style.animation = 'none'; focuslight.style.opacity = '0';
-  requestAnimationFrame(function() { requestAnimationFrame(function() {
-    focuslight.style.animation = 'focus-out 0.8s cubic-bezier(0.4,0,0.2,1) forwards';
-  }); });
-  overlay.style.transition = 'opacity 0.4s ease';
-  overlay.style.opacity = '0';
-  setTimeout(function() {
-    barTop.style.display = ''; barQr.style.display = '';
-    barTop.style.animation = 'flicker 0.3s ease forwards';
-    barQr.style.animation  = 'flicker 0.3s ease forwards';
-    setTimeout(function() { barTop.style.animation = ''; barQr.style.animation = ''; }, 300);
-  }, 250);
+  /* エフェクトなし：ロゴを即時に消して固定枠を戻す */
+  overlay.style.transition = '';
+  overlay.style.opacity    = '0';
+  barTop.style.display = '';
+  barQr.style.display  = '';
 }
 
 /* フリーエリア */
@@ -414,3 +407,4 @@ window.addEventListener('resize', initTicker);
 </script>
 </body>
 </html>
+

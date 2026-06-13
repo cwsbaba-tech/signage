@@ -29,29 +29,16 @@ body {
   flex-shrink:0;
   background:#050a0f;
   border-bottom:2px solid #00b4d8;
-  padding:12px 24px 0;
+  padding:18px 24px;
   z-index:50;
   transition:opacity 0.1s;
 }
 #bar-info {
   display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:8px;
 }
 #weather {
   font-size:48px; font-weight:700;
   letter-spacing:0.05em;
-}
-#ticker-wrap {
-  overflow:hidden; height:48px;
-  border-top:1px solid #00334d;
-  background:#020d14;
-  position:relative;
-}
-#ticker-canvas {
-  position:absolute;
-  top:0; left:0;
-  width:100%; height:100%;
-  pointer-events:none;
 }
 
 /* ==============================
@@ -75,8 +62,8 @@ body {
 }
 .slide.calendar-large {
   width:200% !important;
-  background-size:contain !important;
-  background-position:38.5% center !important;
+  background-size:100% auto !important;
+  background-position:center center !important;
 }
 
 /* ==============================
@@ -128,10 +115,25 @@ body {
   flex-shrink:0;
   background:#050a0f;
   border-top:2px solid #00b4d8;
+  z-index:50;
+  transition:opacity 0.1s;
+}
+#qr-row {
   padding:10px 32px;
   display:flex; justify-content:center; align-items:center;
-  height:96px; z-index:50;
-  transition:opacity 0.1s;
+  height:96px;
+}
+#ticker-wrap {
+  overflow:hidden; height:48px;
+  border-top:1px solid #00334d;
+  background:#020d14;
+  position:relative;
+}
+#ticker-canvas {
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
 }
 .qr-item { display:flex; align-items:center; gap:14px; }
 .qr-item img {
@@ -207,9 +209,6 @@ body {
     <div id="bar-info">
       <span id="weather"><span id="weather-icon"></span> <span id="weather-temp"></span></span>
     </div>
-    <div id="ticker-wrap">
-      <canvas id="ticker-canvas"></canvas>
-    </div>
   </div>
 
   <div id="content">
@@ -227,9 +226,14 @@ body {
   </div>
 
   <div id="bar-qr">
-    <div class="qr-item">
-      <img src="instagram.jpg" alt="Instagram QR">
-      <span class="qr-lbl">Instagram</span>
+    <div id="qr-row">
+      <div class="qr-item">
+        <img src="instagram.jpg" alt="Instagram QR">
+        <span class="qr-lbl">Instagram</span>
+      </div>
+    </div>
+    <div id="ticker-wrap">
+      <canvas id="ticker-canvas"></canvas>
     </div>
   </div>
 </div>

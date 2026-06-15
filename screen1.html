@@ -86,26 +86,45 @@ body {
   to   { transform:scale(1.09); }
 }
 .kb-overlay {
-  position:absolute; top:24px; left:24px; right:24px;
+  position:absolute; top:28px; left:0; right:0;
+  padding:0 28px;
   pointer-events:none; z-index:5;
-}
-.kb-badge {
-  display:inline-block;
-  background:rgba(5,10,15,0.72);
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-  border:1px solid rgba(0,180,216,0.4);
-  border-left:6px solid #00b4d8;
-  border-radius:6px;
-  padding:10px 22px 12px;
+  overflow:hidden;
 }
 .kb-label {
-  font-size:18px; font-weight:700; letter-spacing:0.35em;
-  color:#00b4d8; margin-bottom:4px;
+  display:inline-block;
+  font-size:22px; font-weight:700; letter-spacing:0.35em;
+  color:#00b4d8;
+  text-shadow:
+    2px  2px 0 #000,
+   -2px  2px 0 #000,
+    2px -2px 0 #000,
+   -2px -2px 0 #000;
+  margin-bottom:6px;
+  transform:translateX(-110%);
+  opacity:0;
 }
 .kb-title {
-  font-size:46px; font-weight:700;
-  color:#fff; letter-spacing:0.05em;
+  display:block;
+  font-size:56px; font-weight:700; letter-spacing:0.05em;
+  color:#fff;
+  text-shadow:
+    3px  3px 0 #000,
+   -3px  3px 0 #000,
+    3px -3px 0 #000,
+   -3px -3px 0 #000,
+    4px  4px 6px rgba(0,0,0,0.6);
+  transform:translateX(-110%);
+  opacity:0;
+}
+@keyframes slide-in-label {
+  0%   { transform:translateX(-110%); opacity:0; }
+  100% { transform:translateX(0);     opacity:1; }
+}
+@keyframes slide-in-title {
+  0%   { transform:translateX(-110%); opacity:0; }
+  100% { transform:translateX(0);     opacity:1; }
+}
 }
 
 /* ==============================
@@ -217,10 +236,8 @@ body {
       <div class="kb-slide" id="kb1"></div>
       <div class="kb-slide" id="kb2"></div>
       <div class="kb-overlay">
-        <div class="kb-badge">
-          <div class="kb-label" id="kb-label"></div>
-          <div class="kb-title" id="kb-title"></div>
-        </div>
+        <div class="kb-label" id="kb-label"></div>
+        <div class="kb-title" id="kb-title"></div>
       </div>
     </div>
   </div>
@@ -463,6 +480,18 @@ function showKbSlide(part, idx, dur) {
   });
   kbLabelEl.textContent = part.labels[idx];
   kbTitleEl.textContent = part.titles[idx];
+
+  /* テキストを一旦リセットしてからスライドイン */
+  kbLabelEl.style.animation = 'none';
+  kbTitleEl.style.animation = 'none';
+  kbLabelEl.style.opacity   = '0';
+  kbTitleEl.style.opacity   = '0';
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      kbLabelEl.style.animation = 'slide-in-label 0.5s cubic-bezier(0.2,0.8,0.2,1) 0.3s forwards';
+      kbTitleEl.style.animation = 'slide-in-title 0.5s cubic-bezier(0.2,0.8,0.2,1) 0.5s forwards';
+    });
+  });
   if (freeTimer) clearTimeout(freeTimer);
   freeTimer = setTimeout(function() {
     var next = idx + 1;
@@ -479,6 +508,10 @@ function stopFree() {
     el.style.opacity   = '0';
     el.style.animation = 'none';
   });
+  kbLabelEl.style.animation = 'none';
+  kbTitleEl.style.animation = 'none';
+  kbLabelEl.style.opacity   = '0';
+  kbTitleEl.style.opacity   = '0';
 }
 
 function hideImageSlides() {

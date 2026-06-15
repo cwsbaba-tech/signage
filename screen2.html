@@ -96,7 +96,7 @@ body {
   height:96px;
 }
 #ticker-wrap {
-  overflow:hidden; height:48px;
+  overflow:hidden; height:64px;
   border-top:1px solid #00334d;
   background:#020d14;
   position:relative;
@@ -287,7 +287,7 @@ function initTicker() {
   tickerH = tickerCanvas.offsetHeight;
   tickerCanvas.width  = tickerW;
   tickerCanvas.height = tickerH;
-  tickerCtx.font = '700 32px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  tickerCtx.font = '700 48px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
   textW = tickerCtx.measureText(TICKER_TEXT).width;
 }
 
@@ -298,7 +298,7 @@ function drawTicker() {
   var elapsed = (Date.now() / 1000) * TICKER_SPEED;
   var pos = elapsed % loopW;
   var x   = -pos; /* スクリーン1(x=tickerW-pos)より1画面分左 */
-  tickerCtx.font         = '700 32px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+  tickerCtx.font         = '700 48px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
   tickerCtx.fillStyle    = '#00b4d8';
   tickerCtx.textBaseline = 'middle';
   tickerCtx.fillText(TICKER_TEXT, x, tickerH / 2);

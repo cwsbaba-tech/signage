@@ -147,7 +147,7 @@ body {
 }
 #ticker-wrap {
   overflow:hidden; height:64px;
-  border-top:1px solid #00334d;
+  border-bottom:1px solid #00334d;
   background:#020d14;
   position:relative;
 }
@@ -246,14 +246,14 @@ body {
   </div>
 
   <div id="bar-qr">
+    <div id="ticker-wrap">
+      <canvas id="ticker-canvas"></canvas>
+    </div>
     <div id="qr-row">
       <div class="qr-item">
         <img src="instagram.jpg" alt="Instagram QR">
         <span class="qr-lbl">Instagram</span>
       </div>
-    </div>
-    <div id="ticker-wrap">
-      <canvas id="ticker-canvas"></canvas>
     </div>
   </div>
 </div>
@@ -680,4 +680,3 @@ function drawTicker() {
 </script>
 </body>
 </html>
-

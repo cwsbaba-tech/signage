@@ -35,8 +35,23 @@ body {
 }
 #bar-info {
   display:flex; justify-content:space-between; align-items:center;
+  gap:12px;
+}
+#date-area {
+  display:flex; flex-direction:column; align-items:flex-start;
+  gap:2px;
+}
+#date-str {
+  font-size:32px; font-weight:700;
+  color:#caf0f8; letter-spacing:0.05em;
+  font-variant-numeric:tabular-nums;
+}
+#day-str {
+  font-size:22px; font-weight:700;
+  color:rgba(202,240,248,0.6); letter-spacing:0.1em;
 }
 #weather {
+  display:flex; align-items:center; gap:10px;
   font-size:48px; font-weight:700;
   letter-spacing:0.05em;
 }
@@ -234,6 +249,10 @@ body {
 <div id="layout">
   <div id="bar-top">
     <div id="bar-info">
+      <div id="date-area">
+        <span id="date-str">--/--</span>
+        <span id="day-str">---</span>
+      </div>
       <span id="weather"><span id="weather-icon"></span> <span id="weather-temp"></span></span>
     </div>
   </div>
@@ -579,56 +598,78 @@ function tick() {
 setInterval(tick, 100);
 
 /* ==============================
+   日付・曜日
+============================== */
+var DAY_JA = ['日','月','火','水','木','金','土'];
+
+function updateDate() {
+  try {
+    var now  = new Date();
+    var m    = now.getMonth() + 1;
+    var d    = now.getDate();
+    var day  = DAY_JA[now.getDay()];
+    document.getElementById('date-str').textContent = m + '/' + d;
+    document.getElementById('day-str').textContent  = '(' + day + ')';
+    /* 曜日で色を変える：土=青、日=赤、平日=薄白 */
+    var dayColor = now.getDay() === 0 ? '#ef476f'
+                 : now.getDay() === 6 ? '#4cc9f0'
+                 : 'rgba(202,240,248,0.6)';
+    document.getElementById('day-str').style.color = dayColor;
+  } catch(e) {}
+}
+updateDate();
+setInterval(updateDate, 60000);
+
+/* ==============================
    天気（中野区）
 ============================== */
+/* ==============================
+   天気（完全独立・失敗しても他に影響しない）
+   5分ごとに更新。失敗時は前回値を維持。
+============================== */
 function fetchWeather() {
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.71&longitude=139.66&current_weather=true')
-    .then(function(r) {
-      if (!r.ok) throw new Error('network error');
-      return r.json();
-    })
-    .then(function(d) {
-      var t    = Math.round(d.current_weather.temperature);
-      var code = d.current_weather.weathercode;
-
-      /* 天気アイコンの色 */
-      var icon, iconColor;
-      if (code <= 1) {        /* 晴れ */
-        icon = '☀'; iconColor = '#ffb703';
-      } else if (code <= 3) { /* 晴れ時々曇り */
-        icon = '⛅'; iconColor = '#ffd166';
-      } else if (code <= 45) { /* 曇り・霧 */
-        icon = '☁'; iconColor = '#cbd5e1';
-      } else if (code <= 67) { /* 雨 */
-        icon = '☂'; iconColor = '#90e0ef';
-      } else if (code <= 77) { /* 雪 */
-        icon = '❄'; iconColor = '#e0fbfc';
-      } else {                 /* 雷雨など */
-        icon = '⛈'; iconColor = '#a78bfa';
-      }
-
-      /* 気温の色（温度帯ごと） */
-      var tempColor;
-      if (t <= 0)       tempColor = '#90e0ef'; /* 極寒：水色 */
-      else if (t <= 10) tempColor = '#48cae4'; /* 寒い：青 */
-      else if (t <= 20) tempColor = '#52d68a'; /* 涼しい：緑 */
-      else if (t <= 28) tempColor = '#ffd166'; /* 快適〜暖かい：黄 */
-      else if (t <= 33) tempColor = '#ff9f1c'; /* 暑い：オレンジ */
-      else              tempColor = '#ef476f'; /* 猛暑：赤 */
-
-      var iconEl = document.getElementById('weather-icon');
-      var tempEl = document.getElementById('weather-temp');
-      iconEl.textContent = icon;
-      iconEl.style.color = iconColor;
-      tempEl.textContent = t + '°C';
-      tempEl.style.color = tempColor;
-    })
-    .catch(function() {
-      /* Wi-Fi断時は前回の値をそのまま維持（何もしない） */
-    });
+  var controller = new AbortController();
+  var timer = setTimeout(function(){ controller.abort(); }, 8000); /* 8秒でタイムアウト */
+  fetch(
+    'https://api.open-meteo.com/v1/forecast?latitude=35.71&longitude=139.66&current_weather=true',
+    { signal: controller.signal }
+  )
+  .then(function(r) {
+    clearTimeout(timer);
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.json();
+  })
+  .then(function(d) {
+    var t    = Math.round(d.current_weather.temperature);
+    var code = d.current_weather.weathercode;
+    var icon, iconColor;
+    if      (code <= 1)  { icon = '☀'; iconColor = '#ffb703'; }
+    else if (code <= 3)  { icon = '⛅'; iconColor = '#ffd166'; }
+    else if (code <= 45) { icon = '☁'; iconColor = '#cbd5e1'; }
+    else if (code <= 67) { icon = '☂'; iconColor = '#90e0ef'; }
+    else if (code <= 77) { icon = '❄'; iconColor = '#e0fbfc'; }
+    else                 { icon = '⛈'; iconColor = '#a78bfa'; }
+    var tempColor;
+    if      (t <= 0)  tempColor = '#90e0ef';
+    else if (t <= 10) tempColor = '#48cae4';
+    else if (t <= 20) tempColor = '#52d68a';
+    else if (t <= 28) tempColor = '#ffd166';
+    else if (t <= 33) tempColor = '#ff9f1c';
+    else              tempColor = '#ef476f';
+    var iconEl = document.getElementById('weather-icon');
+    var tempEl = document.getElementById('weather-temp');
+    if (iconEl) { iconEl.textContent = icon; iconEl.style.color = iconColor; }
+    if (tempEl) { tempEl.textContent = t + '°C'; tempEl.style.color = tempColor; }
+  })
+  .catch(function() {
+    clearTimeout(timer);
+    /* 失敗時は前回値を維持・何もしない */
+  });
 }
-fetchWeather();
-setInterval(fetchWeather, 600000);
+/* 起動直後の1回目：ページ読み込み完了後に実行 */
+setTimeout(fetchWeather, 500);
+/* 5分ごとに更新 */
+setInterval(fetchWeather, 300000);
 
 /* ==============================
    スタート

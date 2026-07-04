@@ -38,17 +38,17 @@ body {
   gap:12px;
 }
 #date-area {
-  display:flex; flex-direction:column; align-items:flex-start;
-  gap:2px;
+  display:flex; flex-direction:row; align-items:baseline;
+  gap:10px;
 }
 #date-str {
-  font-size:32px; font-weight:700;
+  font-size:44px; font-weight:700;
   color:#caf0f8; letter-spacing:0.05em;
   font-variant-numeric:tabular-nums;
 }
 #day-str {
-  font-size:22px; font-weight:700;
-  color:rgba(202,240,248,0.6); letter-spacing:0.1em;
+  font-size:36px; font-weight:700;
+  letter-spacing:0.1em;
 }
 #weather {
   display:flex; align-items:center; gap:10px;
@@ -613,7 +613,7 @@ function updateDate() {
     /* 曜日で色を変える：土=青、日=赤、平日=薄白 */
     var dayColor = now.getDay() === 0 ? '#ef476f'
                  : now.getDay() === 6 ? '#4cc9f0'
-                 : 'rgba(202,240,248,0.6)';
+                 : '#ffffff';
     document.getElementById('day-str').style.color = dayColor;
   } catch(e) {}
 }
@@ -727,3 +727,4 @@ function drawTicker() {
 </script>
 </body>
 </html>
+

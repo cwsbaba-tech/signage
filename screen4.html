@@ -222,7 +222,7 @@ html, body {
   <div id="content">
     <!-- 顔検知割り込みレイヤー -->
     <div id="welcome-layer">
-      <video id="welcome-video" muted playsinline src="welcome.mp4"></video>
+      <video id="welcome-video" playsinline src="welcome.mp4"></video>
     </div>
     <!-- 通常コンテンツはJSで生成 -->
   </div>
@@ -293,7 +293,7 @@ PARTS.forEach(function(p) {
     var wrap = document.createElement('div');
     wrap.className = 'video-slide';
     var vid = document.createElement('video');
-    vid.src = p.src; vid.muted = true;
+    vid.src = p.src; vid.muted = false;
     vid.setAttribute('muted',''); vid.setAttribute('playsinline','');
     vid.preload = 'auto'; vid.loop = false;
     wrap.appendChild(vid);
@@ -583,8 +583,35 @@ document.getElementById('startOverlay').addEventListener('click', function() {
   requestAnimationFrame(drawTicker);
   /* カメラ・顔検知を初期化 */
   initFaceDetection();
+  /* 音声コンテキストをユーザー操作後に解除（ブラウザの自動再生制限を回避） */
+  unlockAudio();
 });
 window.addEventListener('resize', initTicker);
+
+/* ============================================================
+   音声ロック解除（スタートボタン押下後に呼び出す）
+   ブラウザは「ユーザー操作後」の音声再生を許可する
+============================================================ */
+function unlockAudio() {
+  /* 無音のAudioContextを一瞬再生して音声を許可状態にする */
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var buf = ctx.createBuffer(1, 1, 22050);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume();
+  } catch(e) {}
+
+  /* 既存の動画要素のmutedを全て解除 */
+  document.querySelectorAll('video').forEach(function(v) {
+    if (v.id !== 'camera-video') { /* カメラはmuted維持 */
+      v.muted = false;
+      v.volume = 1.0;
+    }
+  });
+}
 </script>
 </body>
 </html>

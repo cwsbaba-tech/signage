@@ -194,7 +194,7 @@ html, body {
 </head>
 <body>
 
-<div id="startOverlay">
+<div id="startOverlay" style="display:none">
   <h1>タップしてスタート</h1>
   <p>SCREEN 4 (ENTRANCE)</p>
 </div>
@@ -573,19 +573,28 @@ loadConfig();
 /* ============================================================
    スタート
 ============================================================ */
-document.getElementById('startOverlay').addEventListener('click', function() {
+/* 自動スタート：ページ読み込み後すぐに開始 */
+function autoStart() {
   document.getElementById('startOverlay').style.display = 'none';
   var el = document.documentElement;
-  if (el.requestFullscreen)            el.requestFullscreen();
+  if (el.requestFullscreen)            el.requestFullscreen().catch(function(){});
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   started = true;
   initTicker();
   requestAnimationFrame(drawTicker);
-  /* カメラ・顔検知を初期化 */
   initFaceDetection();
-  /* 音声コンテキストをユーザー操作後に解除（ブラウザの自動再生制限を回避） */
   unlockAudio();
-});
+}
+
+/* DOMContentLoaded後に自動スタート */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', autoStart);
+} else {
+  autoStart();
+}
+
+/* フォールバック：クリックでもスタートできる */
+document.getElementById('startOverlay').addEventListener('click', autoStart);
 window.addEventListener('resize', initTicker);
 
 /* ============================================================
@@ -615,3 +624,4 @@ function unlockAudio() {
 </script>
 </body>
 </html>
+

@@ -160,10 +160,55 @@ html, body {
 /* ロゴ */
 #mainOverlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#fff url('トリックロゴ.jpg') no-repeat center center;
+  background:#000 url('トリックロゴ.jpg') no-repeat center center;
   background-size:contain;
   opacity:0; pointer-events:none;
   z-index:100;
+}
+
+/* シーズンエフェクトレイヤー（ロゴの上に重なる） */
+#season-layer {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  z-index:101; pointer-events:none; opacity:0;
+  overflow:hidden;
+}
+#season-layer.visible { opacity:1; }
+
+/* ==============================
+   蝙蝠アニメーション
+============================== */
+.bat {
+  position:absolute;
+  font-size:32px;
+  animation:bat-fly linear infinite;
+  opacity:0.85;
+}
+@keyframes bat-fly {
+  0%   { transform:translateX(0) translateY(0) scaleX(1); }
+  25%  { transform:translateX(30px) translateY(-20px) scaleX(-1); }
+  50%  { transform:translateX(-20px) translateY(10px) scaleX(1); }
+  75%  { transform:translateX(20px) translateY(-10px) scaleX(-1); }
+  100% { transform:translateX(0) translateY(0) scaleX(1); }
+}
+@keyframes bat-float {
+  0%,100% { top:var(--bat-y); }
+  50%      { top:calc(var(--bat-y) + var(--bat-amp, 30px)); }
+}
+
+/* ==============================
+   雪アニメーション
+============================== */
+.snowflake {
+  position:absolute;
+  top:-20px;
+  color:#fff;
+  font-size:1.2em;
+  opacity:0.8;
+  animation:snow-fall linear infinite;
+}
+@keyframes snow-fall {
+  0%   { transform:translateY(0) rotate(0deg); opacity:0.8; }
+  100% { transform:translateY(110vh) rotate(360deg); opacity:0.2; }
 }
 #focuslight {
   position:fixed; inset:0;
@@ -202,6 +247,7 @@ html, body {
 </div>
 
 <div id="mainOverlay"></div>
+<div id="season-layer"></div>
 <div id="focuslight"></div>
 <div id="focuslight-center"></div>
 
@@ -573,6 +619,90 @@ function loadConfig() {
 loadConfig();
 
 /* ============================================================
+   シーズンエフェクト
+   season.txt に以下のいずれかを書くだけで切り替わる：
+     halloween  → 蝙蝠が飛ぶ
+     christmas  → 雪が降る
+     normal     → 何も表示しない（デフォルト）
+============================================================ */
+var seasonLayer = document.getElementById('season-layer');
+var currentSeason = 'normal';
+
+/* 蝙蝠を生成 */
+function createBats() {
+  seasonLayer.innerHTML = '';
+  var bats = [
+    /* 上のエリアに飛ぶ蝙蝠 */
+    { x:'8%',  y:'3%',  size:'28px', dur:'3.2s', amp:'-18px' },
+    { x:'25%', y:'6%',  size:'22px', dur:'4.1s', amp:'-22px' },
+    { x:'55%', y:'2%',  size:'32px', dur:'3.7s', amp:'-15px' },
+    { x:'75%', y:'7%',  size:'20px', dur:'4.8s', amp:'-20px' },
+    { x:'88%', y:'4%',  size:'26px', dur:'3.5s', amp:'-18px' },
+    /* 下のエリアに飛ぶ蝙蝠 */
+    { x:'12%', y:'88%', size:'24px', dur:'4.3s', amp:'18px'  },
+    { x:'35%', y:'91%', size:'30px', dur:'3.9s', amp:'15px'  },
+    { x:'60%', y:'87%', size:'22px', dur:'4.6s', amp:'20px'  },
+    { x:'80%', y:'92%', size:'28px', dur:'3.4s', amp:'16px'  },
+  ];
+  bats.forEach(function(b, i) {
+    var el = document.createElement('div');
+    el.className = 'bat';
+    el.textContent = '🦇';
+    el.style.cssText = [
+      'left:' + b.x,
+      'top:' + b.y,
+      'font-size:' + b.size,
+      'animation:bat-fly ' + b.dur + ' ease-in-out infinite',
+      'animation-delay:' + (i * 0.4) + 's',
+      '--bat-y:' + b.y,
+      '--bat-amp:' + b.amp,
+    ].join(';');
+    seasonLayer.appendChild(el);
+  });
+  seasonLayer.classList.add('visible');
+}
+
+/* 雪を生成 */
+function createSnow() {
+  seasonLayer.innerHTML = '';
+  var flakes = ['❄','❅','❆','*'];
+  for (var i = 0; i < 30; i++) {
+    var el = document.createElement('div');
+    el.className = 'snowflake';
+    el.textContent = flakes[Math.floor(Math.random() * flakes.length)];
+    el.style.cssText = [
+      'left:' + Math.random() * 100 + '%',
+      'font-size:' + (Math.random() * 16 + 10) + 'px',
+      'animation-duration:' + (Math.random() * 6 + 5) + 's',
+      'animation-delay:' + (Math.random() * 8) + 's',
+      'opacity:' + (Math.random() * 0.5 + 0.4),
+    ].join(';');
+    seasonLayer.appendChild(el);
+  }
+  seasonLayer.classList.add('visible');
+}
+
+/* season.txtを読んでエフェクトを適用 */
+function loadSeason() {
+  fetch('season.txt', { cache:'no-cache' })
+    .then(function(r){ if(!r.ok) throw new Error(); return r.text(); })
+    .then(function(t){
+      var season = t.trim().toLowerCase();
+      if (season === currentSeason) return;
+      currentSeason = season;
+      seasonLayer.innerHTML = '';
+      seasonLayer.classList.remove('visible');
+      if (season === 'halloween') createBats();
+      else if (season === 'christmas') createSnow();
+      /* normal は何もしない */
+    })
+    .catch(function(){});
+}
+loadSeason();
+/* 1時間ごとにseason.txtをチェック（月が変わっても自動対応） */
+setInterval(loadSeason, 3600000);
+
+/* ============================================================
    スタート
 ============================================================ */
 /* 自動スタート：ページ読み込み後すぐに開始 */
@@ -625,4 +755,6 @@ function unlockAudio() {
 }
 </script>
 </body>
+</html>
+
 </html>

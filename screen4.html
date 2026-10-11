@@ -663,10 +663,11 @@ function createBats() {
 }
 
 /* 雪を生成 */
+/* 雪 */
 function createSnow() {
   seasonLayer.innerHTML = '';
-  var flakes = ['❄','❅','❆','*'];
-  for (var i = 0; i < 30; i++) {
+  var flakes = ['❄','❅','❆','✼'];
+  for (var i = 0; i < 35; i++) {
     var el = document.createElement('div');
     el.className = 'snowflake';
     el.textContent = flakes[Math.floor(Math.random() * flakes.length)];
@@ -682,18 +683,127 @@ function createSnow() {
   seasonLayer.classList.add('visible');
 }
 
+/* 紙吹雪（正月・バレンタイン共用・色指定） */
+function createConfetti(colors) {
+  seasonLayer.innerHTML = '';
+  for (var i = 0; i < 60; i++) {
+    var el = document.createElement('div');
+    el.className = 'confetti';
+    var color = colors[Math.floor(Math.random() * colors.length)];
+    var size = Math.random() * 10 + 6;
+    el.style.cssText = [
+      'left:' + Math.random() * 100 + '%',
+      'background:' + color,
+      'width:' + size + 'px',
+      'height:' + (size * (Math.random() * 0.5 + 0.5)) + 'px',
+      'border-radius:' + (Math.random() > 0.5 ? '50%' : '2px'),
+      'animation-duration:' + (Math.random() * 4 + 3) + 's',
+      'animation-delay:' + (Math.random() * 6) + 's',
+    ].join(';');
+    seasonLayer.appendChild(el);
+  }
+  seasonLayer.classList.add('visible');
+}
+
+/* 桜 */
+function createSpring() {
+  seasonLayer.innerHTML = '';
+  var petals = ['🌸','🌺','✿','❀'];
+  for (var i = 0; i < 25; i++) {
+    var el = document.createElement('div');
+    el.className = 'petal';
+    el.textContent = petals[Math.floor(Math.random() * petals.length)];
+    el.style.cssText = [
+      'left:' + Math.random() * 110 + '%',
+      'font-size:' + (Math.random() * 18 + 12) + 'px',
+      'animation-duration:' + (Math.random() * 5 + 6) + 's',
+      'animation-delay:' + (Math.random() * 8) + 's',
+      'opacity:' + (Math.random() * 0.4 + 0.6),
+    ].join(';');
+    seasonLayer.appendChild(el);
+  }
+  seasonLayer.classList.add('visible');
+}
+
+/* 花火 */
+function createSummer() {
+  seasonLayer.innerHTML = '';
+  var colors = ['#ff4466','#ffaa00','#44ffaa','#aa44ff','#44aaff','#ffff44'];
+  var positions = [15,35,55,75,85,25,65];
+  positions.forEach(function(x, idx) {
+    var color = colors[idx % colors.length];
+    var fw = document.createElement('div');
+    fw.className = 'firework';
+    var size = Math.random() * 20 + 15;
+    fw.style.cssText = [
+      'left:' + x + '%',
+      'bottom:10%',
+      'width:' + size + 'px',
+      'height:' + size + 'px',
+      'background:' + color,
+      'box-shadow:0 0 ' + size + 'px ' + color,
+      'animation-duration:' + (Math.random() * 1.5 + 2) + 's',
+      'animation-delay:' + (idx * 0.7) + 's',
+    ].join(';');
+    for (var s = 0; s < 8; s++) {
+      var spark = document.createElement('div');
+      spark.className = 'spark';
+      var angle = s * 45 * Math.PI / 180;
+      var dist = Math.random() * 60 + 40;
+      spark.style.cssText = [
+        'left:' + x + '%',
+        'bottom:75%',
+        'background:' + color,
+        'box-shadow:0 0 4px ' + color,
+        '--sx:' + (Math.cos(angle) * dist) + 'px',
+        '--sy:' + (Math.sin(angle) * dist) + 'px',
+        'animation-duration:' + (Math.random() * 0.8 + 0.8) + 's',
+        'animation-delay:' + (idx * 0.7 + 0.6) + 's',
+      ].join(';');
+      seasonLayer.appendChild(spark);
+    }
+    seasonLayer.appendChild(fw);
+  });
+  seasonLayer.classList.add('visible');
+}
+
+/* 落ち葉 */
+function createAutumn() {
+  seasonLayer.innerHTML = '';
+  var leaves = ['🍂','🍁','🍃','🌿'];
+  for (var i = 0; i < 28; i++) {
+    var el = document.createElement('div');
+    el.className = 'leaf';
+    el.textContent = leaves[Math.floor(Math.random() * leaves.length)];
+    el.style.cssText = [
+      'left:' + Math.random() * 110 + '%',
+      'font-size:' + (Math.random() * 18 + 12) + 'px',
+      'animation-duration:' + (Math.random() * 5 + 6) + 's',
+      'animation-delay:' + (Math.random() * 8) + 's',
+      'opacity:' + (Math.random() * 0.4 + 0.6),
+    ].join(';');
+    seasonLayer.appendChild(el);
+  }
+  seasonLayer.classList.add('visible');
+}
+
 /* season.txtを読んでエフェクトを適用 */
 function loadSeason() {
   fetch('season.txt', { cache:'no-cache' })
     .then(function(r){ if(!r.ok) throw new Error(); return r.text(); })
     .then(function(t){
-      var season = t.trim().toLowerCase();
+      var season = t.trim().split(/\r?\n/)[0].toLowerCase().trim();
       if (season === currentSeason) return;
       currentSeason = season;
       seasonLayer.innerHTML = '';
       seasonLayer.classList.remove('visible');
-      if (season === 'halloween') createBats();
+      if      (season === 'halloween') createBats();
       else if (season === 'christmas') createSnow();
+      else if (season === 'newyear')   createConfetti(['#e63946','#ffffff','#ffd700','#c8a000']);
+      else if (season === 'valentine') createConfetti(['#ff4488','#ff88aa','#ffaabb','#ffffff','#ff0055']);
+      else if (season === 'spring')    createSpring();
+      else if (season === 'summer')    createSummer();
+      else if (season === 'autumn')    createAutumn();
       /* normal は何もしない */
     })
     .catch(function(){});
@@ -757,4 +867,3 @@ function unlockAudio() {
 </body>
 </html>
 
-</html>

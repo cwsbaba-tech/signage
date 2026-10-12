@@ -161,13 +161,9 @@ body {
 #startOverlay {
   position:fixed; inset:0; background:#000; color:#fff;
   display:flex; flex-direction:column;
-  justify-content:center; align-items:center;
+  justify-content:flex-end; align-items:center;
+  padding-bottom:8vh;
   z-index:9999; cursor:pointer; text-align:center;
-}
-#start-inner {
-  position:absolute;
-  bottom:8vh; left:0; right:0;
-  text-align:center;
 }
 #startOverlay h1 { font-size:4vw; margin-bottom:2vh; color:#00b4d8; }
 #startOverlay p  { font-size:2.5vw; opacity:0.7; }
@@ -176,10 +172,8 @@ body {
 <body>
 
 <div id="startOverlay">
-  <div id="start-inner">
-    <h1>タップしてスタート</h1>
-    <p>SCREEN 2 (RIGHT SIDE)</p>
-  </div>
+  <h1>タップしてスタート</h1>
+  <p>SCREEN 2 (RIGHT SIDE)</p>
 </div>
 <div id="mainOverlay"></div>
 <div id="focuslight"></div>

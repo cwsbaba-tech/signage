@@ -134,14 +134,14 @@ var CONFIG = {
 };
 
 /* 待機中に流す画像（10秒ずつ・6パートで59.9秒）。差し替えはここだけ */
-var PARTS = [
+var PARTS = new Array(
   { id:'p1', src:'calendar.jpg', offset:0     },
   { id:'p2', src:'free1_01.png', offset:10000 },
   { id:'p3', src:'holiday.jpg',  offset:20000 },
   { id:'p4', src:'free2_01.jpg', offset:30000 },
   { id:'p5', src:'event.jpg',    offset:40000 },
   { id:'p6', src:'横長ロゴ.jpg', offset:50000 }
-];
+);
 
 /* ============================================================
    待機サイネージ（スクリーン1〜4と同じ Date.now() 基準で同期）
@@ -159,10 +159,11 @@ PARTS.forEach(function(p) {
 var started = false, lastPartId = null;
 
 function getPart(offset) {
-  for (var i = PARTS.length - 1; i >= 0; i--) {
-    if (offset >= PARTS[i].offset) return PARTS[i];
-  }
-  return PARTS[0];
+  var found = PARTS.at(0);
+  PARTS.forEach(function(p) {
+    if (offset >= p.offset) found = p;
+  });
+  return found;
 }
 
 function tick() {
@@ -235,11 +236,8 @@ qrOverlay.addEventListener('click', function(e) {
 
 /* ============================================================
    期間限定イベント（events.txt）
-   形式:  開始日|終了日|種類|内容
-   種類:  banner   → 上部に内容の文章を表示
-          roulette → ルーレットボタンを表示（内容は景品ファイル名）
 ============================================================ */
-var activeBanners = [];
+var activeBanners = new Array();
 var bannerIdx = 0;
 var activeRoulette = null;
 var bannerEl = document.getElementById('banner');
@@ -258,31 +256,29 @@ function parseLines(text) {
 
 function applyEvents(lines) {
   var today = todayStr();
-  activeBanners = [];
+  activeBanners = new Array();
   activeRoulette = null;
 
   lines.forEach(function(line) {
     var cols = line.split('|');
     if (cols.length < 4) return;
-    var start = cols[0].trim();
-    var end   = cols[1].trim();
-    var type  = cols[2].trim();
-    var val   = cols[3].trim();
+    var start = cols.slice(0, 1).join('').trim();
+    var end   = cols.slice(1, 2).join('').trim();
+    var type  = cols.slice(2, 3).join('').trim();
+    var val   = cols.slice(3, 4).join('').trim();
     if (today >= start && today <= end) {
       if (type === 'banner') activeBanners.push(val);
       if (type === 'roulette') activeRoulette = val;
     }
   });
 
-  // バナー表示更新
   if (activeBanners.length > 0) {
-    bannerEl.textContent = activeBanners[0];
+    bannerEl.textContent = activeBanners.slice(0, 1).join('');
     bannerEl.style.display = 'block';
   } else {
     bannerEl.style.display = 'none';
   }
 
-  // ルーレット期間中のみ下部バーとルーレットボタンを表示
   if (activeRoulette) {
     btnRoulette.style.display = 'inline-block';
     barEl.style.display = 'flex';
@@ -296,7 +292,7 @@ function applyEvents(lines) {
 setInterval(function() {
   if (activeBanners.length > 1) {
     bannerIdx = (bannerIdx + 1) % activeBanners.length;
-    bannerEl.textContent = activeBanners[bannerIdx];
+    bannerEl.textContent = activeBanners.slice(bannerIdx, bannerIdx + 1).join('');
   }
 }, 5000);
 
@@ -310,4 +306,5 @@ function loadEvents() {
 /* ============================================================
    ルーレット描画・抽選処理
 ============================================================ */
+
 

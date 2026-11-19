@@ -6,484 +6,309 @@
 <title>SCREEN 5 - CUSTOMER</title>
 <style>
 html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  overflow: hidden;
-  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
-  -webkit-user-select: none;
-  user-select: none;
+  margin:0; padding:0; width:100%; height:100%;
+  background:#000; overflow:hidden; cursor:none;
+  font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+  -webkit-user-select:none; user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
+#stage { position:fixed; top:0; left:0; right:0; bottom:0; }
 
-#stage {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-}
-
+/* 待機中スライド */
 .slide {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  -webkit-transition: opacity 0.6s ease-in-out;
-  transition: opacity 0.6s ease-in-out;
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  background-size:cover; background-position:center center; background-repeat:no-repeat;
+  opacity:0;
+  -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
 
-#tapLeft {
-  position: absolute;
-  top: 0; bottom: 0; left: 0; width: 50%;
-  z-index: 10;
-  cursor: pointer;
-}
-#tapRight {
-  position: absolute;
-  top: 0; bottom: 0; right: 0; width: 50%;
-  z-index: 10;
-  cursor: pointer;
-}
-
+/* 期間限定バナー（上部） */
 #banner {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  z-index: 20;
-  padding: 1.6vmin 3vmin;
-  text-align: center;
-  font-size: 28px;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(180, 20, 40, 0.88);
-  border-bottom: 3px solid #ffd700;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
-  display: none;
+  position:absolute; top:0; left:0; right:0; z-index:20;
+  padding:1.6vmin 3vmin; text-align:center;
+  font-size:clamp(20px,4vmin,44px); font-weight:700; color:#fff;
+  background:rgba(180,20,40,0.88); border-bottom:3px solid #ffd700;
+  text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  display:none;
 }
 
+/* 下部ボタンバー（通常は非表示・ルーレット期間中のみ表示） */
 #bar {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  z-index: 30;
-  padding: 2vmin 3vmin;
-  text-align: center;
-  background: rgba(5, 10, 15, 0.88);
-  border-top: 3px solid #00b4d8;
-  display: none;
+  position:absolute; left:0; right:0; bottom:0; z-index:30;
+  display:none; justify-content:center; align-items:center; gap:3vmin;
+  padding:2vmin 3vmin;
+  background:rgba(5,10,15,0.88); border-top:3px solid #00b4d8;
 }
-
 .btn {
-  min-width: 22vmin;
-  padding: 1.8vmin 3vmin;
-  font-family: inherit;
-  font-size: 26px;
-  font-weight: 700;
-  color: #fff;
-  border: 2px solid #ffd700;
-  border-radius: 2vmin;
-  background: #b8860b;
-  cursor: pointer;
+  min-width:22vmin; padding:1.8vmin 3vmin;
+  font-family:inherit; font-size:clamp(18px,3.4vmin,36px); font-weight:700;
+  color:#fff; border:2px solid #fff; border-radius:2vmin; background:#222;
+  cursor:pointer;
+  touch-action:manipulation;
 }
+.btn:active { opacity:0.7; }
+#btn-roulette { background:#b8860b; border-color:#ffd700; display:none; }
 
+/* 共通オーバーレイ */
 .overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 100;
-  background: rgba(0, 0, 0, 0.92);
-  color: #fff;
-  text-align: center;
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
+  background:rgba(0,0,0,0.92);
+  display:none; flex-direction:column; justify-content:center; align-items:center;
+  text-align:center; color:#fff;
 }
-.overlay.show {
-  display: flex;
+.overlay.show { display:flex; }
+.close-btn {
+  position:absolute; top:2vmin; right:2vmin;
+  padding:1.4vmin 3vmin; font-size:clamp(16px,2.8vmin,30px); font-weight:700;
+  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:1.6vmin;
+  cursor:pointer;
+}
+.ov-title { font-size:clamp(22px,4.6vmin,52px); font-weight:700; margin:0 0 2vmin; }
+.ov-sub   { font-size:clamp(16px,2.8vmin,30px); color:#caf0f8; margin:2vmin 0 0; }
+
+/* QR */
+#qr-card { background:#fff; padding:2.4vmin; border-radius:2vmin; }
+#qr-img { display:block; width:min(62vmin,620px); height:min(62vmin,620px); object-fit:contain; }
+
+/* ルーレット */
+#wheel-wrap { position:relative; }
+#wheel { display:block; }
+#spin-btn { margin-top:2vmin; background:#b8860b; border-color:#ffd700; display:inline-block; }
+#roulette-result {
+  min-height:6vmin; margin-top:1.6vmin;
+  font-size:clamp(22px,4.4vmin,50px); font-weight:700; color:#ffd700;
 }
 
-.closeBtn {
-  position: absolute;
-  top: 2vmin; right: 2vmin;
-  z-index: 120;
-  padding: 1.4vmin 3vmin;
-  font-size: 24px;
-  font-weight: 700;
-  font-family: inherit;
-  color: #fff;
-  background: #444;
-  border: 2px solid #888;
-  border-radius: 1.6vmin;
-  cursor: pointer;
+/* スタート */
+#startOverlay {
+  position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  z-index:9999; cursor:pointer; text-align:center;
 }
-
-.ovTitle { font-size: 40px; font-weight: 700; margin: 0 0 2vmin; }
-.ovSub   { font-size: 24px; color: #caf0f8; margin: 2vmin 0 0; }
-
-#qrCard {
-  background: #fff;
-  padding: 2.4vmin;
-  border-radius: 2vmin;
-}
-#qrImg {
-  display: block;
-  width: 360px;
-  height: 360px;
-  object-fit: contain;
-}
-
-#qrLeft {
-  position: absolute;
-  top: 0; bottom: 0; left: 0; width: 50%;
-  z-index: 110;
-}
-#qrRight {
-  position: absolute;
-  top: 0; bottom: 0; right: 0; width: 50%;
-  z-index: 110;
-}
-
-#wheel { display: block; margin: 0 auto; }
-#rouletteResult {
-  min-height: 6vmin;
-  margin-top: 1.6vmin;
-  font-size: 36px;
-  font-weight: 700;
-  color: #ffd700;
-}
+#startOverlay h1 { font-size:5vmin; margin:0 0 2vmin; color:#00b4d8; }
+#startOverlay p  { font-size:3vmin; opacity:0.7; margin:0; }
+* { cursor:none !important; }
 </style>
 </head>
 <body>
 
+<div id="startOverlay">
+  <h1>タップしてスタート</h1>
+  <p>SCREEN 5 (CUSTOMER)</p>
+</div>
+
 <div id="stage">
-  <div id="tapLeft"></div>
-  <div id="tapRight"></div>
   <div id="banner"></div>
   <div id="bar">
-    <button class="btn" id="btnRoulette">ルーレット</button>
+    <button class="btn" id="btn-roulette">ルーレット</button>
   </div>
 </div>
 
-<div class="overlay" id="qrOverlay">
-  <button class="closeBtn" id="qrClose">戻る</button>
-  <div id="qrLeft"></div>
-  <div id="qrRight"></div>
-  <p class="ovTitle" id="qrTitle">PayPay</p>
-  <div id="qrCard"><img id="qrImg" src="qr_paypay.png" alt="QR"></div>
-  <p class="ovSub">スマートフォンでスキャンしてお支払いください</p>
-  <p class="ovSub">金額はレジの画面でご確認ください</p>
+<div class="overlay" id="qr-overlay">
+  <button class="close-btn" id="qr-close">戻る</button>
+  <p class="ov-title" id="qr-title">PayPay</p>
+  <div id="qr-card"><img id="qr-img" alt="QR"></div>
+  <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
+  <p class="ov-sub">金額はレジの画面でご確認ください</p>
 </div>
 
-<div class="overlay" id="rouletteOverlay">
-  <button class="closeBtn" id="rouletteClose">閉じる</button>
-  <p class="ovTitle">ルーレット</p>
-  <canvas id="wheel" width="320" height="320"></canvas>
-  <div style="margin-top:2vmin;"><button class="btn" id="spinBtn">スタート</button></div>
-  <div id="rouletteResult"></div>
+<div class="overlay" id="roulette-overlay">
+  <button class="close-btn" id="roulette-close">閉じる</button>
+  <p class="ov-title" id="roulette-title">ルーレット</p>
+  <div id="wheel-wrap"><canvas id="wheel"></canvas></div>
+  <button class="btn" id="spin-btn">スタート</button>
+  <div id="roulette-result"></div>
 </div>
 
 <script>
+/* ============================================================
+   設定（ここだけ変更する）
+============================================================ */
 var CONFIG = {
-  cycleMs         : 59900,
-  qrTimeoutMs     : 60000,
-  rouletteIdleMs  : 90000,
-  resultTimeoutMs : 15000,
-  qrPaypay        : 'qr_paypay.png',
-  qrNakapay       : 'qr_nakapay.png'
+  cycleMs         : 59900,            /* 他のスクリーンと同じ */
+  qrTimeoutMs     : 60000,            /* QR表示後、待機に戻るまで */
+  rouletteIdleMs  : 90000,            /* ルーレットを開いたまま放置した場合 */
+  resultTimeoutMs : 15000,            /* 結果表示後、待機に戻るまで */
+  qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' }
 };
 
+/* 待機中に流す画像（10秒ずつ・6パートで59.9秒）。差し替えはここだけ */
+var PARTS = [
+  { id:'p1', src:'calendar.jpg', offset:0     },
+  { id:'p2', src:'free1_01.png', offset:10000 },
+  { id:'p3', src:'holiday.jpg',  offset:20000 },
+  { id:'p4', src:'free2_01.jpg', offset:30000 },
+  { id:'p5', src:'event.jpg',    offset:40000 },
+  { id:'p6', src:'横長ロゴ.jpg', offset:50000 }
+];
+
+/* ============================================================
+   待機サイネージ（スクリーン1〜4と同じ Date.now() 基準で同期）
+============================================================ */
 var stage = document.getElementById('stage');
-
-function createSlide(id, src) {
+var slideEls = {};
+PARTS.forEach(function(p) {
   var el = document.createElement('div');
-  el.id = id;
   el.className = 'slide';
-  el.style.backgroundImage = "url('" + src + "')";
+  el.style.backgroundImage = "url('" + p.src + "')";
   stage.insertBefore(el, stage.firstChild);
-  return el;
+  slideEls[p.id] = el;
+});
+
+var started = false, lastPartId = null;
+
+function getPart(offset) {
+  for (var i = PARTS.length - 1; i >= 0; i--) {
+    if (offset >= PARTS[i].offset) return PARTS[i];
+  }
+  return PARTS[0];
 }
-
-var elP1 = createSlide('p1', 'calendar.jpg');
-var elP2 = createSlide('p2', 'free1_01.png');
-var elP3 = createSlide('p3', 'holiday.jpg');
-var elP4 = createSlide('p4', 'free2_01.jpg');
-var elP5 = createSlide('p5', 'event.jpg');
-var elP6 = createSlide('p6', '横長ロゴ.jpg');
-
-var lastPartId = '';
 
 function tick() {
-  var offset = Date.now() % CONFIG.cycleMs;
-  var partId = 'p1';
-  if (offset >= 50000) { partId = 'p6'; }
-  else if (offset >= 40000) { partId = 'p5'; }
-  else if (offset >= 30000) { partId = 'p4'; }
-  else if (offset >= 20000) { partId = 'p3'; }
-  else if (offset >= 10000) { partId = 'p2'; }
-
-  if (partId === lastPartId) return;
-  lastPartId = partId;
-
-  elP1.style.opacity = (partId === 'p1') ? '1' : '0';
-  elP2.style.opacity = (partId === 'p2') ? '1' : '0';
-  elP3.style.opacity = (partId === 'p3') ? '1' : '0';
-  elP4.style.opacity = (partId === 'p4') ? '1' : '0';
-  elP5.style.opacity = (partId === 'p5') ? '1' : '0';
-  elP6.style.opacity = (partId === 'p6') ? '1' : '0';
+  if (!started) return;
+  var part = getPart(Date.now() % CONFIG.cycleMs);
+  if (part.id === lastPartId) return;
+  lastPartId = part.id;
+  Object.keys(slideEls).forEach(function(id) {
+    slideEls[id].style.opacity = (id === part.id) ? '1' : '0';
+  });
 }
+setInterval(tick, 100);
 
-/* QR事前読み込み */
-var preload1 = new Image();
-preload1.src = CONFIG.qrPaypay;
-var preload2 = new Image();
-preload2.src = CONFIG.qrNakapay;
-
-var qrOverlay = document.getElementById('qrOverlay');
-var rlOverlay = document.getElementById('rouletteOverlay');
+/* ============================================================
+   画面の切り替え管理
+============================================================ */
+var qrOverlay = document.getElementById('qr-overlay');
+var rlOverlay = document.getElementById('roulette-overlay');
 var returnTimer = null;
 
 function closeAll() {
   qrOverlay.classList.remove('show');
   rlOverlay.classList.remove('show');
-  if (returnTimer) {
-    clearTimeout(returnTimer);
-    returnTimer = null;
-  }
+  if (returnTimer) { clearTimeout(returnTimer); returnTimer = null; }
 }
-
 function setReturnTimer(ms) {
   if (returnTimer) clearTimeout(returnTimer);
   returnTimer = setTimeout(closeAll, ms);
 }
 
-function showPaypay() {
+/* ============================================================
+   QR表示（事前読み込み ＋ 左右タップ切り替え）
+============================================================ */
+new Image().src = CONFIG.qr.paypay;
+new Image().src = CONFIG.qr.nakapay;
+
+function showQr(kind, label) {
   closeAll();
-  document.getElementById('qrTitle').textContent = 'PayPay';
-  document.getElementById('qrImg').src = CONFIG.qrPaypay;
+  document.getElementById('qr-title').textContent = label;
+  document.getElementById('qr-img').src = CONFIG.qr[kind];
   qrOverlay.classList.add('show');
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
 
-function showNakapay() {
+document.getElementById('qr-close').addEventListener('click', function(e) {
+  e.stopPropagation();
   closeAll();
-  document.getElementById('qrTitle').textContent = 'ナカペイ';
-  document.getElementById('qrImg').src = CONFIG.qrNakapay;
-  qrOverlay.classList.add('show');
-  setReturnTimer(CONFIG.qrTimeoutMs);
-}
+});
 
-document.getElementById('tapLeft').addEventListener('click', showPaypay);
-document.getElementById('tapRight').addEventListener('click', showNakapay);
-document.getElementById('qrLeft').addEventListener('click', showPaypay);
-document.getElementById('qrRight').addEventListener('click', showNakapay);
-document.getElementById('qrClose').addEventListener('click', closeAll);
-
-/* イベント読み込み（events.txt） */
-var prizeFile = '';
-
-function pad2(n) {
-  return (n < 10) ? ('0' + n) : ('' + n);
-}
-
-function getToday() {
-  var d = new Date();
-  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-}
-
-function parseEvents(rawText) {
-  var today = getToday();
-  var lines = rawText.split('\n');
-  var firstBanner = '';
-  prizeFile = '';
-
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines.slice(i, i + 1).join('').trim();
-    if (line.length === 0) continue;
-    if (line.charAt(0) === '#') continue;
-
-    var p1 = line.indexOf('|');
-    if (p1 === -1) continue;
-    var p2 = line.indexOf('|', p1 + 1);
-    if (p2 === -1) continue;
-    var p3 = line.indexOf('|', p2 + 1);
-    if (p3 === -1) continue;
-
-    var start = line.substring(0, p1).trim();
-    var end   = line.substring(p1 + 1, p2).trim();
-    var type  = line.substring(p2 + 1, p3).trim();
-    var val   = line.substring(p3 + 1).trim();
-
-    if (today >= start && today <= end) {
-      if (type === 'banner' && firstBanner === '') {
-        firstBanner = val;
-      }
-      if (type === 'roulette') {
-        prizeFile = val;
-      }
-    }
+// 待機画面の左半分タップでPayPay、右半分タップでナカペイ
+stage.addEventListener('click', function(e) {
+  if (!started) return;
+  if (e.target.closest('button')) return;
+  if (e.clientX < window.innerWidth / 2) {
+    showQr('paypay', 'PayPay');
+  } else {
+    showQr('nakapay', 'ナカペイ');
   }
+});
 
-  var bannerEl = document.getElementById('banner');
-  if (firstBanner !== '') {
-    bannerEl.textContent = firstBanner;
+// QR表示中も左右半分タップで切り替え可能にする
+qrOverlay.addEventListener('click', function(e) {
+  if (e.target.closest('button')) return;
+  if (e.clientX < window.innerWidth / 2) {
+    showQr('paypay', 'PayPay');
+  } else {
+    showQr('nakapay', 'ナカペイ');
+  }
+});
+
+/* ============================================================
+   期間限定イベント（events.txt）
+   形式:  開始日|終了日|種類|内容
+   種類:  banner   → 上部に内容の文章を表示
+          roulette → ルーレットボタンを表示（内容は景品ファイル名）
+============================================================ */
+var activeBanners = [];
+var bannerIdx = 0;
+var activeRoulette = null;
+var bannerEl = document.getElementById('banner');
+var barEl = document.getElementById('bar');
+var btnRoulette = document.getElementById('btn-roulette');
+
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function parseLines(text) {
+  return text.split(/\r?\n/).map(function(l){ return l.trim(); })
+             .filter(function(l){ return l.length > 0 && l.charAt(0) !== '#' && l.indexOf('|') !== -1; });
+}
+
+function applyEvents(lines) {
+  var today = todayStr();
+  activeBanners = [];
+  activeRoulette = null;
+
+  lines.forEach(function(line) {
+    var cols = line.split('|');
+    if (cols.length < 4) return;
+    var start = cols[0].trim();
+    var end   = cols[1].trim();
+    var type  = cols[2].trim();
+    var val   = cols[3].trim();
+    if (today >= start && today <= end) {
+      if (type === 'banner') activeBanners.push(val);
+      if (type === 'roulette') activeRoulette = val;
+    }
+  });
+
+  // バナー表示更新
+  if (activeBanners.length > 0) {
+    bannerEl.textContent = activeBanners[0];
     bannerEl.style.display = 'block';
   } else {
     bannerEl.style.display = 'none';
   }
 
-  var barEl = document.getElementById('bar');
-  var btnEl = document.getElementById('btnRoulette');
-  if (prizeFile !== '') {
-    btnEl.style.display = 'inline-block';
-    barEl.style.display = 'block';
-    loadPrizes(prizeFile);
+  // ルーレット期間中のみ下部バーとルーレットボタンを表示
+  if (activeRoulette) {
+    btnRoulette.style.display = 'inline-block';
+    barEl.style.display = 'flex';
+    loadPrizes(activeRoulette);
   } else {
-    btnEl.style.display = 'none';
+    btnRoulette.style.display = 'none';
     barEl.style.display = 'none';
   }
 }
 
+setInterval(function() {
+  if (activeBanners.length > 1) {
+    bannerIdx = (bannerIdx + 1) % activeBanners.length;
+    bannerEl.textContent = activeBanners[bannerIdx];
+  }
+}, 5000);
+
 function loadEvents() {
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'events.txt?t=' + Date.now(), true);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 0) {
-          if (xhr.responseText) {
-            parseEvents(xhr.responseText);
-          }
-        }
-      }
-    };
-    xhr.send();
-  } catch (e) {}
+  fetch('events.txt?t=' + Date.now())
+    .then(function(r){ return r.ok ? r.text() : ''; })
+    .then(function(txt){ if (txt) applyEvents(parseLines(txt)); })
+    .catch(function(){});
 }
 
-/* ルーレット処理 */
-var prizesData = '1等|||2等|||3等|||参加賞';
-var prizeCount = 4;
-var currentAngle = 0;
-var spinning = false;
+/* ============================================================
+   ルーレット描画・抽選処理
+============================================================ */
 
-function getPrizeAt(idx) {
-  var parts = prizesData.split('|||');
-  return parts.slice(idx, idx + 1).join('');
-}
-
-function getColorAt(idx) {
-  var mod = idx % 6;
-  if (mod === 0) return '#e63946';
-  if (mod === 1) return '#457b9d';
-  if (mod === 2) return '#2a9d8f';
-  if (mod === 3) return '#e9c46a';
-  if (mod === 4) return '#f4a261';
-  return '#8338ec';
-}
-
-function loadPrizes(file) {
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', file + '?t=' + Date.now(), true);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 0) {
-          if (xhr.responseText) {
-            var lines = xhr.responseText.split('\n');
-            var joined = '';
-            var c = 0;
-            for (var i = 0; i < lines.length; i++) {
-              var s = lines.slice(i, i + 1).join('').trim();
-              if (s.length > 0 && s.charAt(0) !== '#') {
-                if (c > 0) joined += '|||';
-                joined += s;
-                c++;
-}
-}
-if (c > 0) {
-prizesData = joined;
-prizeCount = c;
-}
-}
-drawWheel();
-}
-}
-};
-xhr.send();
-} catch (e) {}
-}
-function drawWheel() {
-var canvas = document.getElementById('wheel');
-var ctx = canvas.getContext('2d');
-var size = 320;
-var r = size / 2;
-var arc = (Math.PI * 2) / prizeCount;
-ctx.clearRect(0, 0, size, size);
-for (var i = 0; i < prizeCount; i++) {
-var angle = currentAngle + i * arc;
-ctx.beginPath();
-ctx.moveTo(r, r);
-ctx.arc(r, r, r - 6, angle, angle + arc);
-ctx.fillStyle = getColorAt(i);
-ctx.fill();
-ctx.strokeStyle = '#fff';
-ctx.lineWidth = 3;
-ctx.stroke();
-ctx.save();
-ctx.translate(r, r);
-ctx.rotate(angle + arc / 2);
-ctx.textAlign = 'right';
-ctx.fillStyle = '#fff';
-ctx.font = 'bold 20px sans-serif';
-ctx.fillText(getPrizeAt(i), r - 18, 6);
-ctx.restore();
-}
-ctx.fillStyle = '#ffd700';
-ctx.beginPath();
-ctx.moveTo(r - 12, 0);
-ctx.lineTo(r + 12, 0);
-ctx.lineTo(r, 22);
-ctx.fill();
-}
-document.getElementById('btnRoulette').addEventListener('click', function() {
-closeAll();
-document.getElementById('rouletteResult').textContent = '';
-document.getElementById('spinBtn').disabled = false;
-drawWheel();
-rlOverlay.classList.add('show');
-setReturnTimer(CONFIG.rouletteIdleMs);
-});
-document.getElementById('rouletteClose').addEventListener('click', function() {
-if (!spinning) closeAll();
-});
-document.getElementById('spinBtn').addEventListener('click', function() {
-if (spinning) return;
-spinning = true;
-document.getElementById('spinBtn').disabled = true;
-document.getElementById('rouletteResult').textContent = '';
-var spinTotal = Math.PI * 2 * (6 + Math.random() * 4);
-var duration = 3500;
-var startAngle = currentAngle;
-var startTime = Date.now();
-var timer = setInterval(function() {
-var elapsed = Date.now() - startTime;
-var t = elapsed / duration;
-if (t > 1) t = 1;
-var ease = 1 - Math.pow(1 - t, 3);
-currentAngle = startAngle + spinTotal * ease;
-drawWheel();
-if (t >= 1) {
-clearInterval(timer);
-spinning = false;
-var arc = (Math.PI * 2) / prizeCount;
-var norm = (Math.PI * 1.5 - (currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-var winIdx = Math.floor(norm / arc) % prizeCount;
-document.getElementById('rouletteResult').textContent = '結果：' + getPrizeAt(winIdx);
-setReturnTimer(CONFIG.resultTimeoutMs);
-}
-}, 30);
-});
-/* 起動時に即時実行 */
-tick();
-setInterval(tick, 100);
-loadEvents();
-setInterval(loadEvents, 60000);
+  

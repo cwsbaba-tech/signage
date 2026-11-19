@@ -8,7 +8,7 @@
 html, body {
   margin:0; padding:0; width:100%; height:100%;
   background:#000; overflow:hidden;
-  font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+  font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
 }
@@ -22,27 +22,34 @@ html, body {
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
 
+/* 左右タップ用の透明エリア（iPhone 4sでも確実に反応させるため） */
+#tap-left, #tap-right {
+  position:absolute; top:0; bottom:0; width:50%; z-index:10;
+  cursor:pointer;
+}
+#tap-left  { left:0; }
+#tap-right { right:0; }
+
 /* 期間限定バナー（上部） */
 #banner {
   position:absolute; top:0; left:0; right:0; z-index:20;
-  padding:1.6vmin 3vmin; text-align:center;
-  font-size:clamp(20px,4vmin,44px); font-weight:700; color:#fff;
-  background:rgba(180,20,40,0.88); border-bottom:3px solid #ffd700;
-  text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  padding:12px 20px; text-align:center;
+  font-size:24px; font-weight:700; color:#fff;
+  background:rgba(180,20,40,0.9); border-bottom:3px solid #ffd700;
   display:none;
 }
 
 /* 下部ボタンバー（通常は非表示・ルーレット期間中のみ表示） */
 #bar {
   position:absolute; left:0; right:0; bottom:0; z-index:30;
-  display:none; justify-content:center; align-items:center; gap:3vmin;
-  padding:2vmin 3vmin;
-  background:rgba(5,10,15,0.88); border-top:3px solid #00b4d8;
+  display:none; text-align:center;
+  padding:14px 20px;
+  background:rgba(5,10,15,0.9); border-top:3px solid #00b4d8;
 }
 .btn {
-  min-width:22vmin; padding:1.8vmin 3vmin;
-  font-family:inherit; font-size:clamp(18px,3.4vmin,36px); font-weight:700;
-  color:#fff; border:2px solid #fff; border-radius:2vmin; background:#222;
+  min-width:160px; padding:12px 24px;
+  font-family:inherit; font-size:22px; font-weight:700;
+  color:#fff; border:2px solid #fff; border-radius:10px; background:#222;
   cursor:pointer;
 }
 .btn:active { opacity:0.7; }
@@ -51,77 +58,86 @@ html, body {
 /* 共通オーバーレイ */
 .overlay {
   position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
-  background:rgba(0,0,0,0.92);
-  display:none; flex-direction:column; justify-content:center; align-items:center;
-  text-align:center; color:#fff;
+  background:rgba(0,0,0,0.94);
+  display:none; text-align:center; color:#fff;
+  padding-top:40px;
 }
-.overlay.show { display:flex; }
 .close-btn {
-  position:absolute; top:2vmin; right:2vmin;
-  padding:1.4vmin 3vmin; font-size:clamp(16px,2.8vmin,30px); font-weight:700;
-  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:1.6vmin;
+  position:absolute; top:14px; right:14px; z-index:120;
+  padding:10px 22px; font-size:20px; font-weight:700;
+  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:8px;
   cursor:pointer;
 }
-.ov-title { font-size:clamp(22px,4.6vmin,52px); font-weight:700; margin:0 0 2vmin; }
-.ov-sub   { font-size:clamp(16px,2.8vmin,30px); color:#caf0f8; margin:2vmin 0 0; }
+.ov-title { font-size:32px; font-weight:700; margin:0 0 16px; }
+.ov-sub   { font-size:18px; color:#caf0f8; margin:12px 0 0; }
 
 /* QR */
-#qr-card { background:#fff; padding:2.4vmin; border-radius:2vmin; }
-#qr-img { display:block; width:min(62vmin,620px); height:min(62vmin,620px); object-fit:contain; }
+#qr-card {
+  display:inline-block; background:#fff; padding:14px; border-radius:12px;
+}
+#qr-img {
+  display:block; width:240px; height:240px;
+}
+@media (min-width: 700px) {
+  #qr-img { width:420px; height:420px; }
+  .ov-title { font-size:44px; }
+  .ov-sub { font-size:26px; }
+}
 
 /* ルーレット */
-#wheel-wrap { position:relative; }
-#wheel { display:block; }
-#spin-btn { margin-top:2vmin; background:#b8860b; border-color:#ffd700; display:inline-block; }
+#wheel-wrap { position:relative; display:inline-block; }
+#wheel { display:block; margin:0 auto; }
+#spin-btn { margin-top:14px; background:#b8860b; border-color:#ffd700; display:inline-block; }
 #roulette-result {
-  min-height:6vmin; margin-top:1.6vmin;
-  font-size:clamp(22px,4.4vmin,50px); font-weight:700; color:#ffd700;
+  min-height:40px; margin-top:12px;
+  font-size:28px; font-weight:700; color:#ffd700;
 }
 
 /* スタート */
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
+  padding-top:35%;
 }
-#startOverlay h1 { font-size:5vmin; margin:0 0 2vmin; color:#00b4d8; }
-#startOverlay p  { font-size:3vmin; opacity:0.7; margin:0; }
+#startOverlay h1 { font-size:32px; margin:0 0 14px; color:#00b4d8; }
+#startOverlay p  { font-size:18px; opacity:0.7; margin:0; }
 </style>
 </head>
 <body>
 
-<div id="startOverlay">
+<div id="startOverlay" onclick="startApp()">
   <h1>タップしてスタート</h1>
   <p>SCREEN 5 (CUSTOMER)</p>
 </div>
 
 <div id="stage">
+  <div id="tap-left" onclick="showQr('paypay', 'PayPay')"></div>
+  <div id="tap-right" onclick="showQr('nakapay', 'ナカペイ')"></div>
   <div id="banner"></div>
   <div id="bar">
-    <button class="btn" id="btn-roulette">ルーレット</button>
+    <button class="btn" id="btn-roulette" onclick="openRoulette()">ルーレット</button>
   </div>
 </div>
 
 <div class="overlay" id="qr-overlay">
-  <button class="close-btn" id="qr-close">戻る</button>
+  <button class="close-btn" onclick="closeAll()">戻る</button>
+  <div id="qr-tap-left" style="position:absolute;top:0;bottom:0;left:0;width:50%;z-index:110;" onclick="showQr('paypay', 'PayPay')"></div>
+  <div id="qr-tap-right" style="position:absolute;top:0;bottom:0;right:0;width:50%;z-index:110;" onclick="showQr('nakapay', 'ナカペイ')"></div>
   <p class="ov-title" id="qr-title">PayPay</p>
-  <div id="qr-card"><img id="qr-img" alt="QR"></div>
+  <div id="qr-card"><img id="qr-img" src="qr_paypay.png" alt="QR"></div>
   <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
   <p class="ov-sub">金額はレジの画面でご確認ください</p>
 </div>
 
 <div class="overlay" id="roulette-overlay">
-  <button class="close-btn" id="roulette-close">閉じる</button>
+  <button class="close-btn" onclick="closeRoulette()">閉じる</button>
   <p class="ov-title" id="roulette-title">ルーレット</p>
   <div id="wheel-wrap"><canvas id="wheel"></canvas></div>
-  <button class="btn" id="spin-btn">スタート</button>
+  <div><button class="btn" id="spin-btn" onclick="spinWheel()">スタート</button></div>
   <div id="roulette-result"></div>
 </div>
 
 <script>
-/* ============================================================
-   設定（ここだけ変更する）
-============================================================ */
 var CONFIG = {
   cycleMs         : 59900,
   qrTimeoutMs     : 60000,
@@ -130,7 +146,6 @@ var CONFIG = {
   qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' }
 };
 
-/* 待機中に流す画像（10秒ずつ・6パートで59.9秒） */
 var PARTS = new Array(
   { id:'p1', src:'calendar.jpg', offset:0     },
   { id:'p2', src:'free1_01.png', offset:10000 },
@@ -140,27 +155,26 @@ var PARTS = new Array(
   { id:'p6', src:'横長ロゴ.jpg', offset:50000 }
 );
 
-/* ============================================================
-   待機サイネージ（旧Android Chrome完全対応）
-============================================================ */
 var stage = document.getElementById('stage');
 var slideEls = {};
-PARTS.forEach(function(p) {
+for (var i = 0; i < PARTS.length; i++) {
+  var p = PARTS.slice(i, i + 1).pop();
   var el = document.createElement('div');
   el.className = 'slide';
   el.style.backgroundImage = "url('" + p.src + "')";
   stage.insertBefore(el, stage.firstChild);
   slideEls[p.id] = el;
-});
+}
 
-var started = false, lastPartId = null;
+var started = false;
+var lastPartId = null;
 
 function getPart(offset) {
-  var found = null;
-  PARTS.forEach(function(p) {
-    if (!found) found = p;
+  var found = PARTS.slice(0, 1).pop();
+  for (var i = 0; i < PARTS.length; i++) {
+    var p = PARTS.slice(i, i + 1).pop();
     if (offset >= p.offset) found = p;
-  });
+  }
   return found;
 }
 
@@ -169,22 +183,21 @@ function tick() {
   var part = getPart(Date.now() % CONFIG.cycleMs);
   if (!part || part.id === lastPartId) return;
   lastPartId = part.id;
-  Object.keys(slideEls).forEach(function(id) {
-    slideEls[id].style.opacity = (id === part.id) ? '1' : '0';
-  });
+  for (var id in slideEls) {
+    if (slideEls.hasOwnProperty(id)) {
+      slideEls[id].style.opacity = (id === part.id) ? '1' : '0';
+    }
+  }
 }
-setInterval(tick, 100);
+setInterval(tick, 200);
 
-/* ============================================================
-   画面の切り替え管理
-============================================================ */
 var qrOverlay = document.getElementById('qr-overlay');
 var rlOverlay = document.getElementById('roulette-overlay');
 var returnTimer = null;
 
 function closeAll() {
-  qrOverlay.classList.remove('show');
-  rlOverlay.classList.remove('show');
+  qrOverlay.style.display = 'none';
+  rlOverlay.style.display = 'none';
   if (returnTimer) { clearTimeout(returnTimer); returnTimer = null; }
 }
 function setReturnTimer(ms) {
@@ -192,49 +205,20 @@ function setReturnTimer(ms) {
   returnTimer = setTimeout(closeAll, ms);
 }
 
-/* ============================================================
-   QR表示（事前読み込み ＋ 左右タップ切り替え）
-============================================================ */
-new Image().src = CONFIG.qr.paypay;
-new Image().src = CONFIG.qr.nakapay;
+/* QR事前読み込み */
+var img1 = new Image(); img1.src = CONFIG.qr.paypay;
+var img2 = new Image(); img2.src = CONFIG.qr.nakapay;
 
 function showQr(kind, label) {
+  if (!started) return;
   closeAll();
-  document.getElementById('qr-title').textContent = label;
+  document.getElementById('qr-title').innerHTML = label;
   document.getElementById('qr-img').src = CONFIG.qr[kind];
-  qrOverlay.classList.add('show');
+  qrOverlay.style.display = 'block';
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
 
-document.getElementById('qr-close').addEventListener('click', function(e) {
-  e.stopPropagation();
-  closeAll();
-});
-
-// 待機画面の左半分タップでPayPay、右半分タップでナカペイ
-stage.addEventListener('click', function(e) {
-  if (!started) return;
-  if (e.target && e.target.tagName === 'BUTTON') return;
-  if (e.clientX < window.innerWidth / 2) {
-    showQr('paypay', 'PayPay');
-  } else {
-    showQr('nakapay', 'ナカペイ');
-  }
-});
-
-// QR表示中も左右半分タップで切り替え可能にする
-qrOverlay.addEventListener('click', function(e) {
-  if (e.target && e.target.tagName === 'BUTTON') return;
-  if (e.clientX < window.innerWidth / 2) {
-    showQr('paypay', 'PayPay');
-  } else {
-    showQr('nakapay', 'ナカペイ');
-  }
-});
-
-/* ============================================================
-   期間限定イベント（events.txt）
-============================================================ */
+/* イベント・ルーレット管理 */
 var activeBanners = new Array();
 var bannerIdx = 0;
 var activeRoulette = null;
@@ -242,40 +226,35 @@ var bannerEl = document.getElementById('banner');
 var barEl = document.getElementById('bar');
 var btnRoulette = document.getElementById('btn-roulette');
 
-function pad2(n) {
-  return (n < 10 ? '0' : '') + n;
-}
-
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
 function todayStr() {
   var d = new Date();
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 
-function parseLines(text) {
-  return text.split(/\r?\n/).map(function(l){ return l.trim(); })
-             .filter(function(l){ return l.length > 0 && l.charAt(0) !== '#' && l.indexOf('|') !== -1; });
-}
-
-function applyEvents(lines) {
+function applyEvents(text) {
+  var lines = text.split(/\r?\n/);
   var today = todayStr();
   activeBanners = new Array();
   activeRoulette = null;
 
-  lines.forEach(function(line) {
-    var cols = line.split('|');
-    if (cols.length < 4) return;
-    var start = cols.slice(0, 1).join('').trim();
-    var end   = cols.slice(1, 2).join('').trim();
-    var type  = cols.slice(2, 3).join('').trim();
-    var val   = cols.slice(3, 4).join('').trim();
+  for (var i = 0; i < lines.length; i++) {
+    var l = lines.slice(i, i + 1).join('').replace(/^\s+|\s+$/g, '');
+    if (!l || l.charAt(0) === '#' || l.indexOf('|') === -1) continue;
+    var cols = l.split('|');
+    if (cols.length < 4) continue;
+    var start = cols.slice(0, 1).join('').replace(/^\s+|\s+$/g, '');
+    var end   = cols.slice(1, 2).join('').replace(/^\s+|\s+$/g, '');
+    var type  = cols.slice(2, 3).join('').replace(/^\s+|\s+$/g, '');
+    var val   = cols.slice(3, 4).join('').replace(/^\s+|\s+$/g, '');
     if (today >= start && today <= end) {
       if (type === 'banner') activeBanners.push(val);
       if (type === 'roulette') activeRoulette = val;
     }
-  });
+  }
 
   if (activeBanners.length > 0) {
-    bannerEl.textContent = activeBanners.slice(0, 1).join('');
+    bannerEl.innerHTML = activeBanners.slice(0, 1).join('');
     bannerEl.style.display = 'block';
   } else {
     bannerEl.style.display = 'none';
@@ -283,7 +262,7 @@ function applyEvents(lines) {
 
   if (activeRoulette) {
     btnRoulette.style.display = 'inline-block';
-    barEl.style.display = 'flex';
+    barEl.style.display = 'block';
     loadPrizes(activeRoulette);
   } else {
     btnRoulette.style.display = 'none';
@@ -294,7 +273,7 @@ function applyEvents(lines) {
 setInterval(function() {
   if (activeBanners.length > 1) {
     bannerIdx = (bannerIdx + 1) % activeBanners.length;
-    bannerEl.textContent = activeBanners.slice(bannerIdx, bannerIdx + 1).join('');
+    bannerEl.innerHTML = activeBanners.slice(bannerIdx, bannerIdx + 1).join('');
   }
 }, 5000);
 
@@ -304,15 +283,33 @@ function loadEvents() {
     xhr.open('GET', 'events.txt?t=' + Date.now(), true);
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
-        if (xhr.responseText) applyEvents(parseLines(xhr.responseText));
+        if (xhr.responseText) applyEvents(xhr.responseText);
       }
     };
     xhr.send();
   } catch (e) {}
 }
 
-/* ============================================================
-   ルーレット描画・抽選処理
-============================================================ */
+/* ルーレット */
+var PRIZES = new Array('1等', '2等', '3等', '参加賞');
+var COLORS = new Array('#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261', '#8338ec');
+var wheelCanvas = document.getElementById('wheel');
+var ctx = wheelCanvas.getContext('2d');
+var currentAngle = 0;
+var isSpinning = false;
+
+function loadPrizes(filename) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', filename + '?t=' + Date.now(), true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+        if (xhr.responseText) {
+          var raw = xhr.responseText.split(/\r?\n/);
+          var list = new Array();
+          for (var i = 0; i < raw.length; i++) {
+            var s = raw.slice(i, i + 1).join('').replace(/^\s+|\s+$/g, '');
+            if (s && s.charAt(0) !== '#') list.push(s);
+          }
 
 

@@ -15,19 +15,28 @@ html, body {
   -webkit-tap-highlight-color:transparent;
 }
 
-/* 上部 1/4（25%）：カスタマーディスプレイ枠 */
+/* 上部 1/4（25%）：お会計枠（タップでカスタマーディスプレイへ） */
 #customer-top {
   position:absolute; top:0; left:0; right:0; height:25%; z-index:40;
-  background:#1a1a1a;
+  background:#18222f;
   border-bottom:2px solid #00b4d8;
   box-sizing:border-box;
-  overflow:hidden;
+  text-align:center;
+  color:#fff;
+  cursor:pointer;
 }
-#customer-frame {
-  display:block;
-  width:100%; height:100%;
-  border:0;
-  background:#1a1a1a;
+#customer-top-inner {
+  position:relative; top:50%;
+  margin-top:-22px;
+  padding:0 10px;
+}
+#customer-top-title {
+  font-size:16px; font-weight:700; color:#ffd700;
+  margin:0 0 4px;
+}
+#customer-top-sub {
+  font-size:12px; color:#caf0f8;
+  margin:0;
 }
 
 /* 下部 3/4（75%）：サイネージ・QR・ルーレット領域 */
@@ -38,7 +47,6 @@ html, body {
 }
 #stage { position:absolute; top:0; left:0; right:0; bottom:0; background:#111; }
 
-/* 待機中スライド */
 .slide {
   position:absolute; top:0; left:0; width:100%; height:100%;
   background-size:cover; background-position:center center; background-repeat:no-repeat;
@@ -46,7 +54,6 @@ html, body {
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
 
-/* 期間限定バナー */
 #banner {
   position:absolute; top:0; left:0; right:0; z-index:20;
   padding:8px 12px; text-align:center;
@@ -55,7 +62,6 @@ html, body {
   display:none;
 }
 
-/* 下部ボタンバー */
 #bar {
   position:absolute; left:0; right:0; bottom:0; z-index:30;
   display:none; text-align:center;
@@ -69,7 +75,6 @@ html, body {
 }
 #btn-roulette { background:#b8860b; border-color:#ffd700; display:none; }
 
-/* 共通オーバーレイ */
 .overlay {
   position:absolute; top:0; left:0; right:0; bottom:0; z-index:100;
   background:rgba(0,0,0,0.94);
@@ -80,25 +85,15 @@ html, body {
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
 }
-.overlay.show { display:block; }
 .close-btn {
   position:absolute; top:8px; right:10px; z-index:110;
   padding:5px 12px;
   font-size:14px; font-weight:700;
   font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:8px;
 }
-.ov-title {
-  font-size:22px; font-weight:700;
-  margin:4px 0 8px;
-}
-.ov-sub {
-  font-size:13px; line-height:1.4;
-  color:#caf0f8;
-  margin:6px auto 0;
-  max-width:92%;
-}
+.ov-title { font-size:22px; font-weight:700; margin:4px 0 8px; }
+.ov-sub { font-size:13px; line-height:1.4; color:#caf0f8; margin:6px auto 0; max-width:92%; }
 
-/* QR（iPhone 4Sでも枠内に余裕をもって収まるサイズ） */
 #qr-card {
   display:inline-block;
   background:#fff;
@@ -106,23 +101,13 @@ html, body {
   border-radius:10px;
   box-sizing:border-box;
 }
-#qr-img {
-  display:block;
-  width:150px;
-  height:150px;
-  object-fit:contain;
-}
+#qr-img { display:block; width:150px; height:150px; object-fit:contain; }
 
-/* ルーレット */
 #wheel-wrap { position:relative; }
 #wheel { display:inline-block; }
 #spin-btn { margin-top:10px; background:#b8860b; border-color:#ffd700; }
-#roulette-result {
-  min-height:32px; margin-top:8px;
-  font-size:22px; font-weight:700; color:#ffd700;
-}
+#roulette-result { min-height:32px; margin-top:8px; font-size:22px; font-weight:700; color:#ffd700; }
 
-/* スタート */
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
   z-index:9999; text-align:center; padding-top:35%; box-sizing:border-box;
@@ -138,9 +123,12 @@ html, body {
   <p>SCREEN 5 (CUSTOMER)</p>
 </div>
 
-<!-- 上部 1/4：カスタマーディスプレイ -->
+<!-- 上部 1/4：カスタマーディスプレイ起動枠 -->
 <div id="customer-top">
-  <iframe id="customer-frame" src="about:blank" title="カスタマーディスプレイ"></iframe>
+  <div id="customer-top-inner">
+    <p id="customer-top-title">お会計・金額表示を開く</p>
+    <p id="customer-top-sub">タップで 192.168.0.115:55556 を表示</p>
+  </div>
 </div>
 
 <!-- 下部 3/4：サイネージ・QR・ルーレット -->
@@ -187,6 +175,10 @@ var PARTS = [
   { id:'p5', src:'event.jpg',    offset:40000 },
   { id:'p6', src:'横長ロゴ.jpg', offset:50000 }
 ];
+
+document.getElementById('customer-top').addEventListener('click', function() {
+  window.location.href = CONFIG.customerUrl;
+}, false);
 
 var qrOverlay = document.getElementById('qr-overlay');
 var rlOverlay = document.getElementById('roulette-overlay');
@@ -259,7 +251,6 @@ function handleStartTap() {
   if (started) return;
   started = true;
   startOverlay.style.display = 'none';
-  document.getElementById('customer-frame').src = CONFIG.customerUrl;
   tick();
   loadEvents();
 }
@@ -313,7 +304,6 @@ stage.addEventListener('touchend', handleSideTap, false);
 qrOverlay.addEventListener('click', handleSideTap, false);
 qrOverlay.addEventListener('touchend', handleSideTap, false);
 
-/* events.txt 読み込み（XHRベースで古いiOSでも動作しやすく） */
 var activeBanners = [];
 var bannerIdx = 0;
 var activeRoulette = null;
@@ -402,7 +392,6 @@ function loadEvents() {
 }
 setInterval(loadEvents, 60000);
 
-/* ルーレット */
 var prizes = ['あたり', 'はずれ', 'もう1回', 'プチ賞'];
 var canvas = document.getElementById('wheel');
 var ctx = canvas.getContext('2d');

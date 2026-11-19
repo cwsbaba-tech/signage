@@ -50,45 +50,78 @@ html, body {
 .btn:active { opacity:0.7; }
 #btn-roulette { background:#b8860b; border-color:#ffd700; display:none; }
 
-/* 共通オーバーレイ */
+/* 共通オーバーレイ（スマホ・タブレット両対応） */
 .overlay {
   position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
   background:rgba(0,0,0,0.92);
   display:none; flex-direction:column; justify-content:center; align-items:center;
   text-align:center; color:#fff;
+  padding:clamp(56px, 9vmin, 90px) clamp(16px, 4vw, 40px) clamp(20px, 4vmin, 40px);
+  box-sizing:border-box;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 .overlay.show { display:flex; }
 .close-btn {
-  position:absolute; top:2vmin; right:2vmin;
-  padding:1.4vmin 3vmin; font-size:clamp(16px,2.8vmin,30px); font-weight:700;
+  position:fixed; top:clamp(12px, 2.5vmin, 28px); right:clamp(12px, 2.5vw, 28px); z-index:110;
+  padding:clamp(8px, 1.4vmin, 16px) clamp(16px, 3vw, 32px);
+  font-size:clamp(15px, 2.6vmin, 28px); font-weight:700;
   font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:1.6vmin;
   cursor:pointer;
 }
-.ov-title { font-size:clamp(22px,4.6vmin,52px); font-weight:700; margin:0 0 2vmin; }
-.ov-sub   { font-size:clamp(16px,2.8vmin,30px); color:#caf0f8; margin:2vmin 0 0; }
+.ov-title {
+  font-size:clamp(22px, 4.4vmin, 48px);
+  font-weight:700;
+  margin:0 0 clamp(10px, 2vmin, 20px);
+  flex-shrink:0;
+}
+.ov-sub {
+  font-size:clamp(14px, 2.5vmin, 28px);
+  line-height:1.45;
+  color:#caf0f8;
+  margin:clamp(8px, 1.4vmin, 14px) 0 0;
+  max-width:min(90vw, 720px);
+  flex-shrink:0;
+}
 
-/* QR */
-#qr-card { background:#fff; padding:2.4vmin; border-radius:2vmin; }
-#qr-img { display:block; width:min(62vmin,620px); height:min(62vmin,620px); object-fit:contain; }
+/* QR（縦長スマホ・横長タブレット両方で画面内に収める） */
+#qr-card {
+  background:#fff;
+  padding:clamp(10px, 2vmin, 22px);
+  border-radius:clamp(12px, 2vmin, 24px);
+  box-sizing:border-box;
+  flex-shrink:0;
+  max-width:100%;
+  max-height:100%;
+}
+#qr-img {
+  display:block;
+  width:min(68vw, 50vh, 520px);
+  height:min(68vw, 50vh, 520px);
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
 
 /* ルーレット */
-#wheel-wrap { position:relative; }
+#wheel-wrap { position:relative; flex-shrink:0; }
 #wheel { display:block; }
-#spin-btn { margin-top:2vmin; background:#b8860b; border-color:#ffd700; display:inline-block; }
+#spin-btn { margin-top:2vmin; background:#b8860b; border-color:#ffd700; display:inline-block; flex-shrink:0; }
 #roulette-result {
   min-height:6vmin; margin-top:1.6vmin;
   font-size:clamp(22px,4.4vmin,50px); font-weight:700; color:#ffd700;
+  flex-shrink:0;
 }
 
 /* スタート */
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
   display:flex; flex-direction:column; justify-content:center; align-items:center;
-  z-index:9999; cursor:pointer; text-align:center;
+  z-index:9999; cursor:pointer; text-align:center; padding:20px; box-sizing:border-box;
 }
 #startOverlay.hidden { display:none !important; }
-#startOverlay h1 { font-size:5vmin; margin:0 0 2vmin; color:#00b4d8; }
-#startOverlay p  { font-size:3vmin; opacity:0.7; margin:0; }
+#startOverlay h1 { font-size:clamp(24px, 5vmin, 52px); margin:0 0 2vmin; color:#00b4d8; }
+#startOverlay p  { font-size:clamp(16px, 3vmin, 32px); opacity:0.7; margin:0; }
 * { cursor:none !important; }
 </style>
 </head>
@@ -242,7 +275,6 @@ function handleSideTap(e) {
   if (!started) return;
   if (e.target && e.target.closest && e.target.closest('button')) return;
 
-  // touchend と click の二重発火防止
   var now = Date.now();
   if (now - lastSideTapTime < 250) return;
   lastSideTapTime = now;
@@ -372,7 +404,7 @@ function loadPrizes(filename) {
 }
 
 function resizeWheel() {
-  var size = Math.min(window.innerWidth * 0.56, window.innerHeight * 0.48, 460);
+  var size = Math.min(window.innerWidth * 0.65, window.innerHeight * 0.45, 460);
   var dpr = window.devicePixelRatio || 1;
   canvas.width = size * dpr;
   canvas.height = size * dpr;

@@ -2,35 +2,37 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SCREEN 5 - CUSTOMER</title>
 <style>
 html, body {
   margin:0; padding:0; width:100%; height:100%;
-  background:#111; overflow:hidden; cursor:none;
-  font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+  background:#111; overflow:hidden;
+  font-family:'Hiragino Kaku Gothic ProN',sans-serif;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
 }
 
-/* 上部 1/4（25vh）：カスタマーディスプレイ枠 */
+/* 上部 1/4（25%）：カスタマーディスプレイ枠 */
 #customer-top {
-  position:fixed; top:0; left:0; right:0; height:25vh; z-index:40;
-  background:#000;
+  position:absolute; top:0; left:0; right:0; height:25%; z-index:40;
+  background:#1a1a1a;
   border-bottom:2px solid #00b4d8;
   box-sizing:border-box;
+  overflow:hidden;
 }
 #customer-frame {
   display:block;
   width:100%; height:100%;
   border:0;
-  background:#000;
+  background:#1a1a1a;
 }
 
-/* 下部 3/4（75vh）：サイネージ・QR・ルーレット領域 */
+/* 下部 3/4（75%）：サイネージ・QR・ルーレット領域 */
 #lower-area {
-  position:fixed; top:25vh; left:0; right:0; bottom:0; z-index:10;
+  position:absolute; top:25%; left:0; right:0; bottom:0; z-index:10;
   background:#111;
   overflow:hidden;
 }
@@ -44,109 +46,89 @@ html, body {
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
 
-/* 期間限定バナー（下部領域の上部） */
+/* 期間限定バナー */
 #banner {
   position:absolute; top:0; left:0; right:0; z-index:20;
-  padding:1.2vmin 2.5vmin; text-align:center;
-  font-size:clamp(16px,3.2vmin,36px); font-weight:700; color:#fff;
-  background:rgba(180,20,40,0.88); border-bottom:3px solid #ffd700;
-  text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  padding:8px 12px; text-align:center;
+  font-size:18px; font-weight:700; color:#fff;
+  background:rgba(180,20,40,0.88); border-bottom:2px solid #ffd700;
   display:none;
 }
 
-/* 下部ボタンバー（通常は非表示・ルーレット期間中のみ表示） */
+/* 下部ボタンバー */
 #bar {
   position:absolute; left:0; right:0; bottom:0; z-index:30;
-  display:none; justify-content:center; align-items:center; gap:3vmin;
-  padding:1.6vmin 3vmin;
-  background:rgba(5,10,15,0.88); border-top:3px solid #00b4d8;
+  display:none; text-align:center;
+  padding:10px;
+  background:rgba(5,10,15,0.88); border-top:2px solid #00b4d8;
 }
 .btn {
-  min-width:20vmin; padding:1.4vmin 2.6vmin;
-  font-family:inherit; font-size:clamp(16px,3vmin,32px); font-weight:700;
-  color:#fff; border:2px solid #fff; border-radius:2vmin; background:#222;
-  cursor:pointer;
-  touch-action:manipulation;
+  padding:10px 20px;
+  font-family:inherit; font-size:18px; font-weight:700;
+  color:#fff; border:2px solid #fff; border-radius:12px; background:#222;
 }
-.btn:active { opacity:0.7; }
 #btn-roulette { background:#b8860b; border-color:#ffd700; display:none; }
 
-/* 共通オーバーレイ（下部3/4エリア内に表示） */
+/* 共通オーバーレイ */
 .overlay {
   position:absolute; top:0; left:0; right:0; bottom:0; z-index:100;
   background:rgba(0,0,0,0.94);
-  display:none; flex-direction:column; justify-content:center; align-items:center;
+  display:none;
   text-align:center; color:#fff;
-  padding:46px 14px 16px;
+  padding:38px 12px 12px;
   box-sizing:border-box;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
 }
-.overlay.show { display:flex; }
+.overlay.show { display:block; }
 .close-btn {
-  position:absolute; top:10px; right:12px; z-index:110;
-  padding:6px 14px;
-  font-size:clamp(13px,2.2vmin,22px); font-weight:700;
-  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:10px;
-  cursor:pointer;
+  position:absolute; top:8px; right:10px; z-index:110;
+  padding:5px 12px;
+  font-size:14px; font-weight:700;
+  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:8px;
 }
 .ov-title {
-  font-size:clamp(18px,3.2vmin,34px);
-  font-weight:700;
-  margin:0 0 8px;
-  flex-shrink:0;
+  font-size:22px; font-weight:700;
+  margin:4px 0 8px;
 }
 .ov-sub {
-  font-size:clamp(12px,1.9vmin,20px);
-  line-height:1.4;
+  font-size:13px; line-height:1.4;
   color:#caf0f8;
-  margin:6px 0 0;
+  margin:6px auto 0;
   max-width:92%;
-  flex-shrink:0;
 }
 
-/* QR（下部枠内に収まる小さめサイズ） */
+/* QR（iPhone 4Sでも枠内に余裕をもって収まるサイズ） */
 #qr-card {
+  display:inline-block;
   background:#fff;
-  padding:10px;
-  border-radius:12px;
+  padding:8px;
+  border-radius:10px;
   box-sizing:border-box;
-  flex-shrink:0;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
 }
 #qr-img {
   display:block;
-  width:28vmin;
-  height:28vmin;
-  max-width:240px;
-  max-height:240px;
-  min-width:110px;
-  min-height:110px;
+  width:150px;
+  height:150px;
   object-fit:contain;
 }
 
 /* ルーレット */
-#wheel-wrap { position:relative; flex-shrink:0; }
-#wheel { display:block; }
-#spin-btn { margin-top:1.4vmin; background:#b8860b; border-color:#ffd700; display:inline-block; flex-shrink:0; }
+#wheel-wrap { position:relative; }
+#wheel { display:inline-block; }
+#spin-btn { margin-top:10px; background:#b8860b; border-color:#ffd700; }
 #roulette-result {
-  min-height:4.5vmin; margin-top:1vmin;
-  font-size:clamp(18px,3.6vmin,40px); font-weight:700; color:#ffd700;
-  flex-shrink:0;
+  min-height:32px; margin-top:8px;
+  font-size:22px; font-weight:700; color:#ffd700;
 }
 
 /* スタート */
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
-  z-index:9999; cursor:pointer; text-align:center; padding:20px; box-sizing:border-box;
+  z-index:9999; text-align:center; padding-top:35%; box-sizing:border-box;
 }
-#startOverlay.hidden { display:none !important; }
-#startOverlay h1 { font-size:clamp(24px,5vmin,52px); margin:0 0 2vmin; color:#00b4d8; }
-#startOverlay p  { font-size:clamp(16px,3vmin,32px); opacity:0.7; margin:0; }
-* { cursor:none !important; }
+#startOverlay h1 { font-size:26px; margin:0 0 12px; color:#00b4d8; }
+#startOverlay p  { font-size:16px; opacity:0.7; margin:0; }
 </style>
 </head>
 <body>
@@ -158,7 +140,7 @@ html, body {
 
 <!-- 上部 1/4：カスタマーディスプレイ -->
 <div id="customer-top">
-  <iframe id="customer-frame" src="http://192.168.0.115:55556" title="カスタマーディスプレイ"></iframe>
+  <iframe id="customer-frame" src="about:blank" title="カスタマーディスプレイ"></iframe>
 </div>
 
 <!-- 下部 3/4：サイネージ・QR・ルーレット -->
@@ -188,19 +170,15 @@ html, body {
 </div>
 
 <script>
-/* ============================================================
-   設定（ここだけ変更する）
-============================================================ */
 var CONFIG = {
   customerUrl     : 'http://192.168.0.115:55556',
-  cycleMs         : 59900,            /* 他のスクリーンと同じ */
-  qrTimeoutMs     : 60000,            /* QR表示後、待機に戻るまで */
-  rouletteIdleMs  : 90000,            /* ルーレットを開いたまま放置した場合 */
-  resultTimeoutMs : 15000,            /* 結果表示後、待機に戻るまで */
+  cycleMs         : 59900,
+  qrTimeoutMs     : 60000,
+  rouletteIdleMs  : 90000,
+  resultTimeoutMs : 15000,
   qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' }
 };
 
-/* 待機中に流す画像（10秒ずつ・6パートで59.9秒）。差し替えはここだけ */
 var PARTS = [
   { id:'p1', src:'calendar.jpg', offset:0     },
   { id:'p2', src:'free1_01.png', offset:10000 },
@@ -210,18 +188,17 @@ var PARTS = [
   { id:'p6', src:'横長ロゴ.jpg', offset:50000 }
 ];
 
-document.getElementById('customer-frame').src = CONFIG.customerUrl;
-
-/* ============================================================
-   画面の切り替え管理
-============================================================ */
 var qrOverlay = document.getElementById('qr-overlay');
 var rlOverlay = document.getElementById('roulette-overlay');
 var returnTimer = null;
 
+function setOverlayVisible(el, visible) {
+  el.style.display = visible ? 'block' : 'none';
+}
+
 function closeAll() {
-  qrOverlay.classList.remove('show');
-  rlOverlay.classList.remove('show');
+  setOverlayVisible(qrOverlay, false);
+  setOverlayVisible(rlOverlay, false);
   if (returnTimer) { clearTimeout(returnTimer); returnTimer = null; }
 }
 function setReturnTimer(ms) {
@@ -229,9 +206,6 @@ function setReturnTimer(ms) {
   returnTimer = setTimeout(closeAll, ms);
 }
 
-/* ============================================================
-   QR表示（事前読み込み ＋ 左右タップ切り替え）
-============================================================ */
 function encodeImgSrc(src) {
   return encodeURI(src);
 }
@@ -243,91 +217,72 @@ function showQr(kind, label) {
   closeAll();
   document.getElementById('qr-title').textContent = label;
   document.getElementById('qr-img').src = encodeImgSrc(CONFIG.qr[kind]);
-  qrOverlay.classList.add('show');
+  setOverlayVisible(qrOverlay, true);
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
 
-/* ============================================================
-   待機サイネージ（スクリーン1〜4と同じ Date.now() 基準で同期）
-============================================================ */
 var stage = document.getElementById('stage');
 var slideEls = {};
-PARTS.forEach(function(p) {
+for (var i = 0; i < PARTS.length; i++) {
+  var p = PARTS[i];
   var el = document.createElement('div');
   el.className = 'slide';
   el.style.backgroundImage = "url('" + encodeImgSrc(p.src) + "')";
   stage.insertBefore(el, stage.firstChild);
   slideEls[p.id] = el;
-});
+}
 
 var started = false, lastPartId = null;
 
 function getPart(offset) {
-  for (var i = PARTS.length - 1; i >= 0; i--) {
-    if (offset >= PARTS[i].offset) return PARTS[i];
+  for (var j = PARTS.length - 1; j >= 0; j--) {
+    if (offset >= PARTS[j].offset) return PARTS[j];
   }
   return PARTS[0];
 }
 
 function tick() {
   if (!started) return;
-  var part = getPart(Date.now() % CONFIG.cycleMs);
+  var part = getPart(new Date().getTime() % CONFIG.cycleMs);
   if (part.id === lastPartId) return;
   lastPartId = part.id;
-  Object.keys(slideEls).forEach(function(id) {
-    slideEls[id].style.opacity = (id === part.id) ? '1' : '0';
-  });
+  for (var k in slideEls) {
+    if (slideEls.hasOwnProperty(k)) {
+      slideEls[k].style.opacity = (k === part.id) ? '1' : '0';
+    }
+  }
 }
 setInterval(tick, 100);
 
-/* ============================================================
-   フルスクリーン切り替えヘルパー
-============================================================ */
-function enterFullscreen() {
-  try {
-    var docEl = document.documentElement;
-    if (document.fullscreenElement || document.webkitFullscreenElement) return;
-    if (docEl.requestFullscreen) {
-      var p = docEl.requestFullscreen();
-      if (p && p.catch) p.catch(function(){});
-    } else if (docEl.webkitRequestFullscreen) {
-      docEl.webkitRequestFullscreen();
-    }
-  } catch (e) {}
-}
-
-/* ============================================================
-   スタート画面（タップでフルスクリーン化 ＋ 開始）
-============================================================ */
 var startOverlay = document.getElementById('startOverlay');
-var startHandled = false;
-
-function handleStartTap(e) {
-  enterFullscreen();
-  if (startHandled) return;
-  startHandled = true;
+function handleStartTap() {
+  if (started) return;
   started = true;
-  startOverlay.classList.add('hidden');
+  startOverlay.style.display = 'none';
+  document.getElementById('customer-frame').src = CONFIG.customerUrl;
   tick();
   loadEvents();
 }
-
-startOverlay.addEventListener('click', handleStartTap);
+startOverlay.addEventListener('click', handleStartTap, false);
 startOverlay.addEventListener('touchend', function(e) {
-  e.preventDefault();
-  handleStartTap(e);
-}, { passive: false });
+  if (e && e.preventDefault) e.preventDefault();
+  handleStartTap();
+}, false);
 
-/* ============================================================
-   左右タップで PayPay / ナカペイ に切り替え
-============================================================ */
+function isButtonTarget(target) {
+  while (target && target !== document.body) {
+    if (target.tagName === 'BUTTON') return true;
+    target = target.parentNode;
+  }
+  return false;
+}
+
 var lastSideTapTime = 0;
-
 function handleSideTap(e) {
   if (!started) return;
-  if (e.target && e.target.closest && e.target.closest('button')) return;
+  if (isButtonTarget(e.target)) return;
 
-  var now = Date.now();
+  var now = new Date().getTime();
   if (now - lastSideTapTime < 250) return;
   lastSideTapTime = now;
 
@@ -340,7 +295,8 @@ function handleSideTap(e) {
     x = e.touches[0].clientX;
   }
 
-  if (x < window.innerWidth / 2) {
+  var w = window.innerWidth || document.documentElement.clientWidth || 320;
+  if (x < w / 2) {
     showQr('paypay', 'PayPay');
   } else {
     showQr('nakapay', 'ナカペイ');
@@ -348,19 +304,16 @@ function handleSideTap(e) {
 }
 
 document.getElementById('qr-close').addEventListener('click', function(e) {
-  e.stopPropagation();
+  if (e && e.stopPropagation) e.stopPropagation();
   closeAll();
-});
+}, false);
 
-stage.addEventListener('click', handleSideTap);
-stage.addEventListener('touchend', handleSideTap, { passive: true });
+stage.addEventListener('click', handleSideTap, false);
+stage.addEventListener('touchend', handleSideTap, false);
+qrOverlay.addEventListener('click', handleSideTap, false);
+qrOverlay.addEventListener('touchend', handleSideTap, false);
 
-qrOverlay.addEventListener('click', handleSideTap);
-qrOverlay.addEventListener('touchend', handleSideTap, { passive: true });
-
-/* ============================================================
-   期間限定イベント（events.txt）
-============================================================ */
+/* events.txt 読み込み（XHRベースで古いiOSでも動作しやすく） */
 var activeBanners = [];
 var bannerIdx = 0;
 var activeRoulette = null;
@@ -368,14 +321,22 @@ var bannerEl = document.getElementById('banner');
 var barEl = document.getElementById('bar');
 var btnRoulette = document.getElementById('btn-roulette');
 
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function todayStr() {
   var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 
 function parseLines(text) {
-  return text.split(/\r?\n/).map(function(l){ return l.trim(); })
-             .filter(function(l){ return l.length > 0 && l.charAt(0) !== '#' && l.indexOf('|') !== -1; });
+  var raw = text.split(/\r?\n/);
+  var out = [];
+  for (var i = 0; i < raw.length; i++) {
+    var l = raw[i].replace(/^\s+|\s+$/g, '');
+    if (l.length > 0 && l.charAt(0) !== '#' && l.indexOf('|') !== -1) {
+      out.push(l);
+    }
+  }
+  return out;
 }
 
 function applyEvents(lines) {
@@ -383,18 +344,18 @@ function applyEvents(lines) {
   activeBanners = [];
   activeRoulette = null;
 
-  lines.forEach(function(line) {
-    var cols = line.split('|');
-    if (cols.length < 4) return;
-    var start = cols[0].trim();
-    var end   = cols[1].trim();
-    var type  = cols[2].trim();
-    var val   = cols[3].trim();
+  for (var i = 0; i < lines.length; i++) {
+    var cols = lines[i].split('|');
+    if (cols.length < 4) continue;
+    var start = cols[0].replace(/^\s+|\s+$/g, '');
+    var end   = cols[1].replace(/^\s+|\s+$/g, '');
+    var type  = cols[2].replace(/^\s+|\s+$/g, '');
+    var val   = cols[3].replace(/^\s+|\s+$/g, '');
     if (today >= start && today <= end) {
       if (type === 'banner') activeBanners.push(val);
       if (type === 'roulette') activeRoulette = val;
     }
-  });
+  }
 
   if (activeBanners.length > 0) {
     bannerIdx = 0;
@@ -406,7 +367,7 @@ function applyEvents(lines) {
 
   if (activeRoulette) {
     btnRoulette.style.display = 'inline-block';
-    barEl.style.display = 'flex';
+    barEl.style.display = 'block';
     loadPrizes(activeRoulette);
   } else {
     btnRoulette.style.display = 'none';
@@ -421,17 +382,27 @@ setInterval(function() {
   }
 }, 5000);
 
+function xhrGet(url, cb) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) cb(xhr.responseText || '');
+      }
+    };
+    xhr.send(null);
+  } catch (e) {}
+}
+
 function loadEvents() {
-  fetch('events.txt?t=' + Date.now())
-    .then(function(r){ return r.ok ? r.text() : ''; })
-    .then(function(txt){ if (txt) applyEvents(parseLines(txt)); })
-    .catch(function(){});
+  xhrGet('events.txt?t=' + new Date().getTime(), function(txt) {
+    if (txt) applyEvents(parseLines(txt));
+  });
 }
 setInterval(loadEvents, 60000);
 
-/* ============================================================
-   ルーレット描画・抽選処理
-============================================================ */
+/* ルーレット */
 var prizes = ['あたり', 'はずれ', 'もう1回', 'プチ賞'];
 var canvas = document.getElementById('wheel');
 var ctx = canvas.getContext('2d');
@@ -442,35 +413,37 @@ var spinning = false;
 var wheelColors = ['#c1121f', '#1d3557', '#2a9d8f', '#e9c46a', '#6a4c93', '#f77f00'];
 
 function loadPrizes(filename) {
-  fetch(filename + '?t=' + Date.now())
-    .then(function(r){ return r.ok ? r.text() : ''; })
-    .then(function(txt) {
-      if (!txt) return;
-      var list = txt.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
-      if (list.length > 0) {
-        prizes = list;
-        drawWheel(wheelAngle);
-      }
-    })
-    .catch(function(){});
+  xhrGet(filename + '?t=' + new Date().getTime(), function(txt) {
+    if (!txt) return;
+    var raw = txt.split(/\r?\n/);
+    var list = [];
+    for (var i = 0; i < raw.length; i++) {
+      var s = raw[i].replace(/^\s+|\s+$/g, '');
+      if (s.length > 0) list.push(s);
+    }
+    if (list.length > 0) {
+      prizes = list;
+      drawWheel(wheelAngle);
+    }
+  });
 }
 
 function resizeWheel() {
-  var lowerH = document.getElementById('lower-area').clientHeight || (window.innerHeight * 0.75);
-  var lowerW = document.getElementById('lower-area').clientWidth || window.innerWidth;
-  var size = Math.min(lowerW * 0.62, lowerH * 0.46, 380);
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
+  var lower = document.getElementById('lower-area');
+  var lw = lower.clientWidth || 320;
+  var lh = lower.clientHeight || 360;
+  var size = Math.min(Math.floor(lw * 0.65), Math.floor(lh * 0.48), 260);
+  if (size < 140) size = 140;
+  canvas.width = size;
+  canvas.height = size;
   canvas.style.width = size + 'px';
   canvas.style.height = size + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   drawWheel(wheelAngle);
 }
 
 function drawWheel(angle) {
-  var size = parseFloat(canvas.style.width) || 260;
-  var r = size / 2 - 8;
+  var size = parseInt(canvas.style.width, 10) || 180;
+  var r = size / 2 - 6;
   var cx = size / 2;
   var cy = size / 2;
   var n = prizes.length;
@@ -483,7 +456,7 @@ function drawWheel(angle) {
     var endA = startA + arc;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, startA, endA);
+    ctx.arc(cx, cy, r, startA, endA, false);
     ctx.closePath();
     ctx.fillStyle = wheelColors[i % wheelColors.length];
     ctx.fill();
@@ -497,40 +470,37 @@ function drawWheel(angle) {
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold ' + Math.max(13, Math.floor(r * 0.13)) + 'px sans-serif';
-    ctx.fillText(prizes[i], r - 14, 0);
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(prizes[i], r - 10, 0);
     ctx.restore();
   }
 
   ctx.beginPath();
   ctx.moveTo(cx, 2);
-  ctx.lineTo(cx - 12, 22);
-  ctx.lineTo(cx + 12, 22);
+  ctx.lineTo(cx - 10, 18);
+  ctx.lineTo(cx + 10, 18);
   ctx.closePath();
   ctx.fillStyle = '#ffd700';
   ctx.fill();
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2;
-  ctx.stroke();
 }
 
 btnRoulette.addEventListener('click', function(e) {
-  e.stopPropagation();
+  if (e && e.stopPropagation) e.stopPropagation();
   closeAll();
   resultEl.textContent = '';
   spinBtn.disabled = false;
-  rlOverlay.classList.add('show');
+  setOverlayVisible(rlOverlay, true);
   resizeWheel();
   setReturnTimer(CONFIG.rouletteIdleMs);
-});
+}, false);
 
 document.getElementById('roulette-close').addEventListener('click', function(e) {
-  e.stopPropagation();
+  if (e && e.stopPropagation) e.stopPropagation();
   closeAll();
-});
+}, false);
 
 spinBtn.addEventListener('click', function(e) {
-  e.stopPropagation();
+  if (e && e.stopPropagation) e.stopPropagation();
   if (spinning || prizes.length === 0) return;
   spinning = true;
   spinBtn.disabled = true;
@@ -538,21 +508,20 @@ spinBtn.addEventListener('click', function(e) {
 
   var startAngle = wheelAngle;
   var extraSpins = (5 + Math.floor(Math.random() * 4)) * Math.PI * 2;
-  var randomOffset = Math.random() * Math.PI * 2;
-  var targetAngle = startAngle + extraSpins + randomOffset;
+  var targetAngle = startAngle + extraSpins + Math.random() * Math.PI * 2;
   var duration = 3600;
-  var startTime = performance.now();
+  var startTime = new Date().getTime();
 
-  function animate(now) {
-    var elapsed = now - startTime;
-    var t = Math.min(elapsed / duration, 1);
+  var timer = setInterval(function() {
+    var elapsed = new Date().getTime() - startTime;
+    var t = elapsed / duration;
+    if (t > 1) t = 1;
     var easeOut = 1 - Math.pow(1 - t, 3);
     wheelAngle = startAngle + (targetAngle - startAngle) * easeOut;
     drawWheel(wheelAngle);
 
-    if (t < 1) {
-      requestAnimationFrame(animate);
-    } else {
+    if (t >= 1) {
+      clearInterval(timer);
       spinning = false;
       spinBtn.disabled = false;
       var n = prizes.length;
@@ -562,13 +531,8 @@ spinBtn.addEventListener('click', function(e) {
       resultEl.textContent = prizes[idx];
       setReturnTimer(CONFIG.resultTimeoutMs);
     }
-  }
-  requestAnimationFrame(animate);
-});
-
-window.addEventListener('resize', function() {
-  if (rlOverlay.classList.contains('show')) resizeWheel();
-});
+  }, 25);
+}, false);
 </script>
 </body>
 </html>

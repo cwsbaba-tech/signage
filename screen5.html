@@ -395,4 +395,6 @@ function loadPrizes(file) {
               var s = lines.slice(i, i + 1).join('').trim();
               if (s.length > 0 && s.charAt(0) !== '#') {
                 if (c > 0) joined += '|||';
+                joined += s;
+                c++;
 

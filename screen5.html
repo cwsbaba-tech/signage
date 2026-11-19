@@ -56,7 +56,7 @@ html, body {
   background:rgba(0,0,0,0.92);
   display:none; flex-direction:column; justify-content:center; align-items:center;
   text-align:center; color:#fff;
-  padding:clamp(56px, 9vmin, 90px) clamp(16px, 4vw, 40px) clamp(20px, 4vmin, 40px);
+  padding:clamp(64px, 11vmin, 100px) clamp(16px, 4vw, 40px) clamp(24px, 5vmin, 48px);
   box-sizing:border-box;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
@@ -70,36 +70,32 @@ html, body {
   cursor:pointer;
 }
 .ov-title {
-  font-size:clamp(22px, 4.4vmin, 48px);
+  font-size:clamp(20px, 3.8vmin, 42px);
   font-weight:700;
-  margin:0 0 clamp(10px, 2vmin, 20px);
+  margin:0 0 clamp(10px, 1.8vmin, 18px);
   flex-shrink:0;
 }
 .ov-sub {
-  font-size:clamp(14px, 2.5vmin, 28px);
+  font-size:clamp(13px, 2.2vmin, 24px);
   line-height:1.45;
   color:#caf0f8;
-  margin:clamp(8px, 1.4vmin, 14px) 0 0;
-  max-width:min(90vw, 720px);
+  margin:clamp(6px, 1.2vmin, 12px) 0 0;
+  max-width:min(88vw, 680px);
   flex-shrink:0;
 }
 
-/* QR（縦長スマホ・横長タブレット両方で画面内に収める） */
+/* QR（さらに小さめにして上下左右の重なりを防止） */
 #qr-card {
   background:#fff;
-  padding:clamp(10px, 2vmin, 22px);
-  border-radius:clamp(12px, 2vmin, 24px);
+  padding:clamp(8px, 1.6vmin, 18px);
+  border-radius:clamp(10px, 1.8vmin, 20px);
   box-sizing:border-box;
   flex-shrink:0;
-  max-width:100%;
-  max-height:100%;
 }
 #qr-img {
   display:block;
-  width:min(68vw, 50vh, 520px);
-  height:min(68vw, 50vh, 520px);
-  max-width:100%;
-  max-height:100%;
+  width:min(52vw, 38vh, 420px);
+  height:min(52vw, 38vh, 420px);
   object-fit:contain;
 }
 
@@ -246,12 +242,29 @@ function tick() {
 setInterval(tick, 100);
 
 /* ============================================================
-   スタート画面（タップで確実に開始）
+   フルスクリーン切り替えヘルパー
+============================================================ */
+function enterFullscreen() {
+  try {
+    var docEl = document.documentElement;
+    if (document.fullscreenElement || document.webkitFullscreenElement) return;
+    if (docEl.requestFullscreen) {
+      var p = docEl.requestFullscreen();
+      if (p && p.catch) p.catch(function(){});
+    } else if (docEl.webkitRequestFullscreen) {
+      docEl.webkitRequestFullscreen();
+    }
+  } catch (e) {}
+}
+
+/* ============================================================
+   スタート画面（タップでフルスクリーン化 ＋ 開始）
 ============================================================ */
 var startOverlay = document.getElementById('startOverlay');
 var startHandled = false;
 
 function handleStartTap(e) {
+  enterFullscreen();
   if (startHandled) return;
   startHandled = true;
   started = true;

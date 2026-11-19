@@ -15,31 +15,11 @@ html, body {
   -webkit-tap-highlight-color:transparent;
 }
 
-/* 上部 1/4（25%）：エアレジ カスタマーディスプレイ直結エリア */
-#customer-top {
-  position:absolute; top:0; left:0; right:0; height:25%; z-index:40;
-  background:#1a1a1a;
-  border-bottom:3px solid #00b4d8;
-  box-sizing:border-box;
-  color:#fff;
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  padding:0 16px;
+/* 画面全体を3エリアに分ける（上の黒い窓なし） */
+#stage {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:#111; overflow:hidden;
 }
-.regi-box { text-align:center; }
-.regi-title { font-size:14px; color:#caf0f8; display:block; margin-bottom:2px; }
-.regi-val { font-size:32px; font-weight:700; color:#fff; }
-#amount-payable .regi-val { color:#ffd700; font-size:40px; }
-.is-invisible, .is-hidden { display:none !important; }
-
-/* 下部 3/4（75%）：サイネージ・QR・ルーレット領域 */
-#lower-area {
-  position:absolute; top:25%; left:0; right:0; bottom:0; z-index:10;
-  background:#111;
-  overflow:hidden;
-}
-#stage { position:absolute; top:0; left:0; right:0; bottom:0; background:#111; }
 
 .slide {
   position:absolute; top:0; left:0; width:100%; height:100%;
@@ -48,17 +28,33 @@ html, body {
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
 
-#tapLeft  { position:absolute; top:0; bottom:0; left:0; width:50%; z-index:15; cursor:pointer; }
-#tapRight { position:absolute; top:0; bottom:0; right:0; width:50%; z-index:15; cursor:pointer; }
+/* 1. 上（上 1/3）：お会計（カスタマーディスプレイを開く） */
+#tapTop {
+  position:absolute; top:0; left:0; right:0; height:33.333%; z-index:15;
+  cursor:pointer;
+}
+/* 2. 左（下 2/3 の左半分）：PayPay QR */
+#tapLeft {
+  position:absolute; top:33.333%; bottom:0; left:0; width:50%; z-index:15;
+  cursor:pointer;
+}
+/* 3. 右（下 2/3 の右半分）：ナカペイ QR */
+#tapRight {
+  position:absolute; top:33.333%; bottom:0; right:0; width:50%; z-index:15;
+  cursor:pointer;
+}
 
+/* 期間限定バナー */
 #banner {
   position:absolute; top:0; left:0; right:0; z-index:20;
   padding:8px 12px; text-align:center;
   font-size:18px; font-weight:700; color:#fff;
   background:rgba(180,20,40,0.88); border-bottom:2px solid #ffd700;
   display:none;
+  pointer-events:none;
 }
 
+/* ルーレット用ボタンバー（期間中のみ表示） */
 #bar {
   position:absolute; left:0; right:0; bottom:0; z-index:30;
   display:none; text-align:center;
@@ -71,27 +67,33 @@ html, body {
   color:#fff; border:2px solid #ffd700; border-radius:12px; background:#b8860b;
   cursor:pointer;
 }
+#btn-roulette { display:none; }
 
+/* オーバーレイ（QR・ルーレット） */
 .overlay {
-  position:absolute; top:0; left:0; right:0; bottom:0; z-index:100;
+  position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
   background:rgba(0,0,0,0.94);
   display:none;
   text-align:center; color:#fff;
-  padding:36px 12px 12px;
+  padding:44px 14px 16px;
   box-sizing:border-box;
 }
 .close-btn {
-  position:absolute; top:8px; right:10px; z-index:120;
+  position:absolute; top:10px; right:12px; z-index:120;
   padding:6px 14px;
   font-size:16px; font-weight:700;
   font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:8px;
   cursor:pointer;
 }
-.ov-title { font-size:24px; font-weight:700; margin:4px 0 8px; }
-.ov-sub   { font-size:14px; color:#caf0f8; margin:6px auto 0; }
+.ov-title { font-size:24px; font-weight:700; margin:4px 0 10px; }
+.ov-sub   { font-size:14px; color:#caf0f8; margin:8px auto 0; }
 
-#qr-card { display:inline-block; background:#fff; padding:10px; border-radius:10px; }
-#qr-img  { display:block; width:170px; height:170px; object-fit:contain; }
+#qr-card {
+  display:inline-block; background:#fff; padding:10px; border-radius:10px;
+}
+#qr-img {
+  display:block; width:170px; height:170px; object-fit:contain;
+}
 #qrLeft  { position:absolute; top:0; bottom:0; left:0; width:50%; z-index:110; }
 #qrRight { position:absolute; top:0; bottom:0; right:0; width:50%; z-index:110; }
 
@@ -101,6 +103,7 @@ html, body {
   font-size:22px; font-weight:700; color:#ffd700;
 }
 
+/* スタート画面 */
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
   z-index:9999; text-align:center; padding-top:35vh; box-sizing:border-box; cursor:pointer;
@@ -116,65 +119,38 @@ html, body {
   <p>SCREEN 5 (CUSTOMER)</p>
 </div>
 
-<!-- 上部 1/4：カスタマーディスプレイ表示枠 -->
-<div id="customer-top">
-  <section id="number-of-item" class="regi-box">
-    <span class="regi-title">商品点数</span>
-    <span class="regi-val"><span class="value">0</span><span class="unit" style="font-size:18px;">点</span></span>
-  </section>
-  <section id="amount-payable" class="regi-box">
-    <span class="regi-title">合計金額</span>
-    <span class="regi-val"><span class="unit" style="font-size:24px;">¥</span><span class="value">0</span></span>
-  </section>
-  <section id="payment-total" class="regi-box is-invisible">
-    <span class="regi-title">お預り</span>
-    <span class="regi-val"><span class="unit" style="font-size:18px;">¥</span><span class="value">0</span></span>
-  </section>
-  <section id="shortage" class="regi-box is-invisible">
-    <span class="regi-title">残り</span>
-    <span class="regi-val"><span class="unit" style="font-size:18px;">¥</span><span class="value">0</span></span>
-  </section>
-  <section id="change" class="regi-box is-hidden">
-    <span class="regi-title">おつり</span>
-    <span class="regi-val"><span class="unit" style="font-size:18px;">¥</span><span class="value">0</span></span>
-  </section>
-</div>
+<div id="stage">
+  <div id="tapTop" onclick="openCheckout()"></div>
+  <div id="tapLeft" onclick="showQr('paypay')"></div>
+  <div id="tapRight" onclick="showQr('nakapay')"></div>
 
-<!-- 下部 3/4：サイネージ・QR・ルーレット -->
-<div id="lower-area">
-  <div id="stage">
-    <div id="tapLeft" onclick="showQr('paypay')"></div>
-    <div id="tapRight" onclick="showQr('nakapay')"></div>
-    <div id="banner"></div>
-    <div id="bar">
-      <button class="btn" id="btn-roulette" onclick="openRoulette()">ルーレット</button>
-    </div>
-  </div>
-
-  <div class="overlay" id="qr-overlay">
-    <button class="close-btn" onclick="closeAll()">戻る</button>
-    <div id="qrLeft" onclick="showQr('paypay')"></div>
-    <div id="qrRight" onclick="showQr('nakapay')"></div>
-    <p class="ov-title" id="qr-title">PayPay</p>
-    <div id="qr-card"><img id="qr-img" src="qr_paypay.png" alt="QR"></div>
-    <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
-    <p class="ov-sub">金額は上の画面でご確認ください</p>
-  </div>
-
-  <div class="overlay" id="roulette-overlay">
-    <button class="close-btn" onclick="closeAll()">閉じる</button>
-    <p class="ov-title">ルーレット</p>
-    <canvas id="wheel" width="220" height="220"></canvas>
-    <div style="margin-top:10px;"><button class="btn" id="spin-btn" onclick="spinWheel()">スタート</button></div>
-    <div id="roulette-result"></div>
+  <div id="banner"></div>
+  <div id="bar">
+    <button class="btn" id="btn-roulette" onclick="openRoulette()">ルーレット</button>
   </div>
 </div>
 
-<!-- 必要に応じて 192.168.0.115:55556 側のスクリプトURLを指定 -->
-<script type="text/javascript" src="http://192.168.0.115:55556/customerDisplay.js"></script>
+<div class="overlay" id="qr-overlay">
+  <button class="close-btn" onclick="closeAll()">戻る</button>
+  <div id="qrLeft" onclick="showQr('paypay')"></div>
+  <div id="qrRight" onclick="showQr('nakapay')"></div>
+  <p class="ov-title" id="qr-title">PayPay</p>
+  <div id="qr-card"><img id="qr-img" src="qr_paypay.png" alt="QR"></div>
+  <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
+  <p class="ov-sub">金額はレジまたはお会計画面でご確認ください</p>
+</div>
+
+<div class="overlay" id="roulette-overlay">
+  <button class="close-btn" onclick="closeAll()">閉じる</button>
+  <p class="ov-title">ルーレット</p>
+  <canvas id="wheel" width="220" height="220"></canvas>
+  <div style="margin-top:10px;"><button class="btn" id="spin-btn" onclick="spinWheel()">スタート</button></div>
+  <div id="roulette-result"></div>
+</div>
 
 <script>
 var CONFIG = {
+  checkoutUrl     : 'http://192.168.0.115:55556',
   cycleMs         : 59900,
   qrTimeoutMs     : 60000,
   rouletteIdleMs  : 90000,
@@ -240,6 +216,11 @@ function closeAll() {
 function setReturnTimer(ms) {
   if (returnTimer) clearTimeout(returnTimer);
   returnTimer = setTimeout(closeAll, ms);
+}
+
+function openCheckout() {
+  if (!started) return;
+  window.location.href = CONFIG.checkoutUrl;
 }
 
 function showQr(kind) {

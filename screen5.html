@@ -17,19 +17,6 @@ html, body {
   user-select: none;
 }
 
-#startOverlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #000;
-  color: #fff;
-  z-index: 9999;
-  text-align: center;
-  padding-top: 35vh;
-  cursor: pointer;
-}
-#startOverlay h1 { font-size: 36px; margin: 0 0 16px; color: #00b4d8; }
-#startOverlay p  { font-size: 20px; opacity: 0.7; margin: 0; }
-
 #stage {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -157,11 +144,6 @@ html, body {
 </head>
 <body>
 
-<div id="startOverlay">
-  <h1>タップしてスタート</h1>
-  <p>SCREEN 5 (CUSTOMER)</p>
-</div>
-
 <div id="stage">
   <div id="p1" class="slide" style="background-image:url('calendar.jpg');"></div>
   <div id="p2" class="slide" style="background-image:url('free1_01.png');"></div>
@@ -170,19 +152,19 @@ html, body {
   <div id="p5" class="slide" style="background-image:url('event.jpg');"></div>
   <div id="p6" class="slide" style="background-image:url('横長ロゴ.jpg');"></div>
 
-  <div id="tapLeft"></div>
-  <div id="tapRight"></div>
+  <div id="tapLeft" onclick="showPaypay()"></div>
+  <div id="tapRight" onclick="showNakapay()"></div>
 
   <div id="banner"></div>
   <div id="bar">
-    <button class="btn" id="btnRoulette">ルーレット</button>
+    <button class="btn" id="btnRoulette" onclick="openRoulette()">ルーレット</button>
   </div>
 </div>
 
 <div class="overlay" id="qrOverlay">
-  <button class="closeBtn" id="qrClose">戻る</button>
-  <div id="qrLeft"></div>
-  <div id="qrRight"></div>
+  <button class="closeBtn" onclick="closeAll()">戻る</button>
+  <div id="qrLeft" onclick="showPaypay()"></div>
+  <div id="qrRight" onclick="showNakapay()"></div>
   <p class="ovTitle" id="qrTitle">PayPay</p>
   <div id="qrCard"><img id="qrImg" src="qr_paypay.png" alt="QR"></div>
   <p class="ovSub">スマートフォンでスキャンしてお支払いください</p>
@@ -190,10 +172,10 @@ html, body {
 </div>
 
 <div class="overlay" id="rouletteOverlay">
-  <button class="closeBtn" id="rouletteClose">閉じる</button>
+  <button class="closeBtn" onclick="closeRoulette()">閉じる</button>
   <p class="ovTitle">ルーレット</p>
   <canvas id="wheel" width="320" height="320"></canvas>
-  <div style="margin-top:16px;"><button class="btn" id="spinBtn">スタート</button></div>
+  <div style="margin-top:16px;"><button class="btn" id="spinBtn" onclick="spinWheel()">スタート</button></div>
   <div id="rouletteResult"></div>
 </div>
 
@@ -206,7 +188,6 @@ var resultTimeoutMs = 15000;
 var qrPaypayFile = 'qr_paypay.png';
 var qrNakapayFile = 'qr_nakapay.png';
 
-var started = false;
 var lastPart = 0;
 var returnTimer = null;
 
@@ -216,7 +197,6 @@ var preload2 = new Image();
 preload2.src = qrNakapayFile;
 
 function tick() {
-  if (!started) return;
   var offset = Date.now() % cycleMs;
   var part = 1;
   if (offset >= 50000) { part = 6; }
@@ -235,7 +215,6 @@ function tick() {
   document.getElementById('p5').style.opacity = (part === 5) ? '1' : '0';
   document.getElementById('p6').style.opacity = (part === 6) ? '1' : '0';
 }
-setInterval(tick, 100);
 
 function closeAll() {
   document.getElementById('qrOverlay').style.display = 'none';
@@ -252,7 +231,6 @@ function setReturnTimer(ms) {
 }
 
 function showPaypay() {
-  if (!started) return;
   closeAll();
   document.getElementById('qrTitle').textContent = 'PayPay';
   document.getElementById('qrImg').src = qrPaypayFile;
@@ -261,7 +239,6 @@ function showPaypay() {
 }
 
 function showNakapay() {
-  if (!started) return;
   closeAll();
   document.getElementById('qrTitle').textContent = 'ナカペイ';
   document.getElementById('qrImg').src = qrNakapayFile;
@@ -269,23 +246,7 @@ function showNakapay() {
   setReturnTimer(qrTimeoutMs);
 }
 
-document.getElementById('startOverlay').addEventListener('click', function() {
-  document.getElementById('startOverlay').style.display = 'none';
-  started = true;
-  tick();
-  loadEvents();
-});
-
-document.getElementById('tapLeft').addEventListener('click', showPaypay);
-document.getElementById('tapRight').addEventListener('click', showNakapay);
-document.getElementById('qrLeft').addEventListener('click', showPaypay);
-document.getElementById('qrRight').addEventListener('click', showNakapay);
-document.getElementById('qrClose').addEventListener('click', closeAll);
-
 /* イベント読み込み（events.txt） */
-var bannerList = '';
-var bannerCount = 0;
-var bannerIndex = 0;
 var prizeFile = '';
 
 function pad2(n) {
@@ -300,8 +261,7 @@ function getToday() {
 function parseEvents(rawText) {
   var today = getToday();
   var lines = rawText.split('\n');
-  var foundBanners = '';
-  var count = 0;
+  var firstBanner = '';
   prizeFile = '';
 
   for (var i = 0; i < lines.length; i++) {
@@ -322,10 +282,8 @@ function parseEvents(rawText) {
     var val   = line.substring(p3 + 1).trim();
 
     if (today >= start && today <= end) {
-      if (type === 'banner') {
-        if (count > 0) foundBanners += '|||';
-        foundBanners += val;
-        count++;
+      if (type === 'banner' && firstBanner === '') {
+        firstBanner = val;
       }
       if (type === 'roulette') {
         prizeFile = val;
@@ -333,13 +291,9 @@ function parseEvents(rawText) {
     }
   }
 
-  bannerList = foundBanners;
-  bannerCount = count;
-
   var bannerEl = document.getElementById('banner');
-  if (bannerCount > 0) {
-    var firstEnd = bannerList.indexOf('|||');
-    bannerEl.textContent = (firstEnd === -1) ? bannerList : bannerList.substring(0, firstEnd);
+  if (firstBanner !== '') {
+    bannerEl.textContent = firstBanner;
     bannerEl.style.display = 'block';
   } else {
     bannerEl.style.display = 'none';
@@ -358,20 +312,21 @@ function parseEvents(rawText) {
 }
 
 function loadEvents() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'events.txt?t=' + Date.now(), true);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200 || xhr.status === 0) {
-        if (xhr.responseText) {
-          parseEvents(xhr.responseText);
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'events.txt?t=' + Date.now(), true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) {
+          if (xhr.responseText) {
+            parseEvents(xhr.responseText);
+          }
         }
       }
-    }
-  };
-  xhr.send();
+    };
+    xhr.send();
+  } catch (e) {}
 }
-setInterval(loadEvents, 60000);
 
 /* ルーレット処理 */
 var prizesData = '1等|||2等|||3等|||参加賞';
@@ -395,4 +350,46 @@ function getColorAt(idx) {
 }
 
 function loadPrizes(file) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', file + '?t=' + Date.now(), true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) {
+          if (xhr.responseText) {
+            var lines = xhr.responseText.split('\n');
+            var joined = '';
+            var c = 0;
+            for (var i = 0; i < lines.length; i++) {
+              var s = lines.slice(i, i + 1).join('').trim();
+              if (s.length > 0 && s.charAt(0) !== '#') {
+                if (c > 0) joined += '|||';
+                joined += s;
+                c++;
+              }
+            }
+            if (c > 0) {
+              prizesData = joined;
+              prizeCount = c;
+            }
+          }
+          drawWheel();
+        }
+      }
+    };
+    xhr.send();
+  } catch (e) {}
+}
 
+function drawWheel() {
+  var canvas = document.getElementById('wheel');
+  var ctx = canvas.getContext('2d');
+  var size = 320;
+  var r = size / 2;
+  var arc = (Math.PI * 2) / prizeCount;
+
+  ctx.clearRect(0, 0, size, size);
+  for (var i = 0; i < prizeCount; i++) {
+    var angle = currentAngle + i * arc;
+    ctx.beginPath();
+    ctx.moveTo(r, r);

@@ -56,46 +56,53 @@ html, body {
   background:rgba(0,0,0,0.92);
   display:none; flex-direction:column; justify-content:center; align-items:center;
   text-align:center; color:#fff;
-  padding:clamp(64px, 11vmin, 100px) clamp(16px, 4vw, 40px) clamp(24px, 5vmin, 48px);
+  padding:72px 16px 24px;
   box-sizing:border-box;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
 }
 .overlay.show { display:flex; }
 .close-btn {
-  position:fixed; top:clamp(12px, 2.5vmin, 28px); right:clamp(12px, 2.5vw, 28px); z-index:110;
-  padding:clamp(8px, 1.4vmin, 16px) clamp(16px, 3vw, 32px);
-  font-size:clamp(15px, 2.6vmin, 28px); font-weight:700;
-  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:1.6vmin;
+  position:fixed; top:14px; right:14px; z-index:110;
+  padding:8px 18px;
+  font-size:clamp(14px, 2.4vmin, 24px); font-weight:700;
+  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:12px;
   cursor:pointer;
 }
 .ov-title {
-  font-size:clamp(20px, 3.8vmin, 42px);
+  font-size:clamp(20px, 3.6vmin, 38px);
   font-weight:700;
-  margin:0 0 clamp(10px, 1.8vmin, 18px);
+  margin:0 0 12px;
   flex-shrink:0;
 }
 .ov-sub {
-  font-size:clamp(13px, 2.2vmin, 24px);
+  font-size:clamp(13px, 2vmin, 22px);
   line-height:1.45;
   color:#caf0f8;
-  margin:clamp(6px, 1.2vmin, 12px) 0 0;
-  max-width:min(88vw, 680px);
+  margin:8px 0 0;
+  max-width:90%;
   flex-shrink:0;
 }
 
-/* QR（さらに小さめにして上下左右の重なりを防止） */
+/* QR（vmin基準で縦長・横長どちらでも確実に小さめに収める） */
 #qr-card {
   background:#fff;
-  padding:clamp(8px, 1.6vmin, 18px);
-  border-radius:clamp(10px, 1.8vmin, 20px);
+  padding:12px;
+  border-radius:14px;
   box-sizing:border-box;
   flex-shrink:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 #qr-img {
   display:block;
-  width:min(52vw, 38vh, 420px);
-  height:min(52vw, 38vh, 420px);
+  width:36vmin;
+  height:36vmin;
+  max-width:320px;
+  max-height:320px;
+  min-width:140px;
+  min-height:140px;
   object-fit:contain;
 }
 

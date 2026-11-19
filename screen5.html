@@ -7,13 +7,13 @@
 <style>
 html, body {
   margin:0; padding:0; width:100%; height:100%;
-  background:#000; overflow:hidden; cursor:none;
+  background:#111; overflow:hidden; cursor:none;
   font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
 }
-#stage { position:fixed; top:0; left:0; right:0; bottom:0; }
+#stage { position:fixed; top:0; left:0; right:0; bottom:0; background:#111; }
 
 /* 待機中スライド */
 .slide {
@@ -86,6 +86,7 @@ html, body {
   display:flex; flex-direction:column; justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
 }
+#startOverlay.hidden { display:none !important; }
 #startOverlay h1 { font-size:5vmin; margin:0 0 2vmin; color:#00b4d8; }
 #startOverlay p  { font-size:3vmin; opacity:0.7; margin:0; }
 * { cursor:none !important; }
@@ -144,6 +145,41 @@ var PARTS = [
 ];
 
 /* ============================================================
+   画面の切り替え管理（先に定義して参照エラーを防ぐ）
+============================================================ */
+var qrOverlay = document.getElementById('qr-overlay');
+var rlOverlay = document.getElementById('roulette-overlay');
+var returnTimer = null;
+
+function closeAll() {
+  qrOverlay.classList.remove('show');
+  rlOverlay.classList.remove('show');
+  if (returnTimer) { clearTimeout(returnTimer); returnTimer = null; }
+}
+function setReturnTimer(ms) {
+  if (returnTimer) clearTimeout(returnTimer);
+  returnTimer = setTimeout(closeAll, ms);
+}
+
+/* ============================================================
+   QR表示（事前読み込み ＋ 左右タップ切り替え）
+============================================================ */
+function encodeImgSrc(src) {
+  return encodeURI(src);
+}
+
+new Image().src = encodeImgSrc(CONFIG.qr.paypay);
+new Image().src = encodeImgSrc(CONFIG.qr.nakapay);
+
+function showQr(kind, label) {
+  closeAll();
+  document.getElementById('qr-title').textContent = label;
+  document.getElementById('qr-img').src = encodeImgSrc(CONFIG.qr[kind]);
+  qrOverlay.classList.add('show');
+  setReturnTimer(CONFIG.qrTimeoutMs);
+}
+
+/* ============================================================
    待機サイネージ（スクリーン1〜4と同じ Date.now() 基準で同期）
 ============================================================ */
 var stage = document.getElementById('stage');
@@ -151,7 +187,7 @@ var slideEls = {};
 PARTS.forEach(function(p) {
   var el = document.createElement('div');
   el.className = 'slide';
-  el.style.backgroundImage = "url('" + p.src + "')";
+  el.style.backgroundImage = "url('" + encodeImgSrc(p.src) + "')";
   stage.insertBefore(el, stage.firstChild);
   slideEls[p.id] = el;
 });
@@ -177,34 +213,54 @@ function tick() {
 setInterval(tick, 100);
 
 /* ============================================================
-   画面の切り替え管理
+   スタート画面（タップで確実に開始）
 ============================================================ */
-var qrOverlay = document.getElementById('qr-overlay');
-var rlOverlay = document.getElementById('roulette-overlay');
-var returnTimer = null;
+var startOverlay = document.getElementById('startOverlay');
+var startHandled = false;
 
-function closeAll() {
-  qrOverlay.classList.remove('show');
-  rlOverlay.classList.remove('show');
-  if (returnTimer) { clearTimeout(returnTimer); returnTimer = null; }
+function handleStartTap(e) {
+  if (startHandled) return;
+  startHandled = true;
+  started = true;
+  startOverlay.classList.add('hidden');
+  tick();
+  loadEvents();
 }
-function setReturnTimer(ms) {
-  if (returnTimer) clearTimeout(returnTimer);
-  returnTimer = setTimeout(closeAll, ms);
-}
+
+startOverlay.addEventListener('click', handleStartTap);
+startOverlay.addEventListener('touchend', function(e) {
+  e.preventDefault();
+  handleStartTap(e);
+}, { passive: false });
 
 /* ============================================================
-   QR表示（事前読み込み ＋ 左右タップ切り替え）
+   左右タップで PayPay / ナカペイ に切り替え
 ============================================================ */
-new Image().src = CONFIG.qr.paypay;
-new Image().src = CONFIG.qr.nakapay;
+var lastSideTapTime = 0;
 
-function showQr(kind, label) {
-  closeAll();
-  document.getElementById('qr-title').textContent = label;
-  document.getElementById('qr-img').src = CONFIG.qr[kind];
-  qrOverlay.classList.add('show');
-  setReturnTimer(CONFIG.qrTimeoutMs);
+function handleSideTap(e) {
+  if (!started) return;
+  if (e.target && e.target.closest && e.target.closest('button')) return;
+
+  // touchend と click の二重発火防止
+  var now = Date.now();
+  if (now - lastSideTapTime < 250) return;
+  lastSideTapTime = now;
+
+  var x = 0;
+  if (typeof e.clientX === 'number' && e.clientX > 0) {
+    x = e.clientX;
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    x = e.changedTouches[0].clientX;
+  } else if (e.touches && e.touches.length > 0) {
+    x = e.touches[0].clientX;
+  }
+
+  if (x < window.innerWidth / 2) {
+    showQr('paypay', 'PayPay');
+  } else {
+    showQr('nakapay', 'ナカペイ');
+  }
 }
 
 document.getElementById('qr-close').addEventListener('click', function(e) {
@@ -212,32 +268,14 @@ document.getElementById('qr-close').addEventListener('click', function(e) {
   closeAll();
 });
 
-// 待機画面の左半分タップでPayPay、右半分タップでナカペイ
-stage.addEventListener('click', function(e) {
-  if (!started) return;
-  if (e.target.closest('button')) return;
-  if (e.clientX < window.innerWidth / 2) {
-    showQr('paypay', 'PayPay');
-  } else {
-    showQr('nakapay', 'ナカペイ');
-  }
-});
+stage.addEventListener('click', handleSideTap);
+stage.addEventListener('touchend', handleSideTap, { passive: true });
 
-// QR表示中も左右半分タップで切り替え可能にする
-qrOverlay.addEventListener('click', function(e) {
-  if (e.target.closest('button')) return;
-  if (e.clientX < window.innerWidth / 2) {
-    showQr('paypay', 'PayPay');
-  } else {
-    showQr('nakapay', 'ナカペイ');
-  }
-});
+qrOverlay.addEventListener('click', handleSideTap);
+qrOverlay.addEventListener('touchend', handleSideTap, { passive: true });
 
 /* ============================================================
    期間限定イベント（events.txt）
-   形式:  開始日|終了日|種類|内容
-   種類:  banner   → 上部に内容の文章を表示
-          roulette → ルーレットボタンを表示（内容は景品ファイル名）
 ============================================================ */
 var activeBanners = [];
 var bannerIdx = 0;
@@ -274,15 +312,14 @@ function applyEvents(lines) {
     }
   });
 
-  // バナー表示更新
   if (activeBanners.length > 0) {
+    bannerIdx = 0;
     bannerEl.textContent = activeBanners[0];
     bannerEl.style.display = 'block';
   } else {
     bannerEl.style.display = 'none';
   }
 
-  // ルーレット期間中のみ下部バーとルーレットボタンを表示
   if (activeRoulette) {
     btnRoulette.style.display = 'inline-block';
     barEl.style.display = 'flex';
@@ -306,9 +343,146 @@ function loadEvents() {
     .then(function(txt){ if (txt) applyEvents(parseLines(txt)); })
     .catch(function(){});
 }
+setInterval(loadEvents, 60000);
 
 /* ============================================================
    ルーレット描画・抽選処理
 ============================================================ */
+var prizes = ['あたり', 'はずれ', 'もう1回', 'プチ賞'];
+var canvas = document.getElementById('wheel');
+var ctx = canvas.getContext('2d');
+var spinBtn = document.getElementById('spin-btn');
+var resultEl = document.getElementById('roulette-result');
+var wheelAngle = 0;
+var spinning = false;
+var wheelColors = ['#c1121f', '#1d3557', '#2a9d8f', '#e9c46a', '#6a4c93', '#f77f00'];
 
-  
+function loadPrizes(filename) {
+  fetch(filename + '?t=' + Date.now())
+    .then(function(r){ return r.ok ? r.text() : ''; })
+    .then(function(txt) {
+      if (!txt) return;
+      var list = txt.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+      if (list.length > 0) {
+        prizes = list;
+        drawWheel(wheelAngle);
+      }
+    })
+    .catch(function(){});
+}
+
+function resizeWheel() {
+  var size = Math.min(window.innerWidth * 0.56, window.innerHeight * 0.48, 460);
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawWheel(wheelAngle);
+}
+
+function drawWheel(angle) {
+  var size = parseFloat(canvas.style.width) || 320;
+  var r = size / 2 - 8;
+  var cx = size / 2;
+  var cy = size / 2;
+  var n = prizes.length;
+  var arc = (Math.PI * 2) / n;
+
+  ctx.clearRect(0, 0, size, size);
+
+  for (var i = 0; i < n; i++) {
+    var startA = angle + i * arc;
+    var endA = startA + arc;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startA, endA);
+    ctx.closePath();
+    ctx.fillStyle = wheelColors[i % wheelColors.length];
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startA + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + Math.max(14, Math.floor(r * 0.13)) + 'px sans-serif';
+    ctx.fillText(prizes[i], r - 14, 0);
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(cx, 2);
+  ctx.lineTo(cx - 14, 26);
+  ctx.lineTo(cx + 14, 26);
+  ctx.closePath();
+  ctx.fillStyle = '#ffd700';
+  ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+btnRoulette.addEventListener('click', function(e) {
+  e.stopPropagation();
+  closeAll();
+  resultEl.textContent = '';
+  spinBtn.disabled = false;
+  rlOverlay.classList.add('show');
+  resizeWheel();
+  setReturnTimer(CONFIG.rouletteIdleMs);
+});
+
+document.getElementById('roulette-close').addEventListener('click', function(e) {
+  e.stopPropagation();
+  closeAll();
+});
+
+spinBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (spinning || prizes.length === 0) return;
+  spinning = true;
+  spinBtn.disabled = true;
+  resultEl.textContent = '';
+
+  var startAngle = wheelAngle;
+  var extraSpins = (5 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+  var randomOffset = Math.random() * Math.PI * 2;
+  var targetAngle = startAngle + extraSpins + randomOffset;
+  var duration = 3600;
+  var startTime = performance.now();
+
+  function animate(now) {
+    var elapsed = now - startTime;
+    var t = Math.min(elapsed / duration, 1);
+    var easeOut = 1 - Math.pow(1 - t, 3);
+    wheelAngle = startAngle + (targetAngle - startAngle) * easeOut;
+    drawWheel(wheelAngle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      spinBtn.disabled = false;
+      var n = prizes.length;
+      var arc = (Math.PI * 2) / n;
+      var pointerAngle = ((-Math.PI / 2 - wheelAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      var idx = Math.floor(pointerAngle / arc) % n;
+      resultEl.textContent = prizes[idx];
+      setReturnTimer(CONFIG.resultTimeoutMs);
+    }
+  }
+  requestAnimationFrame(animate);
+});
+
+window.addEventListener('resize', function() {
+  if (rlOverlay.classList.contains('show')) resizeWheel();
+});
+</script>
+</body>
+</html>

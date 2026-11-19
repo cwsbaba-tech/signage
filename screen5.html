@@ -5,17 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SCREEN 5 - CUSTOMER</title>
 <style>
-:root { --u:1vmin; }
 html, body {
   margin:0; padding:0; width:100%; height:100%;
   background:#000; overflow:hidden; cursor:none;
   font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
 #stage { position:fixed; top:0; left:0; right:0; bottom:0; }
-#cd-frame { position:fixed; z-index:5; background:#000; display:none; }
-#cd-iframe { display:block; width:100%; height:100%; border:0; background:#fff; }
 
 /* 待機中スライド */
 .slide {
@@ -28,59 +26,58 @@ html, body {
 /* 期間限定バナー（上部） */
 #banner {
   position:absolute; top:0; left:0; right:0; z-index:20;
-  padding:calc(var(--u)*1.6) calc(var(--u)*3); text-align:center;
-  font-size:clamp(20px,calc(var(--u)*4),44px); font-weight:700; color:#fff;
+  padding:1.6vmin 3vmin; text-align:center;
+  font-size:clamp(20px,4vmin,44px); font-weight:700; color:#fff;
   background:rgba(180,20,40,0.88); border-bottom:3px solid #ffd700;
   text-shadow:0 2px 6px rgba(0,0,0,0.5);
   display:none;
 }
 
-/* 下部ボタンバー */
+/* 下部ボタンバー（通常は非表示・ルーレット期間中のみ表示） */
 #bar {
   position:absolute; left:0; right:0; bottom:0; z-index:30;
-  display:flex; justify-content:center; align-items:center; gap:calc(var(--u)*3);
-  padding:calc(var(--u)*2) calc(var(--u)*3);
+  display:none; justify-content:center; align-items:center; gap:3vmin;
+  padding:2vmin 3vmin;
   background:rgba(5,10,15,0.88); border-top:3px solid #00b4d8;
 }
 .btn {
-  min-width:calc(var(--u)*22); padding:calc(var(--u)*1.8) calc(var(--u)*3);
-  font-family:inherit; font-size:clamp(18px,calc(var(--u)*3.4),36px); font-weight:700;
-  color:#fff; border:2px solid #fff; border-radius:calc(var(--u)*2); background:#222;
+  min-width:22vmin; padding:1.8vmin 3vmin;
+  font-family:inherit; font-size:clamp(18px,3.4vmin,36px); font-weight:700;
+  color:#fff; border:2px solid #fff; border-radius:2vmin; background:#222;
   cursor:pointer;
+  touch-action:manipulation;
 }
 .btn:active { opacity:0.7; }
-#btn-paypay   { background:#ff0033; border-color:#ff6680; }
-#btn-nakapay  { background:#0a8aa8; border-color:#5fd0e8; }
 #btn-roulette { background:#b8860b; border-color:#ffd700; display:none; }
 
 /* 共通オーバーレイ */
 .overlay {
-  position:absolute; top:0; left:0; right:0; bottom:0; z-index:100;
+  position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
   background:rgba(0,0,0,0.92);
   display:none; flex-direction:column; justify-content:center; align-items:center;
   text-align:center; color:#fff;
 }
 .overlay.show { display:flex; }
 .close-btn {
-  position:absolute; top:calc(var(--u)*2); right:calc(var(--u)*2);
-  padding:calc(var(--u)*1.4) calc(var(--u)*3); font-size:clamp(16px,calc(var(--u)*2.8),30px); font-weight:700;
-  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:calc(var(--u)*1.6);
+  position:absolute; top:2vmin; right:2vmin;
+  padding:1.4vmin 3vmin; font-size:clamp(16px,2.8vmin,30px); font-weight:700;
+  font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:1.6vmin;
   cursor:pointer;
 }
-.ov-title { font-size:clamp(22px,calc(var(--u)*4.6),52px); font-weight:700; margin:0 0 calc(var(--u)*2); }
-.ov-sub   { font-size:clamp(16px,calc(var(--u)*2.8),30px); color:#caf0f8; margin:calc(var(--u)*2) 0 0; }
+.ov-title { font-size:clamp(22px,4.6vmin,52px); font-weight:700; margin:0 0 2vmin; }
+.ov-sub   { font-size:clamp(16px,2.8vmin,30px); color:#caf0f8; margin:2vmin 0 0; }
 
 /* QR */
-#qr-card { background:#fff; padding:calc(var(--u)*2.4); border-radius:calc(var(--u)*2); }
-#qr-img { display:block; width:min(calc(var(--u)*62),620px); height:min(calc(var(--u)*62),620px); object-fit:contain; }
+#qr-card { background:#fff; padding:2.4vmin; border-radius:2vmin; }
+#qr-img { display:block; width:min(62vmin,620px); height:min(62vmin,620px); object-fit:contain; }
 
 /* ルーレット */
 #wheel-wrap { position:relative; }
 #wheel { display:block; }
-#spin-btn { margin-top:calc(var(--u)*2); background:#b8860b; border-color:#ffd700; display:inline-block; }
+#spin-btn { margin-top:2vmin; background:#b8860b; border-color:#ffd700; display:inline-block; }
 #roulette-result {
-  min-height:calc(var(--u)*6); margin-top:calc(var(--u)*1.6);
-  font-size:clamp(22px,calc(var(--u)*4.4),50px); font-weight:700; color:#ffd700;
+  min-height:6vmin; margin-top:1.6vmin;
+  font-size:clamp(22px,4.4vmin,50px); font-weight:700; color:#ffd700;
 }
 
 /* スタート */
@@ -89,8 +86,8 @@ html, body {
   display:flex; flex-direction:column; justify-content:center; align-items:center;
   z-index:9999; cursor:pointer; text-align:center;
 }
-#startOverlay h1 { font-size:calc(var(--u)*5); margin:0 0 calc(var(--u)*2); color:#00b4d8; }
-#startOverlay p  { font-size:calc(var(--u)*3); opacity:0.7; margin:0; }
+#startOverlay h1 { font-size:5vmin; margin:0 0 2vmin; color:#00b4d8; }
+#startOverlay p  { font-size:3vmin; opacity:0.7; margin:0; }
 * { cursor:none !important; }
 </style>
 </head>
@@ -101,15 +98,12 @@ html, body {
   <p>SCREEN 5 (CUSTOMER)</p>
 </div>
 
-<div id="cd-frame"><iframe id="cd-iframe" title="Airレジ 合計金額"></iframe></div>
-
 <div id="stage">
   <div id="banner"></div>
   <div id="bar">
-    <button class="btn" id="btn-paypay">PayPay</button>
-    <button class="btn" id="btn-nakapay">ナカペイ</button>
     <button class="btn" id="btn-roulette">ルーレット</button>
   </div>
+</div>
 
 <div class="overlay" id="qr-overlay">
   <button class="close-btn" id="qr-close">戻る</button>
@@ -126,7 +120,6 @@ html, body {
   <button class="btn" id="spin-btn">スタート</button>
   <div id="roulette-result"></div>
 </div>
-</div>
 
 <script>
 /* ============================================================
@@ -137,10 +130,7 @@ var CONFIG = {
   qrTimeoutMs     : 60000,            /* QR表示後、待機に戻るまで */
   rouletteIdleMs  : 90000,            /* ルーレットを開いたまま放置した場合 */
   resultTimeoutMs : 15000,            /* 結果表示後、待機に戻るまで */
-  qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' },
-  /* Airレジのカスタマーディスプレイ（合計金額）を画面の一部に表示する。空にすると分割しない */
-  cdUrl   : 'http://192.168.0.115:55556',
-  cdRatio : 0.4          /* 金額表示が画面に占める割合（縦長は上、横長は左） */
+  qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' }
 };
 
 /* 待機中に流す画像（10秒ずつ・6パートで59.9秒）。差し替えはここだけ */
@@ -165,34 +155,6 @@ PARTS.forEach(function(p) {
   stage.insertBefore(el, stage.firstChild);
   slideEls[p.id] = el;
 });
-
-var cdFrame  = document.getElementById('cd-frame');
-var cdIframe = document.getElementById('cd-iframe');
-
-/* 画面を「金額表示」と「サイネージ/QR」に分割する */
-function layout() {
-  var W = window.innerWidth, H = window.innerHeight;
-  var s = stage.style, c = cdFrame.style;
-  s.top = '0'; s.left = '0'; s.right = '0'; s.bottom = '0';
-  if (CONFIG.cdUrl) {
-    if (!cdIframe.getAttribute('src')) cdIframe.setAttribute('src', CONFIG.cdUrl);
-    var r = Math.round(CONFIG.cdRatio * 100);
-    c.display = 'block';
-    c.top = '0'; c.left = '0';
-    if (W > H) {                                  /* 横長: 左に金額 */
-      c.right = 'auto'; c.bottom = '0'; c.width = r + '%'; c.height = 'auto';
-      s.left = r + '%';
-    } else {                                      /* 縦長: 上に金額 */
-      c.right = '0'; c.bottom = 'auto'; c.width = 'auto'; c.height = r + '%';
-      s.top = r + '%';
-    }
-  } else {
-    c.display = 'none';
-  }
-  var sw = stage.clientWidth || W, sh = stage.clientHeight || H;
-  document.documentElement.style.setProperty('--u', (Math.min(sw, sh) / 100) + 'px');
-}
-layout();
 
 var started = false, lastPartId = null;
 
@@ -232,8 +194,11 @@ function setReturnTimer(ms) {
 }
 
 /* ============================================================
-   QR表示
+   QR表示（事前読み込み ＋ 左右タップ切り替え）
 ============================================================ */
+new Image().src = CONFIG.qr.paypay;
+new Image().src = CONFIG.qr.nakapay;
+
 function showQr(kind, label) {
   closeAll();
   document.getElementById('qr-title').textContent = label;
@@ -241,9 +206,32 @@ function showQr(kind, label) {
   qrOverlay.classList.add('show');
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
-document.getElementById('btn-paypay').addEventListener('click',  function(){ showQr('paypay',  'PayPay'); });
-document.getElementById('btn-nakapay').addEventListener('click', function(){ showQr('nakapay', 'ナカペイ'); });
-document.getElementById('qr-close').addEventListener('click', closeAll);
+
+document.getElementById('qr-close').addEventListener('click', function(e) {
+  e.stopPropagation();
+  closeAll();
+});
+
+// 待機画面の左半分タップでPayPay、右半分タップでナカペイ
+stage.addEventListener('click', function(e) {
+  if (!started) return;
+  if (e.target.closest('button')) return;
+  if (e.clientX < window.innerWidth / 2) {
+    showQr('paypay', 'PayPay');
+  } else {
+    showQr('nakapay', 'ナカペイ');
+  }
+});
+
+// QR表示中も左右半分タップで切り替え可能にする
+qrOverlay.addEventListener('click', function(e) {
+  if (e.target.closest('button')) return;
+  if (e.clientX < window.innerWidth / 2) {
+    showQr('paypay', 'PayPay');
+  } else {
+    showQr('nakapay', 'ナカペイ');
+  }
+});
 
 /* ============================================================
    期間限定イベント（events.txt）
@@ -251,11 +239,11 @@ document.getElementById('qr-close').addEventListener('click', closeAll);
    種類:  banner   → 上部に内容の文章を表示
           roulette → ルーレットボタンを表示（内容は景品ファイル名）
 ============================================================ */
-var EVENTS = [];
 var activeBanners = [];
 var bannerIdx = 0;
 var activeRoulette = null;
 var bannerEl = document.getElementById('banner');
+var barEl = document.getElementById('bar');
 var btnRoulette = document.getElementById('btn-roulette');
 
 function todayStr() {
@@ -268,182 +256,57 @@ function parseLines(text) {
              .filter(function(l){ return l.length > 0 && l.charAt(0) !== '#' && l.indexOf('|') !== -1; });
 }
 
+function applyEvents(lines) {
+  var today = todayStr();
+  activeBanners = [];
+  activeRoulette = null;
+
+  lines.forEach(function(line) {
+    var cols = line.split('|');
+    if (cols.length < 4) return;
+    var start = cols[0].trim();
+    var end   = cols[1].trim();
+    var type  = cols[2].trim();
+    var val   = cols[3].trim();
+    if (today >= start && today <= end) {
+      if (type === 'banner') activeBanners.push(val);
+      if (type === 'roulette') activeRoulette = val;
+    }
+  });
+
+  // バナー表示更新
+  if (activeBanners.length > 0) {
+    bannerEl.textContent = activeBanners[0];
+    bannerEl.style.display = 'block';
+  } else {
+    bannerEl.style.display = 'none';
+  }
+
+  // ルーレット期間中のみ下部バーとルーレットボタンを表示
+  if (activeRoulette) {
+    btnRoulette.style.display = 'inline-block';
+    barEl.style.display = 'flex';
+    loadPrizes(activeRoulette);
+  } else {
+    btnRoulette.style.display = 'none';
+    barEl.style.display = 'none';
+  }
+}
+
+setInterval(function() {
+  if (activeBanners.length > 1) {
+    bannerIdx = (bannerIdx + 1) % activeBanners.length;
+    bannerEl.textContent = activeBanners[bannerIdx];
+  }
+}, 5000);
+
 function loadEvents() {
-  fetch('events.txt', { cache:'no-cache' })
-    .then(function(r){ if (!r.ok) throw new Error(); return r.text(); })
-    .then(function(t){
-      EVENTS = parseLines(t).map(function(l){
-        var a = l.split('|').map(function(s){ return s.trim(); });
-        return { start:a[0], end:a[1], type:(a[2]||'').toLowerCase(), content:a.slice(3).join('|') };
-      });
-      applyEvents();
-    })
+  fetch('events.txt?t=' + Date.now())
+    .then(function(r){ return r.ok ? r.text() : ''; })
+    .then(function(txt){ if (txt) applyEvents(parseLines(txt)); })
     .catch(function(){});
 }
 
-function applyEvents() {
-  var today = todayStr();
-  var act = EVENTS.filter(function(e){ return e.start <= today && today <= e.end; });
-  activeBanners  = act.filter(function(e){ return e.type === 'banner'; });
-  activeRoulette = act.filter(function(e){ return e.type === 'roulette'; })[0] || null;
-  btnRoulette.style.display = activeRoulette ? 'inline-block' : 'none';
-  if (activeRoulette) {
-    var t = (activeRoulette.content || '').split('@')[0].trim();
-    btnRoulette.textContent = t || 'ルーレット';
-  }
-  showBanner();
-}
-
-function showBanner() {
-  if (!activeBanners.length) { bannerEl.style.display = 'none'; return; }
-  bannerIdx = bannerIdx % activeBanners.length;
-  bannerEl.textContent = activeBanners[bannerIdx].content;
-  bannerEl.style.display = 'block';
-}
-setInterval(function(){ bannerIdx++; showBanner(); }, 6000);
-setInterval(applyEvents, 60000);   /* 日付が変わったら自動で切り替わる */
-loadEvents();
-setInterval(loadEvents, 600000);
-
 /* ============================================================
-   ルーレット（景品ファイル: 景品名|重み）
-   重みが大きいほど当たりやすく、盤面の面積もその比率で描く
+   ルーレット描画・抽選処理
 ============================================================ */
-var PRIZES = [];
-var wheel = document.getElementById('wheel');
-var wctx  = wheel.getContext('2d');
-var wheelSize = 0, theta = 0, spinning = false, spun = false;
-var COLORS = ['#e63946','#ffd166','#2a9d8f','#4895ef','#f4a261','#9d4edd','#52b788','#ef476f'];
-
-function loadPrizes(path, cb) {
-  fetch(path, { cache:'no-cache' })
-    .then(function(r){ if (!r.ok) throw new Error(); return r.text(); })
-    .then(function(t){
-      var list = parseLines(t).map(function(l){
-        var a = l.split('|');
-        var w = parseFloat(a[1]);
-        return { name:a[0].trim(), weight:(w > 0 ? w : 1) };
-      });
-      var total = list.reduce(function(s,p){ return s + p.weight; }, 0);
-      var acc = 0;
-      list.forEach(function(p){
-        p.a0 = acc / total * Math.PI * 2;
-        acc += p.weight;
-        p.a1 = acc / total * Math.PI * 2;
-      });
-      PRIZES = list;
-      cb(list.length > 0);
-    })
-    .catch(function(){ cb(false); });
-}
-
-function sizeWheel() {
-  wheelSize = Math.floor(Math.min(stage.clientWidth, stage.clientHeight) * 0.58);
-  wheel.width  = wheelSize;
-  wheel.height = wheelSize;
-}
-
-function drawWheel() {
-  var s = wheelSize, cx = s/2, cy = s/2 + s*0.03, r = s*0.46;
-  wctx.clearRect(0, 0, s, s);
-  PRIZES.forEach(function(p, i) {
-    wctx.beginPath();
-    wctx.moveTo(cx, cy);
-    wctx.arc(cx, cy, r, theta + p.a0, theta + p.a1);
-    wctx.closePath();
-    wctx.fillStyle = COLORS[i % COLORS.length];
-    wctx.fill();
-    wctx.strokeStyle = '#fff'; wctx.lineWidth = 3; wctx.stroke();
-
-    wctx.save();
-    wctx.translate(cx, cy);
-    wctx.rotate(theta + (p.a0 + p.a1) / 2);
-    wctx.textAlign = 'right'; wctx.textBaseline = 'middle';
-    wctx.fillStyle = '#111';
-    wctx.font = '700 ' + Math.round(s*0.06) + 'px "Noto Sans JP",sans-serif';
-    wctx.fillText(p.name, r*0.92, 0, r*0.62);
-    wctx.restore();
-  });
-  wctx.beginPath(); wctx.arc(cx, cy, s*0.05, 0, Math.PI*2);
-  wctx.fillStyle = '#fff'; wctx.fill();
-  /* 上の矢印（回転しない） */
-  wctx.beginPath();
-  wctx.moveTo(cx - s*0.04, 2);
-  wctx.lineTo(cx + s*0.04, 2);
-  wctx.lineTo(cx, cy - r + s*0.03);
-  wctx.closePath();
-  wctx.fillStyle = '#fff'; wctx.fill();
-  wctx.strokeStyle = '#222'; wctx.lineWidth = 2; wctx.stroke();
-}
-
-function pickPrize() {
-  var total = PRIZES[PRIZES.length - 1].a1;
-  var x = Math.random() * total;
-  for (var i = 0; i < PRIZES.length; i++) {
-    if (x >= PRIZES[i].a0 && x < PRIZES[i].a1) return PRIZES[i];
-  }
-  return PRIZES[PRIZES.length - 1];
-}
-
-function spin() {
-  if (spinning || spun || !PRIZES.length) return;
-  spinning = true;
-  document.getElementById('spin-btn').style.display = 'none';
-  var prize = pickPrize();
-  var phi = prize.a0 + (prize.a1 - prize.a0) * (0.15 + 0.7 * Math.random());
-  var TWO = Math.PI * 2;
-  var target = -Math.PI / 2 - phi;                  /* 矢印は真上 */
-  var delta = (((target - theta) % TWO) + TWO) % TWO + TWO * 5;
-  var from = theta, dur = 5000, t0 = Date.now();
-  function step() {
-    var k = Math.min((Date.now() - t0) / dur, 1);
-    var e = 1 - Math.pow(1 - k, 3);
-    theta = from + delta * e;
-    drawWheel();
-    if (k < 1) { requestAnimationFrame(step); return; }
-    spinning = false; spun = true;
-    document.getElementById('roulette-result').textContent = '「' + prize.name + '」が当たりました！';
-    setReturnTimer(CONFIG.resultTimeoutMs);
-  }
-  requestAnimationFrame(step);
-}
-
-btnRoulette.addEventListener('click', function() {
-  if (!activeRoulette) return;
-  var file = ((activeRoulette.content || '').split('@')[1] || 'roulette.txt').trim();
-  loadPrizes(file, function(ok) {
-    if (!ok) return;
-    closeAll();
-    spinning = false; spun = false; theta = 0;
-    document.getElementById('roulette-result').textContent = '';
-    document.getElementById('spin-btn').style.display = 'inline-block';
-    var title = (activeRoulette.content || '').split('@')[0].trim();
-    document.getElementById('roulette-title').textContent = title || 'ルーレット';
-    sizeWheel(); drawWheel();
-    rlOverlay.classList.add('show');
-    setReturnTimer(CONFIG.rouletteIdleMs);
-  });
-});
-document.getElementById('spin-btn').addEventListener('click', spin);
-document.getElementById('roulette-close').addEventListener('click', function() {
-  if (spinning) return;
-  closeAll();
-});
-window.addEventListener('resize', function() {
-  layout();
-  if (rlOverlay.classList.contains('show')) { sizeWheel(); drawWheel(); }
-});
-
-/* ============================================================
-   スタート
-============================================================ */
-document.getElementById('startOverlay').addEventListener('click', function() {
-  document.getElementById('startOverlay').style.display = 'none';
-  var el = document.documentElement;
-  if (el.requestFullscreen)            el.requestFullscreen();
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  started = true;
-});
-</script>
-</body>
-</html>

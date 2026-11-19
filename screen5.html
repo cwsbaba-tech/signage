@@ -7,11 +7,10 @@
 <style>
 html, body {
   margin:0; padding:0; width:100%; height:100%;
-  background:#000; overflow:hidden; cursor:none;
+  background:#000; overflow:hidden;
   font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
 }
 #stage { position:fixed; top:0; left:0; right:0; bottom:0; }
 
@@ -45,7 +44,6 @@ html, body {
   font-family:inherit; font-size:clamp(18px,3.4vmin,36px); font-weight:700;
   color:#fff; border:2px solid #fff; border-radius:2vmin; background:#222;
   cursor:pointer;
-  touch-action:manipulation;
 }
 .btn:active { opacity:0.7; }
 #btn-roulette { background:#b8860b; border-color:#ffd700; display:none; }
@@ -88,7 +86,6 @@ html, body {
 }
 #startOverlay h1 { font-size:5vmin; margin:0 0 2vmin; color:#00b4d8; }
 #startOverlay p  { font-size:3vmin; opacity:0.7; margin:0; }
-* { cursor:none !important; }
 </style>
 </head>
 <body>
@@ -126,14 +123,14 @@ html, body {
    設定（ここだけ変更する）
 ============================================================ */
 var CONFIG = {
-  cycleMs         : 59900,            /* 他のスクリーンと同じ */
-  qrTimeoutMs     : 60000,            /* QR表示後、待機に戻るまで */
-  rouletteIdleMs  : 90000,            /* ルーレットを開いたまま放置した場合 */
-  resultTimeoutMs : 15000,            /* 結果表示後、待機に戻るまで */
+  cycleMs         : 59900,
+  qrTimeoutMs     : 60000,
+  rouletteIdleMs  : 90000,
+  resultTimeoutMs : 15000,
   qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' }
 };
 
-/* 待機中に流す画像（10秒ずつ・6パートで59.9秒）。差し替えはここだけ */
+/* 待機中に流す画像（10秒ずつ・6パートで59.9秒） */
 var PARTS = new Array(
   { id:'p1', src:'calendar.jpg', offset:0     },
   { id:'p2', src:'free1_01.png', offset:10000 },
@@ -144,7 +141,7 @@ var PARTS = new Array(
 );
 
 /* ============================================================
-   待機サイネージ（スクリーン1〜4と同じ Date.now() 基準で同期）
+   待機サイネージ（旧Android Chrome完全対応）
 ============================================================ */
 var stage = document.getElementById('stage');
 var slideEls = {};
@@ -159,8 +156,9 @@ PARTS.forEach(function(p) {
 var started = false, lastPartId = null;
 
 function getPart(offset) {
-  var found = PARTS.at(0);
+  var found = null;
   PARTS.forEach(function(p) {
+    if (!found) found = p;
     if (offset >= p.offset) found = p;
   });
   return found;
@@ -169,7 +167,7 @@ function getPart(offset) {
 function tick() {
   if (!started) return;
   var part = getPart(Date.now() % CONFIG.cycleMs);
-  if (part.id === lastPartId) return;
+  if (!part || part.id === lastPartId) return;
   lastPartId = part.id;
   Object.keys(slideEls).forEach(function(id) {
     slideEls[id].style.opacity = (id === part.id) ? '1' : '0';
@@ -216,7 +214,7 @@ document.getElementById('qr-close').addEventListener('click', function(e) {
 // 待機画面の左半分タップでPayPay、右半分タップでナカペイ
 stage.addEventListener('click', function(e) {
   if (!started) return;
-  if (e.target.closest('button')) return;
+  if (e.target && e.target.tagName === 'BUTTON') return;
   if (e.clientX < window.innerWidth / 2) {
     showQr('paypay', 'PayPay');
   } else {
@@ -226,7 +224,7 @@ stage.addEventListener('click', function(e) {
 
 // QR表示中も左右半分タップで切り替え可能にする
 qrOverlay.addEventListener('click', function(e) {
-  if (e.target.closest('button')) return;
+  if (e.target && e.target.tagName === 'BUTTON') return;
   if (e.clientX < window.innerWidth / 2) {
     showQr('paypay', 'PayPay');
   } else {
@@ -244,9 +242,13 @@ var bannerEl = document.getElementById('banner');
 var barEl = document.getElementById('bar');
 var btnRoulette = document.getElementById('btn-roulette');
 
+function pad2(n) {
+  return (n < 10 ? '0' : '') + n;
+}
+
 function todayStr() {
   var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 
 function parseLines(text) {
@@ -297,10 +299,16 @@ setInterval(function() {
 }, 5000);
 
 function loadEvents() {
-  fetch('events.txt?t=' + Date.now())
-    .then(function(r){ return r.ok ? r.text() : ''; })
-    .then(function(txt){ if (txt) applyEvents(parseLines(txt)); })
-    .catch(function(){});
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'events.txt?t=' + Date.now(), true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+        if (xhr.responseText) applyEvents(parseLines(xhr.responseText));
+      }
+    };
+    xhr.send();
+  } catch (e) {}
 }
 
 /* ============================================================

@@ -22,7 +22,7 @@ html, body {
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
 
-/* 左右タップ用の透明エリア（iPhone 4sでも確実に反応させるため） */
+/* 左右タップ用の透明エリア */
 #tap-left, #tap-right {
   position:absolute; top:0; bottom:0; width:50%; z-index:10;
   cursor:pointer;
@@ -97,7 +97,7 @@ html, body {
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
   z-index:9999; cursor:pointer; text-align:center;
-  padding-top:35%;
+  padding-top:35vh;
 }
 #startOverlay h1 { font-size:32px; margin:0 0 14px; color:#00b4d8; }
 #startOverlay p  { font-size:18px; opacity:0.7; margin:0; }
@@ -111,8 +111,15 @@ html, body {
 </div>
 
 <div id="stage">
-  <div id="tap-left" onclick="showQr('paypay', 'PayPay')"></div>
-  <div id="tap-right" onclick="showQr('nakapay', 'ナカペイ')"></div>
+  <div id="slide1" class="slide" style="background-image:url('calendar.jpg');"></div>
+  <div id="slide2" class="slide" style="background-image:url('free1_01.png');"></div>
+  <div id="slide3" class="slide" style="background-image:url('holiday.jpg');"></div>
+  <div id="slide4" class="slide" style="background-image:url('free2_01.jpg');"></div>
+  <div id="slide5" class="slide" style="background-image:url('event.jpg');"></div>
+  <div id="slide6" class="slide" style="background-image:url('横長ロゴ.jpg');"></div>
+
+  <div id="tap-left" onclick="showQr('paypay')"></div>
+  <div id="tap-right" onclick="showQr('nakapay')"></div>
   <div id="banner"></div>
   <div id="bar">
     <button class="btn" id="btn-roulette" onclick="openRoulette()">ルーレット</button>
@@ -121,8 +128,8 @@ html, body {
 
 <div class="overlay" id="qr-overlay">
   <button class="close-btn" onclick="closeAll()">戻る</button>
-  <div id="qr-tap-left" style="position:absolute;top:0;bottom:0;left:0;width:50%;z-index:110;" onclick="showQr('paypay', 'PayPay')"></div>
-  <div id="qr-tap-right" style="position:absolute;top:0;bottom:0;right:0;width:50%;z-index:110;" onclick="showQr('nakapay', 'ナカペイ')"></div>
+  <div id="qr-tap-left" style="position:absolute;top:0;bottom:0;left:0;width:50%;z-index:110;" onclick="showQr('paypay')"></div>
+  <div id="qr-tap-right" style="position:absolute;top:0;bottom:0;right:0;width:50%;z-index:110;" onclick="showQr('nakapay')"></div>
   <p class="ov-title" id="qr-title">PayPay</p>
   <div id="qr-card"><img id="qr-img" src="qr_paypay.png" alt="QR"></div>
   <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
@@ -143,50 +150,29 @@ var CONFIG = {
   qrTimeoutMs     : 60000,
   rouletteIdleMs  : 90000,
   resultTimeoutMs : 15000,
-  qr : { paypay:'qr_paypay.png', nakapay:'qr_nakapay.png' }
+  qrPaypay        : 'qr_paypay.png',
+  qrNakapay       : 'qr_nakapay.png'
 };
 
-var PARTS = new Array(
-  { id:'p1', src:'calendar.jpg', offset:0     },
-  { id:'p2', src:'free1_01.png', offset:10000 },
-  { id:'p3', src:'holiday.jpg',  offset:20000 },
-  { id:'p4', src:'free2_01.jpg', offset:30000 },
-  { id:'p5', src:'event.jpg',    offset:40000 },
-  { id:'p6', src:'横長ロゴ.jpg', offset:50000 }
-);
-
-var stage = document.getElementById('stage');
-var slideEls = {};
-for (var i = 0; i < PARTS.length; i++) {
-  var p = PARTS.slice(i, i + 1).pop();
-  var el = document.createElement('div');
-  el.className = 'slide';
-  el.style.backgroundImage = "url('" + p.src + "')";
-  stage.insertBefore(el, stage.firstChild);
-  slideEls[p.id] = el;
-}
-
 var started = false;
-var lastPartId = null;
-
-function getPart(offset) {
-  var found = PARTS.slice(0, 1).pop();
-  for (var i = 0; i < PARTS.length; i++) {
-    var p = PARTS.slice(i, i + 1).pop();
-    if (offset >= p.offset) found = p;
-  }
-  return found;
-}
+var lastSlide = 0;
 
 function tick() {
   if (!started) return;
-  var part = getPart(Date.now() % CONFIG.cycleMs);
-  if (!part || part.id === lastPartId) return;
-  lastPartId = part.id;
-  for (var id in slideEls) {
-    if (slideEls.hasOwnProperty(id)) {
-      slideEls[id].style.opacity = (id === part.id) ? '1' : '0';
-    }
+  var offset = Date.now() % CONFIG.cycleMs;
+  var current = 1;
+  if (offset >= 50000) current = 6;
+  else if (offset >= 40000) current = 5;
+  else if (offset >= 30000) current = 4;
+  else if (offset >= 20000) current = 3;
+  else if (offset >= 10000) current = 2;
+
+  if (current === lastSlide) return;
+  lastSlide = current;
+
+  for (var i = 1; i <= 6; i++) {
+    var el = document.getElementById('slide' + i);
+    if (el) el.style.opacity = (i === current) ? '1' : '0';
   }
 }
 setInterval(tick, 200);
@@ -206,14 +192,19 @@ function setReturnTimer(ms) {
 }
 
 /* QR事前読み込み */
-var img1 = new Image(); img1.src = CONFIG.qr.paypay;
-var img2 = new Image(); img2.src = CONFIG.qr.nakapay;
+var img1 = new Image(); img1.src = CONFIG.qrPaypay;
+var img2 = new Image(); img2.src = CONFIG.qrNakapay;
 
-function showQr(kind, label) {
+function showQr(kind) {
   if (!started) return;
   closeAll();
-  document.getElementById('qr-title').innerHTML = label;
-  document.getElementById('qr-img').src = CONFIG.qr[kind];
+  if (kind === 'paypay') {
+    document.getElementById('qr-title').innerHTML = 'PayPay';
+    document.getElementById('qr-img').src = CONFIG.qrPaypay;
+  } else {
+    document.getElementById('qr-title').innerHTML = 'ナカペイ';
+    document.getElementById('qr-img').src = CONFIG.qrNakapay;
+  }
   qrOverlay.style.display = 'block';
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
@@ -311,5 +302,4 @@ function loadPrizes(filename) {
             var s = raw.slice(i, i + 1).join('').replace(/^\s+|\s+$/g, '');
             if (s && s.charAt(0) !== '#') list.push(s);
           }
-
 

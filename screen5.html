@@ -135,7 +135,7 @@ video.slide { object-fit:cover; background:#000; }
 </head>
 <body>
 
-<button type="button" id="btn-fs" onclick="forceFullscreenAndReset(event)">全画面</button>
+<button type="button" id="btn-fs" onclick="forceFullscreen(event)">全画面</button>
 
 <div id="startOverlay" onclick="handleStartTap()">
   <h1>タップしてスタート</h1>
@@ -185,7 +185,6 @@ var CONFIG = {
   qrNakapay         : 'qr_nakapay.png',
   sound             : false,
   fullscreenAndroid : true,
-  /* ズレが大きい端末で動画負荷を抑える場合は true にする */
   disableVideoMode  : true
 };
 
@@ -251,7 +250,6 @@ function startVideoFromBeginning(v) {
 
 var started = false;
 var lastPartId = '';
-var cycleAnchorMs = 0;
 
 function getPart(offset) {
   var found = PARTS[0];
@@ -261,32 +259,7 @@ function getPart(offset) {
   return found;
 }
 
-function showFirstSlideImmediately() {
-  lastPartId = 'p1';
-  for (var i = 0; i < PARTS.length; i++) {
-    var p = PARTS[i];
-    if (p.id === 'p1') {
-      p.el.style.opacity = '1';
-      if (p.effectiveType === 'video') startVideoFromBeginning(p.el);
-    } else {
-      p.el.style.opacity = '0';
-      if (p.effectiveType === 'video') {
-        try { p.el.pause(); } catch (e) {}
-      }
-    }
-  }
-}
-
-function tick() {
-  if (!started) return;
-  var now = new Date().getTime();
-  var offset = cycleAnchorMs ? ((now - cycleAnchorMs) % CONFIG.cycleMs) : (now % CONFIG.cycleMs);
-  if (offset < 0) offset += CONFIG.cycleMs;
-
-  var part = getPart(offset);
-  if (part.id === lastPartId) return;
-  lastPartId = part.id;
-
+function applyPart(part) {
   for (var i = 0; i < PARTS.length; i++) {
     var p = PARTS[i];
     if (p.id === part.id) {
@@ -300,7 +273,16 @@ function tick() {
     }
   }
 }
-setInterval(tick, 200);
+
+function tick() {
+  if (!started) return;
+  var offset = new Date().getTime() % CONFIG.cycleMs;
+  var part = getPart(offset);
+  if (part.id === lastPartId) return;
+  lastPartId = part.id;
+  applyPart(part);
+}
+setInterval(tick, 100);
 
 var preload1 = new Image(); preload1.src = CONFIG.qrPaypay;
 var preload2 = new Image(); preload2.src = CONFIG.qrNakapay;
@@ -375,12 +357,9 @@ function requestFs() {
   enterFullscreenNow();
 }
 
-function forceFullscreenAndReset(e) {
+function forceFullscreen(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   enterFullscreenNow();
-  closeAll();
-  cycleAnchorMs = new Date().getTime();
-  showFirstSlideImmediately();
 }
 
 function activateSignage() {

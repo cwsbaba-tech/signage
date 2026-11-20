@@ -84,23 +84,39 @@ video.slide { object-fit:cover; background:#000; }
   box-sizing:border-box;
 }
 .close-btn {
-  position:absolute; top:10px; right:12px; z-index:120;
+  position:absolute; top:10px; right:12px; z-index:130;
   padding:6px 14px;
   font-size:16px; font-weight:700;
   font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:8px;
   cursor:pointer;
 }
-.ov-title { font-size:24px; font-weight:700; margin:4px 0 10px; }
+.ov-title { font-size:24px; font-weight:700; margin:0 0 12px; }
 .ov-sub   { font-size:14px; color:#caf0f8; margin:8px auto 0; }
 
+/* QRを画面中央に配置 */
+#qr-center {
+  position:relative;
+  top:50%;
+  -webkit-transform:translateY(-50%);
+  transform:translateY(-50%);
+  z-index:125;
+  pointer-events:none;
+}
 #qr-card {
   display:inline-block; background:#fff; padding:10px; border-radius:10px;
 }
 #qr-img {
   display:block; width:170px; height:170px; object-fit:contain;
 }
-#qrLeft  { position:absolute; top:0; bottom:0; left:0; width:50%; z-index:110; }
-#qrRight { position:absolute; top:0; bottom:0; right:0; width:50%; z-index:110; }
+
+/* QR画面でも上 1/3 をタップでお会計へ移動 */
+#qrTop {
+  position:absolute; top:0; left:0; right:0; height:33.333%; z-index:120;
+  cursor:pointer;
+}
+/* QR画面の下 2/3 は左右タップで PayPay / ナカペイ 切り替え */
+#qrLeft  { position:absolute; top:33.333%; bottom:0; left:0; width:50%; z-index:110; cursor:pointer; }
+#qrRight { position:absolute; top:33.333%; bottom:0; right:0; width:50%; z-index:110; cursor:pointer; }
 
 #wheel { display:inline-block; }
 #roulette-result {
@@ -137,12 +153,15 @@ video.slide { object-fit:cover; background:#000; }
 
 <div class="overlay" id="qr-overlay">
   <button class="close-btn" onclick="closeAll()">戻る</button>
+  <div id="qrTop" onclick="openCheckout()"></div>
   <div id="qrLeft" onclick="showQr('paypay')"></div>
   <div id="qrRight" onclick="showQr('nakapay')"></div>
-  <p class="ov-title" id="qr-title">PayPay</p>
-  <div id="qr-card"><img id="qr-img" src="qr_paypay.png" alt="QR"></div>
-  <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
-  <p class="ov-sub">金額はレジまたはお会計画面でご確認ください</p>
+  <div id="qr-center">
+    <p class="ov-title" id="qr-title">PayPay</p>
+    <div id="qr-card"><img id="qr-img" src="qr_paypay.png" alt="QR"></div>
+    <p class="ov-sub">スマートフォンでスキャンしてお支払いください</p>
+    <p class="ov-sub">上をタップでお会計画面へ進みます</p>
+  </div>
 </div>
 
 <div class="overlay" id="roulette-overlay">
@@ -211,7 +230,6 @@ for (i0 = 0; i0 < PARTS.length; i0++) {
   PARTS[i0].el = (PARTS[i0].type === 'video') ? createVideoSlide(PARTS[i0]) : createImageSlide(PARTS[i0]);
 }
 
-/* 動画を途中（秒）から再生。読み込み前なら読み込み後に開始 */
 function playVideoAt(v, sec) {
   function go() {
     try { v.currentTime = Math.min(sec, v.duration || sec); } catch (e) {}
@@ -279,6 +297,9 @@ function setReturnTimer(ms) {
 
 function openCheckout() {
   if (!started) return;
+  try {
+    window.name = 'SIGNAGE_URL:' + location.href;
+  } catch (e) {}
   window.location.href = CONFIG.checkoutUrl;
 }
 
@@ -296,11 +317,6 @@ function showQr(kind) {
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
 
-/* ============================================================
-   Androidでフルスクリーンにする
-   （ブラウザの仕様でタップなどの操作の中でしか開けないため、
-     スタートのタップで開き、解除されたら次のタップで入り直す）
-============================================================ */
 function isAndroid() {
   return /Android/i.test(navigator.userAgent);
 }
@@ -319,7 +335,6 @@ function requestFs() {
   } catch (e) {}
 }
 
-/* どこをタップしても、フルスクリーンが解除されていれば入り直す */
 document.addEventListener('click', function() {
   if (started) requestFs();
 }, true);
@@ -328,6 +343,9 @@ function handleStartTap() {
   if (started) return;
   started = true;
   requestFs();
+  try {
+    window.name = 'SIGNAGE_URL:' + location.href;
+  } catch (e) {}
   document.getElementById('startOverlay').style.display = 'none';
   tick();
   loadEvents();
@@ -518,4 +536,3 @@ function spinWheel() {
 </script>
 </body>
 </html>
-

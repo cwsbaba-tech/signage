@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SCREEN 5 - CUSTOMER</title>
 <style>
@@ -27,6 +28,10 @@ html, body {
   opacity:0;
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
+/* ロゴ（スクリーン4と同じ：黒背景に全体表示） */
+.slide.contain { background-color:#000; background-size:contain; }
+/* 動画 */
+video.slide { object-fit:cover; background:#000; }
 
 /* 1. 上（上 1/3）：お会計（カスタマーディスプレイを開く） */
 #tapTop {
@@ -156,48 +161,102 @@ var CONFIG = {
   rouletteIdleMs  : 90000,
   resultTimeoutMs : 15000,
   qrPaypay        : 'qr_paypay.png',
-  qrNakapay       : 'qr_nakapay.png'
+  qrNakapay       : 'qr_nakapay.png',
+  sound           : false,   /* true にすると動画の音を出す（レジ横なので通常は false） */
+  fullscreenAndroid : true   /* Androidではタップでフルスクリーンにする */
 };
 
+/* ============================================================
+   普段のサイネージ（スクリーン4と同じ内容・同じ60秒サイクル）
+   type: image=静止画 / video=動画
+   差し替えるときはここのファイル名だけ変える
+============================================================ */
+var PARTS = [
+  { id:'p1', type:'image', src:'calendar.jpg',    offset:0     },
+  { id:'p2', type:'video', src:'video_a.mp4',     offset:10000 },
+  { id:'p3', type:'image', src:'holiday.jpg',     offset:20000 },
+  { id:'p4', type:'video', src:'video_b.mp4',     offset:30000 },
+  { id:'p5', type:'video', src:'video_c.mp4',     offset:40000 },
+  { id:'p6', type:'image', src:'トリックロゴ.jpg', offset:50000, contain:true }
+];
+
 var stage = document.getElementById('stage');
-function createSlide(id, src) {
+
+function createImageSlide(part) {
   var el = document.createElement('div');
-  el.id = id;
-  el.className = 'slide';
-  el.style.backgroundImage = "url('" + encodeURI(src) + "')";
+  el.id = part.id;
+  el.className = 'slide' + (part.contain ? ' contain' : '');
+  el.style.backgroundImage = "url('" + encodeURI(part.src) + "')";
   stage.insertBefore(el, stage.firstChild);
   return el;
 }
 
-var elP1 = createSlide('p1', 'calendar.jpg');
-var elP2 = createSlide('p2', 'free1_01.png');
-var elP3 = createSlide('p3', 'holiday.jpg');
-var elP4 = createSlide('p4', 'free2_01.jpg');
-var elP5 = createSlide('p5', 'event.jpg');
-var elP6 = createSlide('p6', '横長ロゴ.jpg');
+function createVideoSlide(part) {
+  var v = document.createElement('video');
+  v.id = part.id;
+  v.className = 'slide';
+  v.muted = !CONFIG.sound;
+  if (!CONFIG.sound) v.setAttribute('muted', '');
+  v.setAttribute('playsinline', '');
+  v.setAttribute('webkit-playsinline', '');
+  v.preload = 'auto';
+  v.loop = false;
+  v.src = encodeURI(part.src);
+  stage.insertBefore(v, stage.firstChild);
+  return v;
+}
+
+var i0;
+for (i0 = 0; i0 < PARTS.length; i0++) {
+  PARTS[i0].el = (PARTS[i0].type === 'video') ? createVideoSlide(PARTS[i0]) : createImageSlide(PARTS[i0]);
+}
+
+/* 動画を途中（秒）から再生。読み込み前なら読み込み後に開始 */
+function playVideoAt(v, sec) {
+  function go() {
+    try { v.currentTime = Math.min(sec, v.duration || sec); } catch (e) {}
+    try {
+      var pr = v.play();
+      if (pr && pr.catch) pr.catch(function() {});
+    } catch (e2) {}
+  }
+  if (v.readyState >= 1) {
+    go();
+  } else {
+    var h = function() { v.removeEventListener('loadedmetadata', h); go(); };
+    v.addEventListener('loadedmetadata', h);
+  }
+}
 
 var started = false;
 var lastPartId = '';
 
+function getPart(offset) {
+  var found = PARTS[0];
+  for (var i = 0; i < PARTS.length; i++) {
+    if (offset >= PARTS[i].offset) found = PARTS[i];
+  }
+  return found;
+}
+
 function tick() {
   if (!started) return;
   var offset = new Date().getTime() % CONFIG.cycleMs;
-  var partId = 'p1';
-  if (offset >= 50000) { partId = 'p6'; }
-  else if (offset >= 40000) { partId = 'p5'; }
-  else if (offset >= 30000) { partId = 'p4'; }
-  else if (offset >= 20000) { partId = 'p3'; }
-  else if (offset >= 10000) { partId = 'p2'; }
+  var part = getPart(offset);
+  if (part.id === lastPartId) return;
+  lastPartId = part.id;
+  var partOff = offset - part.offset;
 
-  if (partId === lastPartId) return;
-  lastPartId = partId;
-
-  elP1.style.opacity = (partId === 'p1') ? '1' : '0';
-  elP2.style.opacity = (partId === 'p2') ? '1' : '0';
-  elP3.style.opacity = (partId === 'p3') ? '1' : '0';
-  elP4.style.opacity = (partId === 'p4') ? '1' : '0';
-  elP5.style.opacity = (partId === 'p5') ? '1' : '0';
-  elP6.style.opacity = (partId === 'p6') ? '1' : '0';
+  for (var i = 0; i < PARTS.length; i++) {
+    var p = PARTS[i];
+    if (p.id === part.id) {
+      p.el.style.opacity = '1';
+      if (p.type === 'video') playVideoAt(p.el, partOff / 1000);
+    } else {
+      p.el.style.opacity = '0';
+      if (p.type === 'video') { try { p.el.pause(); } catch (e) {} }
+    }
+  }
 }
 setInterval(tick, 100);
 
@@ -237,9 +296,38 @@ function showQr(kind) {
   setReturnTimer(CONFIG.qrTimeoutMs);
 }
 
+/* ============================================================
+   Androidでフルスクリーンにする
+   （ブラウザの仕様でタップなどの操作の中でしか開けないため、
+     スタートのタップで開き、解除されたら次のタップで入り直す）
+============================================================ */
+function isAndroid() {
+  return /Android/i.test(navigator.userAgent);
+}
+
+function requestFs() {
+  if (!CONFIG.fullscreenAndroid || !isAndroid()) return;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  var el = document.documentElement;
+  try {
+    if (el.requestFullscreen) {
+      var pr = el.requestFullscreen();
+      if (pr && pr.catch) pr.catch(function() {});
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    }
+  } catch (e) {}
+}
+
+/* どこをタップしても、フルスクリーンが解除されていれば入り直す */
+document.addEventListener('click', function() {
+  if (started) requestFs();
+}, true);
+
 function handleStartTap() {
   if (started) return;
   started = true;
+  requestFs();
   document.getElementById('startOverlay').style.display = 'none';
   tick();
   loadEvents();
@@ -430,3 +518,4 @@ function spinWheel() {
 </script>
 </body>
 </html>
+

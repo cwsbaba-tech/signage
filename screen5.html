@@ -16,7 +16,6 @@ html, body {
   -webkit-tap-highlight-color:transparent;
 }
 
-/* 画面全体を3エリアに分ける（上の黒い窓なし） */
 #stage {
   position:fixed; top:0; left:0; right:0; bottom:0;
   background:#111; overflow:hidden;
@@ -28,12 +27,10 @@ html, body {
   opacity:0;
   -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
 }
-/* ロゴ（スクリーン4と同じ：黒背景に全体表示） */
 .slide.contain { background-color:#000; background-size:contain; }
-/* 動画 */
 video.slide { object-fit:cover; background:#000; }
 
-/* 1. 上（上 1/3）：お会計（カスタマーディスプレイを開く） */
+/* 1. 上（上 1/3）：お会計 */
 #tapTop {
   position:absolute; top:0; left:0; right:0; height:33.333%; z-index:15;
   cursor:pointer;
@@ -49,17 +46,16 @@ video.slide { object-fit:cover; background:#000; }
   cursor:pointer;
 }
 
-/* フルスクリーン復帰ボタン（右上） */
+/* フルスクリーンボタン（左上配置で右上の「戻る」と重ならないようにする） */
 #btn-fs {
-  position:fixed; top:8px; right:8px; z-index:200;
+  position:fixed; top:8px; left:8px; z-index:200;
   padding:5px 10px;
   font-family:inherit; font-size:12px; font-weight:700;
-  color:#fff; background:rgba(0,0,0,0.55);
-  border:1px solid rgba(255,255,255,0.45); border-radius:6px;
+  color:#fff; background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.5); border-radius:6px;
   cursor:pointer;
 }
 
-/* 期間限定バナー */
 #banner {
   position:absolute; top:0; left:0; right:0; z-index:20;
   padding:8px 12px; text-align:center;
@@ -69,7 +65,6 @@ video.slide { object-fit:cover; background:#000; }
   pointer-events:none;
 }
 
-/* ルーレット用ボタンバー（期間中のみ表示） */
 #bar {
   position:absolute; left:0; right:0; bottom:0; z-index:30;
   display:none; text-align:center;
@@ -84,7 +79,6 @@ video.slide { object-fit:cover; background:#000; }
 }
 #btn-roulette { display:none; }
 
-/* オーバーレイ（QR・ルーレット） */
 .overlay {
   position:fixed; top:0; left:0; right:0; bottom:0; z-index:100;
   background:rgba(0,0,0,0.94);
@@ -94,7 +88,7 @@ video.slide { object-fit:cover; background:#000; }
   box-sizing:border-box;
 }
 .close-btn {
-  position:absolute; top:10px; right:12px; z-index:130;
+  position:absolute; top:8px; right:10px; z-index:130;
   padding:6px 14px;
   font-size:16px; font-weight:700;
   font-family:inherit; color:#fff; background:#444; border:2px solid #888; border-radius:8px;
@@ -103,7 +97,6 @@ video.slide { object-fit:cover; background:#000; }
 .ov-title { font-size:24px; font-weight:700; margin:4px 0 12px; }
 .ov-sub   { font-size:14px; color:#caf0f8; margin:8px auto 0; }
 
-/* QRを画面中央に配置 */
 #qr-center {
   position:relative;
   top:50%;
@@ -119,12 +112,10 @@ video.slide { object-fit:cover; background:#000; }
   display:block; width:170px; height:170px; object-fit:contain;
 }
 
-/* QR画面でも上 1/3 をタップでお会計へ移動 */
 #qrTop {
   position:absolute; top:0; left:0; right:0; height:33.333%; z-index:120;
   cursor:pointer;
 }
-/* QR画面の下 2/3 は左右タップで PayPay / ナカペイ 切り替え */
 #qrLeft  { position:absolute; top:33.333%; bottom:0; left:0; width:50%; z-index:110; cursor:pointer; }
 #qrRight { position:absolute; top:33.333%; bottom:0; right:0; width:50%; z-index:110; cursor:pointer; }
 
@@ -134,7 +125,6 @@ video.slide { object-fit:cover; background:#000; }
   font-size:22px; font-weight:700; color:#ffd700;
 }
 
-/* スタート画面 */
 #startOverlay {
   position:fixed; top:0; left:0; right:0; bottom:0; background:#000; color:#fff;
   z-index:9999; text-align:center; padding-top:35vh; box-sizing:border-box; cursor:pointer;
@@ -145,7 +135,7 @@ video.slide { object-fit:cover; background:#000; }
 </head>
 <body>
 
-<button type="button" id="btn-fs" onclick="forceFullscreen(event)">全画面</button>
+<button type="button" id="btn-fs" onclick="forceFullscreenAndReset(event)">全画面</button>
 
 <div id="startOverlay" onclick="handleStartTap()">
   <h1>タップしてスタート</h1>
@@ -186,37 +176,35 @@ video.slide { object-fit:cover; background:#000; }
 
 <script>
 var CONFIG = {
-  checkoutUrl     : 'http://192.168.0.115:55556',
-  cycleMs         : 60000,
-  qrTimeoutMs     : 60000,
-  rouletteIdleMs  : 90000,
-  resultTimeoutMs : 15000,
-  qrPaypay        : 'qr_paypay.png',
-  qrNakapay       : 'qr_nakapay.png',
-  sound           : false,   /* true にすると動画の音を出す（レジ横なので通常は false） */
-  fullscreenAndroid : true     /* Androidではタップでフルスクリーンにする */
+  checkoutUrl       : 'http://192.168.0.115:55556',
+  cycleMs           : 59900,
+  qrTimeoutMs       : 60000,
+  rouletteIdleMs    : 90000,
+  resultTimeoutMs   : 15000,
+  qrPaypay          : 'qr_paypay.png',
+  qrNakapay         : 'qr_nakapay.png',
+  sound             : false,
+  fullscreenAndroid : true,
+  /* ズレが大きい端末で動画負荷を抑える場合は true にする */
+  disableVideoMode  : true
 };
 
-/* ============================================================
-   普段のサイネージ（60秒サイクル・10秒ごとの切り替え例）
-   type: image=静止画 / video=動画
-   ============================================================ */
 var PARTS = [
-  { id:'p1', type:'image', src:'calendar.jpg',    offset:0     },
-  { id:'p2', type:'video', src:'video_a.mp4',     offset:10000 },
-  { id:'p3', type:'image', src:'holiday.jpg',     offset:20000 },
-  { id:'p4', type:'video', src:'video_b.mp4',     offset:30000 },
-  { id:'p5', type:'video', src:'video_c.mp4',     offset:40000 },
-  { id:'p6', type:'image', src:'トリックロゴ.jpg', offset:50000, contain:true }
+  { id:'p1', type:'image', src:'calendar.jpg',    fallbackSrc:'calendar.jpg', offset:0     },
+  { id:'p2', type:'video', src:'video_a.mp4',     fallbackSrc:'free1_01.png', offset:10000 },
+  { id:'p3', type:'image', src:'holiday.jpg',     fallbackSrc:'holiday.jpg',  offset:20000 },
+  { id:'p4', type:'video', src:'video_b.mp4',     fallbackSrc:'free2_01.jpg', offset:30000 },
+  { id:'p5', type:'video', src:'video_c.mp4',     fallbackSrc:'event.jpg',    offset:40000 },
+  { id:'p6', type:'image', src:'トリックロゴ.jpg', fallbackSrc:'横長ロゴ.jpg',  offset:50000, contain:true }
 ];
 
 var stage = document.getElementById('stage');
 
-function createImageSlide(part) {
+function createImageSlide(part, imgSrc) {
   var el = document.createElement('div');
   el.id = part.id;
   el.className = 'slide' + (part.contain ? ' contain' : '');
-  el.style.backgroundImage = "url('" + encodeURI(part.src) + "')";
+  el.style.backgroundImage = "url('" + encodeURI(imgSrc) + "')";
   stage.insertBefore(el, stage.firstChild);
   return el;
 }
@@ -229,7 +217,7 @@ function createVideoSlide(part) {
   if (!CONFIG.sound) v.setAttribute('muted', '');
   v.setAttribute('playsinline', '');
   v.setAttribute('webkit-playsinline', '');
-  v.preload = 'metadata';
+  v.preload = 'none';
   v.loop = false;
   v.src = encodeURI(part.src);
   stage.insertBefore(v, stage.firstChild);
@@ -238,7 +226,15 @@ function createVideoSlide(part) {
 
 var i0;
 for (i0 = 0; i0 < PARTS.length; i0++) {
-  PARTS[i0].el = (PARTS[i0].type === 'video') ? createVideoSlide(PARTS[i0]) : createImageSlide(PARTS[i0]);
+  if (CONFIG.disableVideoMode) {
+    PARTS[i0].effectiveType = 'image';
+    PARTS[i0].el = createImageSlide(PARTS[i0], PARTS[i0].fallbackSrc || PARTS[i0].src);
+  } else {
+    PARTS[i0].effectiveType = PARTS[i0].type;
+    PARTS[i0].el = (PARTS[i0].type === 'video')
+      ? createVideoSlide(PARTS[i0])
+      : createImageSlide(PARTS[i0], PARTS[i0].src);
+  }
 }
 
 function startVideoFromBeginning(v) {
@@ -255,6 +251,7 @@ function startVideoFromBeginning(v) {
 
 var started = false;
 var lastPartId = '';
+var cycleAnchorMs = 0;
 
 function getPart(offset) {
   var found = PARTS[0];
@@ -264,9 +261,28 @@ function getPart(offset) {
   return found;
 }
 
+function showFirstSlideImmediately() {
+  lastPartId = 'p1';
+  for (var i = 0; i < PARTS.length; i++) {
+    var p = PARTS[i];
+    if (p.id === 'p1') {
+      p.el.style.opacity = '1';
+      if (p.effectiveType === 'video') startVideoFromBeginning(p.el);
+    } else {
+      p.el.style.opacity = '0';
+      if (p.effectiveType === 'video') {
+        try { p.el.pause(); } catch (e) {}
+      }
+    }
+  }
+}
+
 function tick() {
   if (!started) return;
-  var offset = new Date().getTime() % CONFIG.cycleMs;
+  var now = new Date().getTime();
+  var offset = cycleAnchorMs ? ((now - cycleAnchorMs) % CONFIG.cycleMs) : (now % CONFIG.cycleMs);
+  if (offset < 0) offset += CONFIG.cycleMs;
+
   var part = getPart(offset);
   if (part.id === lastPartId) return;
   lastPartId = part.id;
@@ -275,10 +291,10 @@ function tick() {
     var p = PARTS[i];
     if (p.id === part.id) {
       p.el.style.opacity = '1';
-      if (p.type === 'video') startVideoFromBeginning(p.el);
+      if (p.effectiveType === 'video') startVideoFromBeginning(p.el);
     } else {
       p.el.style.opacity = '0';
-      if (p.type === 'video') {
+      if (p.effectiveType === 'video') {
         try { p.el.pause(); } catch (e) {}
       }
     }
@@ -341,22 +357,7 @@ function isAndroid() {
   return /Android/i.test(navigator.userAgent);
 }
 
-function requestFs() {
-  if (!CONFIG.fullscreenAndroid || !isAndroid()) return;
-  if (document.fullscreenElement || document.webkitFullscreenElement) return;
-  var el = document.documentElement;
-  try {
-    if (el.requestFullscreen) {
-      var pr = el.requestFullscreen();
-      if (pr && pr.catch) pr.catch(function() {});
-    } else if (el.webkitRequestFullscreen) {
-      el.webkitRequestFullscreen();
-    }
-  } catch (e) {}
-}
-
-function forceFullscreen(e) {
-  if (e && e.stopPropagation) e.stopPropagation();
+function enterFullscreenNow() {
   var el = document.documentElement;
   try {
     if (el.requestFullscreen) {
@@ -366,6 +367,20 @@ function forceFullscreen(e) {
       el.webkitRequestFullscreen();
     }
   } catch (err) {}
+}
+
+function requestFs() {
+  if (!CONFIG.fullscreenAndroid || !isAndroid()) return;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  enterFullscreenNow();
+}
+
+function forceFullscreenAndReset(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  enterFullscreenNow();
+  closeAll();
+  cycleAnchorMs = new Date().getTime();
+  showFirstSlideImmediately();
 }
 
 function activateSignage() {

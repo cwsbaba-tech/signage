@@ -10,7 +10,7 @@
 <style>
 html, body {
   margin:0; padding:0; width:100%; height:100%;
-  background:#111; overflow:hidden;
+  background:#000; overflow:hidden;
   font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
   -webkit-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent;
@@ -18,14 +18,15 @@ html, body {
 
 #stage {
   position:fixed; top:0; left:0; right:0; bottom:0;
-  background:#111; overflow:hidden;
+  background:#000; overflow:hidden;
 }
 
 .slide {
   position:absolute; top:0; left:0; width:100%; height:100%;
   background-size:cover; background-position:center center; background-repeat:no-repeat;
   opacity:0;
-  -webkit-transition:opacity 0.6s ease-in-out; transition:opacity 0.6s ease-in-out;
+  -webkit-transition:opacity 0.5s ease-in-out; transition:opacity 0.5s ease-in-out;
+  -webkit-transform:translateZ(0); transform:translateZ(0);
 }
 .slide.contain { background-color:#000; background-size:contain; }
 video.slide { object-fit:cover; background:#000; }
@@ -52,7 +53,7 @@ video.slide { object-fit:cover; background:#000; }
   padding:5px 10px;
   font-family:inherit; font-size:12px; font-weight:700;
   color:#fff; background:rgba(0,0,0,0.6);
-  border:1px solid rgba(255,255,255,0.5); border-radius:6px;
+  border:1px solid rgba(255,255,255,0.45); border-radius:6px;
   cursor:pointer;
 }
 
@@ -185,16 +186,18 @@ var CONFIG = {
   qrNakapay         : 'qr_nakapay.png',
   sound             : false,
   fullscreenAndroid : true,
-  disableVideoMode  : true
+  /* true にすると動画パートも静止画(fallbackSrc)に切替 */
+  disableVideoMode  : false
 };
 
+/* 60秒サイクル（各10秒）：カレンダー → フリー1 → 営業時間 → フリー2 → イベント → ロゴ */
 var PARTS = [
-  { id:'p1', type:'image', src:'calendar.jpg',    fallbackSrc:'calendar.jpg', offset:0     },
-  { id:'p2', type:'video', src:'video_a.mp4',     fallbackSrc:'free1_01.png', offset:10000 },
-  { id:'p3', type:'image', src:'holiday.jpg',     fallbackSrc:'holiday.jpg',  offset:20000 },
-  { id:'p4', type:'video', src:'video_b.mp4',     fallbackSrc:'free2_01.jpg', offset:30000 },
-  { id:'p5', type:'video', src:'video_c.mp4',     fallbackSrc:'event.jpg',    offset:40000 },
-  { id:'p6', type:'image', src:'トリックロゴ.jpg', fallbackSrc:'横長ロゴ.jpg',  offset:50000, contain:true }
+  { id:'p1', type:'image', src:'p1.jpg', fallbackSrc:'p1.jpg', offset:0     },
+  { id:'p2', type:'image', src:'p2.jpg', fallbackSrc:'p2.jpg', offset:10000 },
+  { id:'p3', type:'image', src:'p3.jpg', fallbackSrc:'p3.jpg', offset:20000 },
+  { id:'p4', type:'image', src:'p4.jpg', fallbackSrc:'p4.jpg', offset:30000 },
+  { id:'p5', type:'image', src:'p5.jpg', fallbackSrc:'p5.jpg', offset:40000 },
+  { id:'p6', type:'video', src:'p6.mp4', fallbackSrc:'p6.jpg', offset:50000, contain:true }
 ];
 
 var stage = document.getElementById('stage');
@@ -211,12 +214,12 @@ function createImageSlide(part, imgSrc) {
 function createVideoSlide(part) {
   var v = document.createElement('video');
   v.id = part.id;
-  v.className = 'slide';
+  v.className = 'slide' + (part.contain ? ' contain' : '');
   v.muted = !CONFIG.sound;
   if (!CONFIG.sound) v.setAttribute('muted', '');
   v.setAttribute('playsinline', '');
   v.setAttribute('webkit-playsinline', '');
-  v.preload = 'none';
+  v.preload = 'metadata';
   v.loop = false;
   v.src = encodeURI(part.src);
   stage.insertBefore(v, stage.firstChild);
@@ -238,7 +241,7 @@ for (i0 = 0; i0 < PARTS.length; i0++) {
 
 function startVideoFromBeginning(v) {
   try {
-    if (v.readyState >= 1) {
+    if (v.readyState >= 1 && v.currentTime > 0.1) {
       v.currentTime = 0;
     }
   } catch (e) {}
@@ -282,7 +285,7 @@ function tick() {
   lastPartId = part.id;
   applyPart(part);
 }
-setInterval(tick, 100);
+setInterval(tick, 200);
 
 var preload1 = new Image(); preload1.src = CONFIG.qrPaypay;
 var preload2 = new Image(); preload2.src = CONFIG.qrNakapay;
